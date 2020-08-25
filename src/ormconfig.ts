@@ -17,4 +17,5 @@ export default {
       rejectUnauthorized: false,
     },
   },
+  cache: true,
 } as ConnectionOptions;

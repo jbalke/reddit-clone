@@ -1,3 +1,4 @@
+import { Field, Int, ObjectType } from 'type-graphql';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,17 +8,22 @@ import {
   BaseEntity,
 } from 'typeorm';
 
+@ObjectType()
 @Entity()
 export class Post extends BaseEntity {
+  @Field(() => Int)
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Field()
   @Column()
   title: string;
 
+  @Field()
   @UpdateDateColumn()
   updatedAt: Date;
 
+  @Field()
   @CreateDateColumn()
   createdAt: Date;
 }
