@@ -18,4 +18,9 @@ export default {
     },
   },
   cache: true,
+  dropSchema: false,
+  migrations: ['migration/*.js'],
+  cli: {
+    migrationsDir: 'migration',
+  },
 } as ConnectionOptions;

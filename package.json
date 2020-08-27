@@ -5,7 +5,8 @@
   "scripts": {
     "start:build": "tsc -w",
     "start:run": "nodemon dist/index.js",
-    "dev": "concurrently npm:start:*"
+    "dev": "concurrently npm:start:*",
+    "migration": "npx typeorm migration:generate -n ModelChange"
   },
   "license": "MIT",
   "devDependencies": {
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "apollo-server-express": "^2.16.1",
+    "argon2": "^0.27.0",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "graphql": "^15.3.0",
