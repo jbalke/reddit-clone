@@ -39,4 +39,20 @@ export class PostResolver {
     }
     return result.raw[0];
   }
+
+  @Mutation(() => Boolean)
+  async deletePost(@Arg('id') id: number): Promise<Boolean> {
+    const result = await getConnection()
+      .createQueryBuilder()
+      .delete()
+      .from(Post)
+      .where('id = :id', { id })
+      .returning('*')
+      .execute();
+
+    if (result.affected === 0) {
+      return false;
+    }
+    return true;
+  }
 }
