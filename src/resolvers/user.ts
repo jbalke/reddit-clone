@@ -1,6 +1,7 @@
 import { User } from '../entities/User';
 import {
   Arg,
+  Ctx,
   Field,
   InputType,
   Int,
@@ -11,6 +12,7 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
+import { MyContext } from 'src/types';
 
 @InputType()
 class UserRegisterInput {
@@ -62,23 +64,41 @@ export class UserResolver {
   async register(
     @Arg('options') options: UserRegisterInput
   ): Promise<UserResponse> {
+    const username = options.username.replace(' ', '').trim();
+    if (username.length <= 2) {
+      return {
+        errors: [
+          {
+            field: 'username',
+            message: 'must contain three or more characters',
+          },
+        ],
+      };
+    }
+
+    if (options.password.length <= 6) {
+      return {
+        errors: [
+          { field: 'password', message: 'length must be greater than six' },
+        ],
+      };
+    }
+    const existingUsername = await User.findOne({
+      username_lookup: username.toLowerCase(),
+    });
+    if (existingUsername) {
+      return {
+        errors: [{ field: 'username', message: 'not available' }],
+      };
+    }
+
     const existingEmail = await User.findOne({
       email: options.email.toLowerCase(),
     });
 
     if (existingEmail) {
       return {
-        errors: [{ field: 'email', message: 'email already registered' }],
-      };
-    }
-
-    const username = options.username.replace(' ', '').trim();
-    const existingUsername = await User.findOne({
-      username_lookup: username.toLowerCase(),
-    });
-    if (existingUsername) {
-      return {
-        errors: [{ field: 'email', message: 'username not available' }],
+        errors: [{ field: 'email', message: 'already registered' }],
       };
     }
 
@@ -92,30 +112,40 @@ export class UserResolver {
     } catch (err) {
       throw new Error(err.message);
     }
-    await user.save();
-    return {
-      user,
-    };
+
+    try {
+      await user.save();
+      return {
+        user,
+      };
+    } catch (err) {
+      console.error(err);
+      throw new Error('Internal server error: unable to create user');
+    }
   }
 
   @Mutation(() => UserResponse)
-  async login(@Arg('options') options: UserLoginInput): Promise<UserResponse> {
+  async login(
+    @Arg('options') options: UserLoginInput,
+    @Ctx() { req }: MyContext
+  ): Promise<UserResponse> {
     const user = await User.findOne({
       username_lookup: options.username.toLowerCase().trim(),
     });
     if (!user) {
       return {
-        errors: [{ field: 'username', message: 'Not found' }],
+        errors: [{ field: 'username/password', message: 'incorrect' }],
       };
     }
     try {
       if (await argon2.verify(user.password, options.password)) {
         // password match
+        req.session.userId = user.id;
         return { user };
       } else {
         // password did not match
         return {
-          errors: [{ field: 'password', message: 'Does not match' }],
+          errors: [{ field: 'username/password', message: 'incorrect' }],
         };
       }
     } catch (err) {
