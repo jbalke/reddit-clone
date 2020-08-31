@@ -14,6 +14,7 @@ import {
 import { getConnection } from 'typeorm';
 import { MyContext, MyPayload } from '../types';
 import { isAuth } from '../middleware/isAuth';
+import { checkPayload } from '../helpers';
 
 @ObjectType()
 class Payload implements MyPayload {
@@ -47,7 +48,11 @@ export class PostResolver {
 
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
-  createPost(@Arg('title') title: string): Promise<Post> {
+  createPost(
+    @Arg('title') title: string,
+    @Ctx() { payload }: MyContext
+  ): Promise<Post> {
+    checkPayload(payload);
     const post = new Post();
     post.title = title;
     return post.save();
