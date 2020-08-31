@@ -13,7 +13,6 @@ import {
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from 'src/types';
-import { sign } from 'jsonwebtoken';
 import { createAccessToken, createRefreshToken } from '../auth';
 
 @InputType()
