@@ -14,7 +14,7 @@ import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from 'src/types';
 import { sign } from 'jsonwebtoken';
-import { createAccessToken } from '../auth';
+import { createAccessToken, createRefreshToken } from '../auth';
 
 @InputType()
 class UserRegisterInput {
@@ -132,7 +132,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async login(
     @Arg('options') options: UserLoginInput,
-    @Ctx() { req }: MyContext
+    @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
     const user = await User.findOne({
       username_lookup: options.username.toLowerCase().trim(),
@@ -145,6 +145,8 @@ export class UserResolver {
     try {
       if (await argon2.verify(user.password, options.password)) {
         // password match
+        res.cookie('jid', createRefreshToken(user), { httpOnly: true });
+
         return {
           user,
           accessToken: createAccessToken(user),
