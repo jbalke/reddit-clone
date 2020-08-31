@@ -1,6 +1,7 @@
-import express, { Request, Response, Express } from 'express';
+import express, { Request, Response } from 'express';
 
-export type MyContext = {
-  req: Request & { session: Express.Session };
+export interface MyContext {
+  req: Request;
   res: Response;
-};
+  payload?: { userId: string };
+}

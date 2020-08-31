@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 @ObjectType()
-@Entity()
+@Entity('users')
 export class User extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -23,7 +23,7 @@ export class User extends BaseEntity {
   username_lookup: string;
 
   @Field()
-  @Column({ unique: true })
+  @Column('text', { unique: true })
   email!: string;
 
   @Column('text')

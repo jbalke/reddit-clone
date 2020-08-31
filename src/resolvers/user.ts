@@ -13,6 +13,8 @@ import {
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from 'src/types';
+import { sign } from 'jsonwebtoken';
+import { createAccessToken } from '../auth';
 
 @InputType()
 class UserRegisterInput {
@@ -46,6 +48,9 @@ class UserResponse {
 
   @Field(() => User, { nullable: true })
   user?: User;
+
+  @Field(() => String, { nullable: true })
+  accessToken?: string;
 }
 
 @Resolver()
@@ -140,8 +145,10 @@ export class UserResolver {
     try {
       if (await argon2.verify(user.password, options.password)) {
         // password match
-        req.session.userId = user.id;
-        return { user };
+        return {
+          user,
+          accessToken: createAccessToken(user),
+        };
       } else {
         // password did not match
         return {
@@ -155,15 +162,15 @@ export class UserResolver {
 
   // @Mutation(() => User, { nullable: true })
   // async updateUser(
-  //   @Arg('id') id: number,
-  //   @Arg('title', () => String, { nullable: true }) title: string
+  //   @Arg("id") id: number,
+  //   @Arg("title", () => String, { nullable: true }) title: string
   // ): Promise<User | undefined> {
   //   const result = await getConnection()
   //     .createQueryBuilder()
   //     .update(User)
   //     .set({ title })
-  //     .where('id = :id', { id })
-  //     .returning('*')
+  //     .where("id = :id", { id })
+  //     .returning("*")
   //     .execute();
 
   //   if (result.affected === 0) {
