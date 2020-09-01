@@ -1,12 +1,13 @@
 import express, { Request, Response } from 'express';
 
 export interface MyPayload {
-  userId: number;
+  userId: string;
   isAdmin: boolean;
+  tokenVersion: number;
 }
 
 export interface MyContext {
   req: Request;
   res: Response;
-  payload?: MyPayload;
+  jwt?: MyPayload;
 }

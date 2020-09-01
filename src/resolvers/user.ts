@@ -3,6 +3,7 @@ import {
   Arg,
   Ctx,
   Field,
+  ID,
   InputType,
   Int,
   Mutation,
@@ -12,8 +13,10 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
-import { MyContext } from 'src/types';
+import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../auth';
+import { __maxAge__ } from '../constants';
+import { sendRefreshToken } from '../tokens';
 
 @InputType()
 class UserRegisterInput {
@@ -56,11 +59,11 @@ class UserResponse {
 export class UserResolver {
   @Query(() => [User])
   users(): Promise<User[]> {
-    return User.find({});
+    return User.find();
   }
 
   @Query(() => User, { nullable: true })
-  user(@Arg('id', () => Int) id: number): Promise<User | undefined> {
+  user(@Arg('id', () => ID) id: string): Promise<User | undefined> {
     return User.findOne({ id });
   }
 
@@ -144,7 +147,7 @@ export class UserResolver {
     try {
       if (await argon2.verify(user.password, options.password)) {
         // password match
-        res.cookie('jid', createRefreshToken(user), { httpOnly: true });
+        sendRefreshToken(res, createRefreshToken(user));
 
         return {
           user,
@@ -159,6 +162,21 @@ export class UserResolver {
     } catch (err) {
       throw new Error(err.message);
     }
+  }
+
+  //! Don't do this in production, revoke tokens when user changes password or triggers 'forget password' flow.
+  @Mutation(() => Boolean)
+  async revokeRefreshTokenForUser(@Arg('userId', () => ID) userId: string) {
+    try {
+      await getConnection()
+        .getRepository(User)
+        .increment({ id: userId }, 'tokenVersion', 1);
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
+
+    return true;
   }
 
   // @Mutation(() => User, { nullable: true })
@@ -181,18 +199,20 @@ export class UserResolver {
   // }
 
   @Mutation(() => Boolean)
-  async deleteUser(@Arg('id', () => Int) id: number): Promise<Boolean> {
-    const result = await getConnection()
-      .createQueryBuilder()
-      .delete()
-      .from(User)
-      .where('id = :id', { id })
-      .returning('*')
-      .execute();
+  async deleteUser(@Arg('id', () => ID) id: string): Promise<Boolean> {
+    try {
+      const result = await getConnection()
+        .createQueryBuilder()
+        .delete()
+        .from(User)
+        .where('id = :id', { id })
+        .returning('*')
+        .execute();
 
-    if (result.affected === 0) {
-      return false;
+      return result.affected! > 0;
+    } catch (err) {
+      console.error(err);
+      throw new Error(err.message);
     }
-    return true;
   }
 }

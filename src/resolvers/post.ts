@@ -3,38 +3,43 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
+  ID,
   Int,
   Mutation,
-  NextFn,
   ObjectType,
   Query,
   Resolver,
+  ResolverInterface,
+  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { MyContext, MyPayload } from '../types';
 import { isAuth } from '../middleware/isAuth';
-import { checkPayload } from '../helpers';
+import { User } from '../entities/User';
 
 @ObjectType()
 class Payload implements MyPayload {
-  @Field(() => Int)
-  userId: number;
+  @Field(() => ID)
+  userId: string;
   @Field()
   isAdmin: boolean;
+  @Field(() => Int)
+  tokenVersion: number;
 }
 @ObjectType()
 class PayloadResponse {
   @Field(() => Payload, { nullable: true })
-  payload: Payload;
+  jwt: Payload;
 }
-@Resolver()
+@Resolver((of) => Post)
 export class PostResolver {
-  @Query(() => PayloadResponse)
-  @UseMiddleware(isAuth)
-  ping(@Ctx() { payload }: MyContext): PayloadResponse {
-    return { payload: payload! };
-  }
+  // @Query(() => PayloadResponse)
+  // @UseMiddleware(isAuth)
+  // ping(@Ctx() { jwt }: MyContext): PayloadResponse {
+  //   return { jwt: jwt! };
+  // }
 
   @Query(() => [Post])
   posts(): Promise<Post[]> {
@@ -42,17 +47,22 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
+  post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
     return Post.findOne({ id });
   }
+
+  // @FieldResolver((of) => User)
+  // async author(@Root() post: Post): Promise<User> {
+  //   return (await User.findOne(post.author.id))!;
+  // }
 
   @Mutation(() => Post)
   @UseMiddleware(isAuth)
   createPost(
     @Arg('title') title: string,
-    @Ctx() { payload }: MyContext
+    @Arg('authorID', () => Int) authorID: number,
+    @Ctx() { jwt }: MyContext
   ): Promise<Post> {
-    checkPayload(payload);
     const post = new Post();
     post.title = title;
     return post.save();
@@ -61,8 +71,9 @@ export class PostResolver {
   @Mutation(() => Post, { nullable: true })
   @UseMiddleware(isAuth)
   async updatePost(
-    @Arg('id', () => Int) id: number,
-    @Arg('title', () => String, { nullable: true }) title: string
+    @Arg('id', () => ID) id: string,
+    @Arg('title', () => String, { nullable: true }) title: string,
+    @Ctx() { jwt }: MyContext
   ): Promise<Post | undefined> {
     const result = await getConnection()
       .createQueryBuilder()
@@ -80,7 +91,7 @@ export class PostResolver {
 
   @Mutation(() => Boolean)
   @UseMiddleware(isAuth)
-  async deletePost(@Arg('id', () => Int) id: number): Promise<Boolean> {
+  async deletePost(@Arg('id', () => ID) id: string): Promise<Boolean> {
     const result = await getConnection()
       .createQueryBuilder()
       .delete()

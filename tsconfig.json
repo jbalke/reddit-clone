@@ -1,12 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es6",
+    "target": "es2018",
     "module": "commonjs",
-    "lib": ["dom", "es6", "es2017", "esnext.asynciterable"],
+    "lib": ["dom", "es2018", "esnext.asynciterable"],
     "sourceMap": true,
+    "declaration": true,
     "outDir": "./dist",
     "moduleResolution": "node",
     "removeComments": true,
+    "importHelpers": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
     "strictFunctionTypes": true,

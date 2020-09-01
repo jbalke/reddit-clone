@@ -1,5 +1,5 @@
 import { verify } from 'jsonwebtoken';
-import { MyContext, Payload } from 'src/types';
+import { MyContext, MyPayload } from '../types';
 import { MiddlewareFn } from 'type-graphql';
 
 export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
@@ -13,7 +13,7 @@ export const isAuth: MiddlewareFn<MyContext> = ({ context }, next) => {
     const token = authorization.split(' ')[1];
     const payload = verify(token, process.env.ACCESS_TOKEN_SECRET!);
     if (typeof payload === 'object') {
-      context.payload = payload as Payload;
+      context.payload = payload as MyPayload;
     }
   } catch (err) {
     console.error(err);
