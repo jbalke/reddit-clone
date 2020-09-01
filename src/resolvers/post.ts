@@ -15,32 +15,12 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { MyContext, MyPayload } from '../types';
+import { MyContext } from '../types';
 import { isAuth } from '../middleware/isAuth';
 import { User } from '../entities/User';
 
-@ObjectType()
-class Payload implements MyPayload {
-  @Field(() => ID)
-  userId: string;
-  @Field()
-  isAdmin: boolean;
-  @Field(() => Int)
-  tokenVersion: number;
-}
-@ObjectType()
-class PayloadResponse {
-  @Field(() => Payload, { nullable: true })
-  jwt: Payload;
-}
 @Resolver((of) => Post)
 export class PostResolver {
-  // @Query(() => PayloadResponse)
-  // @UseMiddleware(isAuth)
-  // ping(@Ctx() { jwt }: MyContext): PayloadResponse {
-  //   return { jwt: jwt! };
-  // }
-
   @Query(() => [Post])
   posts(): Promise<Post[]> {
     return Post.find({});

@@ -1,19 +1,16 @@
 import 'reflect-metadata';
 import dotenv from 'dotenv';
 import { createConnection } from 'typeorm';
-import express, { Request, Response, NextFunction } from 'express';
+import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
-import { buildSchema, NextFn } from 'type-graphql';
+import { buildSchema } from 'type-graphql';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
-// import expressJWT from 'express-jwt';
 import { __prod__ } from './constants';
-import { MyContext, MyPayload } from './types';
-import { createAccessToken, createRefreshToken } from './auth';
-import { verify } from 'jsonwebtoken';
-import { User } from './entities/User';
+import { MyContext } from './types';
 import { refreshToken } from './tokens';
+import { HelloResolver } from './resolvers/hello';
 
 const main = async () => {
   dotenv.config();
@@ -27,7 +24,7 @@ const main = async () => {
 
   const server = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [PostResolver, UserResolver],
+      resolvers: [PostResolver, UserResolver, HelloResolver],
       validate: false,
     }),
     context: ({ req, res }: MyContext) => ({ req, res }),

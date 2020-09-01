@@ -1,13 +1,17 @@
-import express, { Request, Response } from 'express';
+import { Request, Response } from 'express';
 
-export interface MyPayload {
+export interface RefreshTokenPayload {
+  userId: string;
+  tokenVersion: number;
+}
+
+export interface AccessTokenPayload {
   userId: string;
   isAdmin: boolean;
-  tokenVersion: number;
 }
 
 export interface MyContext {
   req: Request;
   res: Response;
-  jwt?: MyPayload;
+  jwt?: AccessTokenPayload;
 }
