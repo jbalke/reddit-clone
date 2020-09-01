@@ -3,9 +3,9 @@ import { verify } from 'jsonwebtoken';
 import { __maxAge__ } from './constants';
 import { createAccessToken, createRefreshToken } from './auth';
 import { User } from './entities/User';
-import { MyPayload } from './types';
+import { RefreshTokenPayload } from './types';
 
-export async function refreshToken(req: Request, res: Response) {
+export async function handleRefreshToken(req: Request, res: Response) {
   const token = req.cookies.jid;
   if (!token) {
     return res.send({ ok: false, accessToken: '' });
@@ -13,7 +13,10 @@ export async function refreshToken(req: Request, res: Response) {
 
   let payload;
   try {
-    payload = verify(token, process.env.REFRESH_TOKEN_SECRET!) as MyPayload;
+    payload = verify(
+      token,
+      process.env.REFRESH_TOKEN_SECRET!
+    ) as RefreshTokenPayload;
   } catch (err) {
     console.error(err);
     return res.send({ ok: false, accessToken: '' });
@@ -35,5 +38,6 @@ export function sendRefreshToken(res: Response<any>, token: string) {
   res.cookie('jid', token, {
     httpOnly: true,
     maxAge: __maxAge__,
+    sameSite: 'lax',
   });
 }

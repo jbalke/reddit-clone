@@ -3,7 +3,6 @@ import {
   Ctx,
   Field,
   ID,
-  Int,
   ObjectType,
   Query,
   Resolver,
@@ -32,7 +31,7 @@ export class HelloResolver {
 
   @Query(() => PayloadResponse)
   @UseMiddleware(isAuth)
-  ping(@Ctx() { jwt }: MyContext): PayloadResponse {
+  token(@Ctx() { jwt }: MyContext): PayloadResponse {
     return { jwt: jwt! };
   }
 }

@@ -9,7 +9,7 @@ import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { __prod__ } from './constants';
 import { MyContext } from './types';
-import { refreshToken } from './tokens';
+import { handleRefreshToken } from './tokens';
 import { HelloResolver } from './resolvers/hello';
 
 const main = async () => {
@@ -20,8 +20,9 @@ const main = async () => {
   app.use(cookieParser());
 
   //* Routes
-  app.post('/refresh_token', refreshToken);
+  app.post('/refresh_token', handleRefreshToken);
 
+  //* Apollo Server setup
   const server = new ApolloServer({
     schema: await buildSchema({
       resolvers: [PostResolver, UserResolver, HelloResolver],

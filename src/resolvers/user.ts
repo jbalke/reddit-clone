@@ -5,11 +5,11 @@ import {
   Field,
   ID,
   InputType,
-  Int,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
@@ -17,6 +17,7 @@ import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../auth';
 import { __maxAge__ } from '../constants';
 import { sendRefreshToken } from '../tokens';
+import { isAuth } from '../middleware/isAuth';
 
 @InputType()
 class UserRegisterInput {
@@ -57,6 +58,12 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true })
+  @UseMiddleware(isAuth)
+  me(@Ctx() { jwt }: MyContext): Promise<User | undefined> {
+    return User.findOne({ id: jwt!.userId });
+  }
+
   @Query(() => [User])
   users(): Promise<User[]> {
     return User.find();
@@ -145,15 +152,8 @@ export class UserResolver {
       };
     }
     try {
-      if (await argon2.verify(user.password, options.password)) {
-        // password match
-        sendRefreshToken(res, createRefreshToken(user));
-
-        return {
-          user,
-          accessToken: createAccessToken(user),
-        };
-      } else {
+      const valid = await argon2.verify(user.password, options.password);
+      if (!valid) {
         // password did not match
         return {
           errors: [{ field: 'username/password', message: 'incorrect' }],
@@ -162,6 +162,14 @@ export class UserResolver {
     } catch (err) {
       throw new Error(err.message);
     }
+
+    // password match
+    sendRefreshToken(res, createRefreshToken(user));
+
+    return {
+      user,
+      accessToken: createAccessToken(user),
+    };
   }
 
   //! Don't do this in production, revoke tokens when user changes password or triggers 'forget password' flow.
