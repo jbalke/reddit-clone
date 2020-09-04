@@ -11,10 +11,13 @@ import {
 import Wrapper from '../components/Wrapper';
 import InputField from '../components/InputField';
 import { useRegisterMutation } from '../generated/graphql';
+import { toErrorMap } from '../utils/toErrorMap';
+import { useRouter } from 'next/router';
 
 type registerProps = {};
 
 function register(props: registerProps) {
+  const router = useRouter();
   const [, register] = useRegisterMutation();
   return (
     <Wrapper size="small">
@@ -24,8 +27,14 @@ function register(props: registerProps) {
           email: '',
           password: '',
         }}
-        onSubmit={async (values, actions) => {
+        onSubmit={async (values, { setErrors }) => {
           const response = await register(values);
+          if (response.data?.register.errors) {
+            setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            // succesfully registered
+            router.push('/');
+          }
         }}
       >
         {({ isSubmitting }) => (
