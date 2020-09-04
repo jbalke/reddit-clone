@@ -102,6 +102,13 @@ export class UserResolver {
         message: 'password length must be greater than six',
       });
     }
+
+    if (errors.length !== 0) {
+      return {
+        errors,
+      };
+    }
+
     const existingUsername = await User.findOne({
       username_lookup: username.toLowerCase(),
     });
@@ -117,7 +124,7 @@ export class UserResolver {
       errors.push({ field: 'email', message: 'already registered' });
     }
 
-    if (errors.length != 0) {
+    if (errors.length !== 0) {
       return {
         errors,
       };
