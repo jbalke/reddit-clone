@@ -16,7 +16,7 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { MyContext } from '../types';
-import { isAuth } from '../middleware/isAuth';
+import { auth } from '../middleware/auth';
 import { User } from '../entities/User';
 
 @Resolver((of) => Post)
@@ -37,11 +37,11 @@ export class PostResolver {
   // }
 
   @Mutation(() => Post)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(auth)
   createPost(
     @Arg('title') title: string,
     @Arg('authorID', () => Int) authorID: number,
-    @Ctx() { jwt }: MyContext
+    @Ctx() { creds }: MyContext
   ): Promise<Post> {
     const post = new Post();
     post.title = title;
@@ -49,11 +49,11 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
-  @UseMiddleware(isAuth)
+  @UseMiddleware(auth)
   async updatePost(
     @Arg('id', () => ID) id: string,
     @Arg('title', () => String, { nullable: true }) title: string,
-    @Ctx() { jwt }: MyContext
+    @Ctx() { creds }: MyContext
   ): Promise<Post | undefined> {
     const result = await getConnection()
       .createQueryBuilder()
@@ -70,7 +70,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(isAuth)
+  @UseMiddleware(auth)
   async deletePost(@Arg('id', () => ID) id: string): Promise<Boolean> {
     const result = await getConnection()
       .createQueryBuilder()

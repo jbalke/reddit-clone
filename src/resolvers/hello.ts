@@ -8,7 +8,7 @@ import {
   Resolver,
   UseMiddleware,
 } from 'type-graphql';
-import { isAuth } from '../middleware/isAuth';
+import { auth } from '../middleware/auth';
 
 @ObjectType()
 class Payload implements AccessTokenPayload {
@@ -30,8 +30,8 @@ export class HelloResolver {
   }
 
   @Query(() => PayloadResponse)
-  @UseMiddleware(isAuth)
-  token(@Ctx() { jwt }: MyContext): PayloadResponse {
-    return { jwt: jwt! };
+  @UseMiddleware(auth)
+  token(@Ctx() { creds }: MyContext): PayloadResponse {
+    return { jwt: creds! };
   }
 }

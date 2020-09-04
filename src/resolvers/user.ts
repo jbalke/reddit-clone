@@ -17,7 +17,7 @@ import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../auth';
 import { __maxAge__ } from '../constants';
 import { sendRefreshToken } from '../tokens';
-import { isAuth } from '../middleware/isAuth';
+import { auth } from '../middleware/auth';
 
 @InputType()
 class UserRegisterInput {
@@ -59,9 +59,9 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
   @Query(() => User, { nullable: true })
-  @UseMiddleware(isAuth)
-  me(@Ctx() { jwt }: MyContext): Promise<User | undefined> {
-    return User.findOne({ id: jwt!.userId });
+  @UseMiddleware(auth)
+  me(@Ctx() { creds }: MyContext): Promise<User | undefined> {
+    return User.findOne({ id: creds!.userId });
   }
 
   @Query(() => [User])
@@ -76,34 +76,37 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async register(
-    @Arg('options') options: UserRegisterInput
+    @Arg('options') options: UserRegisterInput,
+    @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
+    const errors = [];
+    const emailRE = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!emailRE.test(options.email)) {
+      errors.push({
+        field: 'email',
+        message: 'does not appear to be a valid email address',
+      });
+    }
+
     const username = options.username.replace(' ', '').trim();
     if (username.length <= 2) {
-      return {
-        errors: [
-          {
-            field: 'username',
-            message: 'must contain three or more characters',
-          },
-        ],
-      };
+      errors.push({
+        field: 'username',
+        message: 'username must contain three or more characters',
+      });
     }
 
     if (options.password.length <= 6) {
-      return {
-        errors: [
-          { field: 'password', message: 'length must be greater than six' },
-        ],
-      };
+      errors.push({
+        field: 'password',
+        message: 'password length must be greater than six',
+      });
     }
     const existingUsername = await User.findOne({
       username_lookup: username.toLowerCase(),
     });
     if (existingUsername) {
-      return {
-        errors: [{ field: 'username', message: 'not available' }],
-      };
+      errors.push({ field: 'username', message: 'username not available' });
     }
 
     const existingEmail = await User.findOne({
@@ -111,8 +114,12 @@ export class UserResolver {
     });
 
     if (existingEmail) {
+      errors.push({ field: 'email', message: 'already registered' });
+    }
+
+    if (errors.length != 0) {
       return {
-        errors: [{ field: 'email', message: 'already registered' }],
+        errors,
       };
     }
 
@@ -129,13 +136,15 @@ export class UserResolver {
 
     try {
       await user.save();
-      return {
-        user,
-      };
     } catch (err) {
       console.error(err);
-      throw new Error('Internal server error: unable to create user');
+      throw new Error(`unable to create user`);
     }
+
+    sendRefreshToken(res, createRefreshToken(user));
+    return {
+      user,
+    };
   }
 
   @Mutation(() => UserResponse)
