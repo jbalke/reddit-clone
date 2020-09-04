@@ -121,7 +121,7 @@ export class UserResolver {
     });
 
     if (existingEmail) {
-      errors.push({ field: 'email', message: 'already registered' });
+      errors.push({ field: 'email', message: 'email already registered' });
     }
 
     if (errors.length !== 0) {
