@@ -1,0 +1,9 @@
+mutation Login($emailOrUsername: String!, $password: String!) {
+  login(options: { emailOrUsername: $emailOrUsername, password: $password }) {
+    errors {
+      message
+      field
+    }
+    accessToken
+  }
+}

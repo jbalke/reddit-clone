@@ -7,14 +7,43 @@ import {
   FormErrorMessage,
   Box,
   Button,
+  FormHelperText,
 } from '@chakra-ui/core';
 import Wrapper from '../components/Wrapper';
 import InputField from '../components/InputField';
 import { useRegisterMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
+import { emailRE } from '../constants';
 
 type registerProps = {};
+
+interface Credentials {
+  username: string;
+  email: string;
+  password: string;
+}
+const validate = (values: Credentials) => {
+  const errors: any = {};
+  if (!values.username) {
+    errors.username = 'Required';
+  } else if (values.username.length < 3) {
+    errors.username = 'Must be 3 characters or more';
+  }
+
+  if (!values.email) {
+    errors.email = 'Required';
+  } else if (!emailRE.test(values.email)) {
+    errors.email = 'Invalid email address';
+  }
+
+  if (!values.password) {
+    errors.password = 'Required';
+  } else if (values.password.length <= 6) {
+    errors.password = 'Password length must be greater than 6';
+  }
+  return errors;
+};
 
 function register(props: registerProps) {
   const router = useRouter();
@@ -27,6 +56,7 @@ function register(props: registerProps) {
           email: '',
           password: '',
         }}
+        validate={validate}
         onSubmit={async (values, { setErrors }) => {
           const response = await register(values);
           if (response.data?.register.errors) {
@@ -45,6 +75,9 @@ function register(props: registerProps) {
                 name="email"
                 placeholder="email address"
               />
+              <FormHelperText id="email-helper-text">
+                We'll never share your email.
+              </FormHelperText>
               <Box mt={4}>
                 <InputField
                   label="Username"
