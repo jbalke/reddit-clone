@@ -15,12 +15,18 @@ import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../auth';
-import { __maxAge__ } from '../constants';
+import { emailRE, __maxAge__ } from '../constants';
 import { sendRefreshToken } from '../tokens';
 import { auth } from '../middleware/auth';
 
+interface Credentials {
+  username: string;
+  email: string;
+  password: string;
+}
+
 @InputType()
-class UserRegisterInput {
+class UserRegisterInput implements Credentials {
   @Field()
   username: string;
   @Field()
@@ -31,7 +37,7 @@ class UserRegisterInput {
 @InputType()
 class UserLoginInput {
   @Field()
-  username: string;
+  emailOrUsername: string;
   @Field()
   password: string;
 }
@@ -79,38 +85,15 @@ export class UserResolver {
     @Arg('options') options: UserRegisterInput,
     @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
-    const errors = [];
-    const emailRE = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-    if (!emailRE.test(options.email)) {
-      errors.push({
-        field: 'email',
-        message: 'does not appear to be a valid email address',
-      });
-    }
-
-    const username = options.username.replace(' ', '').trim();
-    if (username.length <= 2) {
-      errors.push({
-        field: 'username',
-        message: 'username must contain three or more characters',
-      });
-    }
-
-    if (options.password.length <= 6) {
-      errors.push({
-        field: 'password',
-        message: 'password length must be greater than six',
-      });
-    }
+    options.username = options.username.replace(' ', '').trim();
+    const errors = validateCredentials(options);
 
     if (errors.length !== 0) {
-      return {
-        errors,
-      };
+      return { errors };
     }
 
     const existingUsername = await User.findOne({
-      username_lookup: username.toLowerCase(),
+      username_lookup: options.username.toLowerCase(),
     });
     if (existingUsername) {
       errors.push({ field: 'username', message: 'username not available' });
@@ -131,8 +114,8 @@ export class UserResolver {
     }
 
     const user = new User();
-    user.username = username;
-    user.username_lookup = username.toLowerCase();
+    user.username = options.username;
+    user.username_lookup = options.username.toLowerCase();
     user.email = options.email.toLowerCase();
     try {
       const hashedPassword = await argon2.hash(options.password);
@@ -159,12 +142,38 @@ export class UserResolver {
     @Arg('options') options: UserLoginInput,
     @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
-    const user = await User.findOne({
-      username_lookup: options.username.toLowerCase().trim(),
-    });
+    let errors: FieldError[];
+    const emailOrUsername = options.emailOrUsername.trim().toLowerCase();
+
+    let user = null;
+    if (emailRE.test(emailOrUsername)) {
+      errors = validateCredentials({
+        password: options.password,
+      });
+      if (errors.length !== 0) {
+        return { errors };
+      }
+
+      user = await User.findOne({
+        email: emailOrUsername,
+      });
+    } else {
+      errors = validateCredentials({
+        username: emailOrUsername,
+        password: options.password,
+      });
+      if (errors.length !== 0) {
+        return { errors };
+      }
+
+      user = await User.findOne({
+        username_lookup: emailOrUsername,
+      });
+    }
+
     if (!user) {
       return {
-        errors: [{ field: 'username/password', message: 'incorrect' }],
+        errors: [{ field: 'form', message: 'Incorrect login details.' }],
       };
     }
     try {
@@ -172,7 +181,7 @@ export class UserResolver {
       if (!valid) {
         // password did not match
         return {
-          errors: [{ field: 'username/password', message: 'incorrect' }],
+          errors: [{ field: 'form', message: 'Incorrect login details.' }],
         };
       }
     } catch (err) {
@@ -239,4 +248,34 @@ export class UserResolver {
       throw new Error(err.message);
     }
   }
+}
+
+function validateCredentials({
+  email,
+  username,
+  password,
+}: Partial<Credentials>): FieldError[] {
+  const errors: FieldError[] = [];
+  if (email && !emailRE.test(email)) {
+    errors.push({
+      field: 'email',
+      message: 'does not appear to be a valid email address',
+    });
+  }
+
+  if (username && username.length <= 2) {
+    errors.push({
+      field: 'username',
+      message: 'username must contain 3 or more characters',
+    });
+  }
+
+  if (password && password.length <= 6) {
+    errors.push({
+      field: 'password',
+      message: 'password length must be greater than 6',
+    });
+  }
+
+  return errors;
 }
