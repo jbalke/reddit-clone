@@ -34,7 +34,6 @@ const addTokenToOperation = (operation: Operation, token: string) => {
           ...fetchOptions.headers,
           authorization: token ? `Bearer ${token}` : '',
         },
-        credentials: 'include',
       },
     },
   };
