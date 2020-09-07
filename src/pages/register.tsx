@@ -1,21 +1,12 @@
 import React from 'react';
 import { Form, Formik } from 'formik';
-import {
-  FormControl,
-  FormLabel,
-  Input,
-  FormErrorMessage,
-  Box,
-  Button,
-  FormHelperText,
-} from '@chakra-ui/core';
+import { FormControl, Button, FormHelperText, Box } from '@chakra-ui/core';
 import Wrapper from '../components/Wrapper';
 import InputField from '../components/InputField';
 import { useRegisterMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
-import { emailRE } from '../constants';
-import Header from '../components/Header';
+import { __emailRE__ } from '../constants';
 
 type registerProps = {};
 
@@ -34,7 +25,7 @@ const validate = (values: Credentials) => {
 
   if (!values.email) {
     errors.email = 'Required';
-  } else if (!emailRE.test(values.email)) {
+  } else if (!__emailRE__.test(values.email)) {
     errors.email = 'Invalid email address';
   }
 

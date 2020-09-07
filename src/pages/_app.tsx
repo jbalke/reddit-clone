@@ -1,4 +1,4 @@
-import { ThemeProvider, CSSReset, DefaultTheme, Box } from '@chakra-ui/core';
+import { ThemeProvider, CSSReset, Box } from '@chakra-ui/core';
 import { useEffect, useState } from 'react';
 import {
   createClient,
@@ -15,20 +15,7 @@ import { useRouter } from 'next/router';
 
 import theme from '../theme';
 import Header from '../components/Header';
-import { Breakpoints } from '../types';
 
-const breakpoints: Breakpoints = ['360px', '768px', '1024px', '1440px'];
-breakpoints.sm = breakpoints[0];
-breakpoints.md = breakpoints[1];
-breakpoints.lg = breakpoints[2];
-breakpoints.xl = breakpoints[3];
-
-const myTheme: DefaultTheme = {
-  ...theme,
-  breakpoints,
-};
-
-// None of these options have to be added, these are the default values.
 const options = {
   initialDelayMs: 1000,
   maxDelayMs: 15000,
@@ -49,9 +36,9 @@ const client = createClient({
 
     return {
       headers: {
-        credentials: 'include',
         authorization: token ? `Bearer ${token}` : '',
       },
+      credentials: 'include',
     };
   },
   exchanges: [
@@ -91,10 +78,9 @@ function MyApp({ Component, pageProps }: any) {
 
   return (
     <Provider value={client}>
-      <ThemeProvider theme={myTheme}>
+      <ThemeProvider theme={theme}>
         <CSSReset />
         <Header />
-        {loading && <Box>loading...</Box>}
         <Component {...pageProps} />
       </ThemeProvider>
     </Provider>

@@ -12,8 +12,8 @@ import {
   merge,
 } from 'wonka';
 import {
+  clearAccessToken,
   getAccessToken,
-  invalidateAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
 } from './accessToken';
@@ -32,7 +32,8 @@ const addTokenToOperation = (operation: Operation, token: string) => {
         ...fetchOptions,
         headers: {
           ...fetchOptions.headers,
-          authorization: `Bearer ${token}`,
+          authorization: token ? `Bearer ${token}` : '',
+          credentials: 'include',
         },
       },
     },
@@ -101,11 +102,10 @@ export const authExchange = (): Exchange => ({ forward }) => {
       forward,
       onPush((result) => {
         if (
-          result.error &&
-          result.error
-            .networkError /* TODO: also add a check for 401 Unauthorized here! */
+          result.error?.networkError ||
+          result.error?.graphQLErrors.some((e) => e.message == 'token expired')
         ) {
-          invalidateAccessToken(); // here you'd invalidate your local token synchronously
+          clearAccessToken(); // here you'd invalidate your local token synchronously
           // this is so our pretend `isAccessTokenExpired()` function returns `true` next time around
         }
       })

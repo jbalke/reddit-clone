@@ -14,9 +14,8 @@ import InputField from '../components/InputField';
 import { useLoginMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
-import { emailRE } from '../constants';
+import { __emailRE__ } from '../constants';
 import { setAccessToken } from '../accessToken';
-import Header from '../components/Header';
 
 type loginProps = {};
 
@@ -95,13 +94,14 @@ interface Credentials {
   emailOrUsername: string;
   password: string;
 }
+
 const validate = (values: any) => {
   const errors: FormikErrors<Credentials> = {};
 
   if (!values.emailOrUsername) {
     errors.emailOrUsername = 'Required';
   } else if (
-    !emailRE.test(values.emailOrUsername) &&
+    !__emailRE__.test(values.emailOrUsername) &&
     values.emailOrUsername.length < 3
   ) {
     errors.emailOrUsername = 'Username must be 3 characters or more';

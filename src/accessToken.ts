@@ -31,7 +31,7 @@ export function isAccessTokenExpired(): boolean {
   return decoded.exp * 1000 <= Date.now();
 }
 
-export function invalidateAccessToken() {
+export function clearAccessToken() {
   accessToken = '';
 }
 
@@ -50,7 +50,7 @@ export async function refreshAccessToken(): Promise<string> {
     if (data.ok) {
       setAccessToken(data.accessToken);
     } else {
-      invalidateAccessToken();
+      clearAccessToken();
     }
   } catch (err) {
     console.error(err);
