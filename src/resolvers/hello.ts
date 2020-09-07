@@ -31,7 +31,7 @@ export class HelloResolver {
 
   @Query(() => PayloadResponse)
   @UseMiddleware(auth)
-  token(@Ctx() { creds }: MyContext): PayloadResponse {
-    return { jwt: creds! };
+  token(@Ctx() { user }: MyContext): PayloadResponse {
+    return { jwt: user! };
   }
 }

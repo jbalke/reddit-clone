@@ -9,7 +9,7 @@ import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { __prod__ } from './constants';
 import { MyContext } from './types';
-import { handleRefreshToken } from './tokens';
+import { handleRefreshToken } from './handlers/tokens';
 import { HelloResolver } from './resolvers/hello';
 import cors from 'cors';
 
@@ -30,7 +30,7 @@ const main = async () => {
       resolvers: [PostResolver, UserResolver, HelloResolver],
       validate: false,
     }),
-    context: ({ req, res }: MyContext) => ({ req, res }),
+    context: ({ req, res, user }: MyContext) => ({ req, res, user }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.
   app.listen(PORT, () => {

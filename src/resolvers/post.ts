@@ -41,7 +41,7 @@ export class PostResolver {
   createPost(
     @Arg('title') title: string,
     @Arg('authorID', () => Int) authorID: number,
-    @Ctx() { creds }: MyContext
+    @Ctx() { user }: MyContext
   ): Promise<Post> {
     const post = new Post();
     post.title = title;
@@ -53,7 +53,7 @@ export class PostResolver {
   async updatePost(
     @Arg('id', () => ID) id: string,
     @Arg('title', () => String, { nullable: true }) title: string,
-    @Ctx() { creds }: MyContext
+    @Ctx() { user }: MyContext
   ): Promise<Post | undefined> {
     const result = await getConnection()
       .createQueryBuilder()

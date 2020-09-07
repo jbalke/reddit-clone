@@ -14,9 +14,9 @@ import {
 import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from '../types';
-import { createAccessToken, createRefreshToken } from '../auth';
+import { createAccessToken, createRefreshToken } from '../tokens';
 import { emailRE, __maxAge__ } from '../constants';
-import { sendRefreshToken } from '../tokens';
+import { sendRefreshToken } from '../handlers/tokens';
 import { auth } from '../middleware/auth';
 
 interface Credentials {
@@ -66,8 +66,8 @@ class UserResponse {
 export class UserResolver {
   @Query(() => User, { nullable: true })
   @UseMiddleware(auth)
-  me(@Ctx() { creds }: MyContext): Promise<User | undefined> {
-    return User.findOne({ id: creds!.userId });
+  me(@Ctx() { user }: MyContext): Promise<User | undefined> {
+    return User.findOne({ id: user!.userId });
   }
 
   @Query(() => [User])

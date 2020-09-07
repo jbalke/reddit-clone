@@ -13,5 +13,5 @@ export interface AccessTokenPayload {
 export interface MyContext {
   req: Request;
   res: Response;
-  creds?: AccessTokenPayload;
+  user?: AccessTokenPayload;
 }

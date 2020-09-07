@@ -1,28 +1,33 @@
 import { verify } from 'jsonwebtoken';
 import { AccessTokenPayload, MyContext } from '../types';
 import { MiddlewareFn } from 'type-graphql';
+import { bearerRE } from '../constants';
+import { AuthenticationError } from 'apollo-server-express';
 
 export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
-  const bearerRE = /^Bearer\s([A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+\/=]*)$/i;
   const authorization = context.req.headers['authorization'];
 
   if (!authorization) {
-    throw new Error('missing authoriztion header');
+    throw new AuthenticationError('missing authorization header');
   }
 
-  const token = authorization.match(bearerRE);
-  if (!token) {
-    throw new Error('invalid token');
+  const tokenRegExMatch = authorization.match(bearerRE);
+
+  if (!tokenRegExMatch) {
+    throw new AuthenticationError('invalid token');
   }
 
-  const payload = verify(token[1], process.env.ACCESS_TOKEN_SECRET!);
+  const token = tokenRegExMatch[1];
   try {
+    const payload = verify(token, process.env.ACCESS_TOKEN_SECRET!);
     if (typeof payload === 'object') {
-      context.creds = payload as AccessTokenPayload;
+      context.user = payload as AccessTokenPayload;
     }
   } catch (err) {
-    console.error(err);
-    throw new Error('not authenticated');
+    if (err.name === 'TokenExpiredError') {
+      throw new AuthenticationError('token expired');
+    }
+    throw new AuthenticationError('not authenticated');
   }
 
   return next();
