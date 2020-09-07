@@ -1,7 +1,7 @@
 import { verify } from 'jsonwebtoken';
 import { AccessTokenPayload, MyContext } from '../types';
 import { MiddlewareFn } from 'type-graphql';
-import { bearerRE } from '../constants';
+import { ACCESS_TOKEN_SECRET, __bearerRE__ } from '../constants';
 import { AuthenticationError } from 'apollo-server-express';
 
 export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
@@ -11,7 +11,7 @@ export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
     throw new AuthenticationError('missing authorization header');
   }
 
-  const tokenRegExMatch = authorization.match(bearerRE);
+  const tokenRegExMatch = authorization.match(__bearerRE__);
 
   if (!tokenRegExMatch) {
     throw new AuthenticationError('invalid token');
@@ -19,7 +19,7 @@ export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
 
   const token = tokenRegExMatch[1];
   try {
-    const payload = verify(token, process.env.ACCESS_TOKEN_SECRET!);
+    const payload = verify(token, ACCESS_TOKEN_SECRET);
     if (typeof payload === 'object') {
       context.user = payload as AccessTokenPayload;
     }

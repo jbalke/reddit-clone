@@ -15,10 +15,9 @@ import { getConnection } from 'typeorm';
 import argon2 from 'argon2';
 import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../tokens';
-import { emailRE, __maxAge__ } from '../constants';
+import { __emailRE__, __maxAge__ } from '../constants';
 import { sendRefreshToken } from '../handlers/tokens';
 import { auth } from '../middleware/auth';
-
 interface Credentials {
   username: string;
   email: string;
@@ -146,7 +145,7 @@ export class UserResolver {
     const emailOrUsername = options.emailOrUsername.trim().toLowerCase();
 
     let user = null;
-    if (emailRE.test(emailOrUsername)) {
+    if (__emailRE__.test(emailOrUsername)) {
       errors = validateCredentials({
         password: options.password,
       });
@@ -256,7 +255,7 @@ function validateCredentials({
   password,
 }: Partial<Credentials>): FieldError[] {
   const errors: FieldError[] = [];
-  if (email && !emailRE.test(email)) {
+  if (email && !__emailRE__.test(email)) {
     errors.push({
       field: 'email',
       message: 'does not appear to be a valid email address',

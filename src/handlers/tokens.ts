@@ -1,22 +1,24 @@
 import { Request, Response } from 'express';
 import { verify } from 'jsonwebtoken';
-import { __maxAge__ } from '../constants';
+import {
+  __maxAge__,
+  COOKIE_NAME,
+  REFRESH_TOKEN_SECRET,
+  __prod__,
+} from '../constants';
 import { createAccessToken, createRefreshToken } from '../tokens';
 import { User } from '../entities/User';
 import { RefreshTokenPayload } from '../types';
 
 export async function handleRefreshToken(req: Request, res: Response) {
-  const token = req.cookies.jid;
+  const token = req.cookies[COOKIE_NAME];
   if (!token) {
     return res.send({ ok: false, accessToken: '' });
   }
 
   let payload;
   try {
-    payload = verify(
-      token,
-      process.env.REFRESH_TOKEN_SECRET!
-    ) as RefreshTokenPayload;
+    payload = verify(token, REFRESH_TOKEN_SECRET) as RefreshTokenPayload;
   } catch (err) {
     console.error(err);
     return res.send({ ok: false, accessToken: '' });
@@ -36,9 +38,14 @@ export async function handleRefreshToken(req: Request, res: Response) {
 }
 
 export function sendRefreshToken(res: Response, token: string) {
-  res.cookie('jid', token, {
+  res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     maxAge: __maxAge__,
     sameSite: 'lax',
+    secure: __prod__,
   });
+}
+
+export function handleLogout(_req: Request, res: Response) {
+  return res.clearCookie(COOKIE_NAME).send({ ok: true });
 }
