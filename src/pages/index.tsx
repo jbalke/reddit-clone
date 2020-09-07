@@ -1,14 +1,4 @@
-import {
-  Link as ChakraLink,
-  Text,
-  Code,
-  Icon,
-  List,
-  ListIcon,
-  ListItem,
-  Box,
-} from '@chakra-ui/core';
-import Link from 'next/link';
+import { Box } from '@chakra-ui/core';
 import Header from '../components/Header';
 
 const Index = () => (

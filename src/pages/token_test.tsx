@@ -12,15 +12,14 @@ function token_test(props: token_testProps) {
 
   const { data, fetching, error } = result;
 
-  if (fetching) return <p>Loading...</p>;
-  if (error) return <p>Oh no... {error.message}</p>;
-
   return (
     <div>
       <Header />
       <Box mt={5}>
         <h2>Token Test</h2>
-        <pre>{JSON.stringify(data?.token.jwt)}</pre>
+        {fetching && <p>Loading...</p>}
+        {error && <p>Oh no... {error.message}</p>}
+        {data && <pre>{JSON.stringify(data.token.jwt)}</pre>}
       </Box>
     </div>
   );
