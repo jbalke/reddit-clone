@@ -12,13 +12,16 @@
     "@chakra-ui/core": "^0.5.2",
     "@emotion/core": "^10.0.27",
     "@emotion/styled": "^10.0.27",
+    "@urql/exchange-retry": "^0.1.8",
     "emotion-theming": "^10.0.27",
     "formik": "^2.1.5",
     "graphql": "^15.3.0",
+    "jwt-decode": "^2.2.0",
     "next": "^9.1.7",
     "react": "^16.12.0",
     "react-dom": "^16.12.0",
-    "urql": "^1.10.0"
+    "urql": "^1.10.0",
+    "wonka": "^4.0.14"
   },
   "license": "MIT",
   "devDependencies": {
@@ -26,6 +29,7 @@
     "@graphql-codegen/typescript": "1.17.8",
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@graphql-codegen/typescript-urql": "^2.0.1",
+    "@types/jwt-decode": "^2.2.1",
     "@types/node": "^14.6.3",
     "typescript": "^4.0.2"
   }

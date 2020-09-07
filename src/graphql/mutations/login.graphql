@@ -1,5 +1,5 @@
-mutation Login($emailOrUsername: String!, $password: String!) {
-  login(options: { emailOrUsername: $emailOrUsername, password: $password }) {
+mutation Login($options: UserLoginInput!) {
+  login(options: $options) {
     errors {
       message
       field
@@ -7,3 +7,13 @@ mutation Login($emailOrUsername: String!, $password: String!) {
     accessToken
   }
 }
+
+# mutation Login($emailOrUsername: String!, $password: String!) {
+#   login(options: { emailOrUsername: $emailOrUsername, password: $password }) {
+#     errors {
+#       message
+#       field
+#     }
+#     accessToken
+#   }
+# }

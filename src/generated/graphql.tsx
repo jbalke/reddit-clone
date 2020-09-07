@@ -137,8 +137,7 @@ export type UserLoginInput = {
 };
 
 export type LoginMutationVariables = Exact<{
-  emailOrUsername: Scalars['String'];
-  password: Scalars['String'];
+  options: UserLoginInput;
 }>;
 
 
@@ -175,10 +174,24 @@ export type RegisterMutation = (
   ) }
 );
 
+export type TestTokenQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type TestTokenQuery = (
+  { __typename?: 'Query' }
+  & { token: (
+    { __typename?: 'PayloadResponse' }
+    & { jwt?: Maybe<(
+      { __typename?: 'Payload' }
+      & Pick<Payload, 'userId' | 'isAdmin'>
+    )> }
+  ) }
+);
+
 
 export const LoginDocument = gql`
-    mutation Login($emailOrUsername: String!, $password: String!) {
-  login(options: {emailOrUsername: $emailOrUsername, password: $password}) {
+    mutation Login($options: UserLoginInput!) {
+  login(options: $options) {
     errors {
       message
       field
@@ -208,4 +221,18 @@ export const RegisterDocument = gql`
 
 export function useRegisterMutation() {
   return Urql.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument);
+};
+export const TestTokenDocument = gql`
+    query TestToken {
+  token {
+    jwt {
+      userId
+      isAdmin
+    }
+  }
+}
+    `;
+
+export function useTestTokenQuery(options: Omit<Urql.UseQueryArgs<TestTokenQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<TestTokenQuery>({ query: TestTokenDocument, ...options });
 };
