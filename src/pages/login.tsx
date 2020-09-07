@@ -25,72 +25,69 @@ function login(props: loginProps) {
   const [, login] = useLoginMutation();
 
   return (
-    <>
-      <Header />
-      <Wrapper size="small">
-        <Formik
-          initialValues={{
-            emailOrUsername: '',
-            password: '',
-            form: '',
-          }}
-          validate={validate}
-          onSubmit={async (values, { setErrors }) => {
-            const response = await login({
-              options: {
-                emailOrUsername: values.emailOrUsername,
-                password: values.password,
-              },
-            }); //* compare login.graphql and register.graphql for different ways to declare mutation/query variables
-            if (response && response.data) {
-              const { login } = response.data;
-              if (login.errors) {
-                setErrors(toErrorMap(login.errors));
-              } else if (login.accessToken) {
-                // succesfully registered
-                setAccessToken(login.accessToken);
-                router.push('/');
-              }
+    <Wrapper size="small">
+      <Formik
+        initialValues={{
+          emailOrUsername: '',
+          password: '',
+          form: '',
+        }}
+        validate={validate}
+        onSubmit={async (values, { setErrors }) => {
+          const response = await login({
+            options: {
+              emailOrUsername: values.emailOrUsername,
+              password: values.password,
+            },
+          }); //* compare login.graphql and register.graphql for different ways to declare mutation/query variables
+          if (response && response.data) {
+            const { login } = response.data;
+            if (login.errors) {
+              setErrors(toErrorMap(login.errors));
+            } else if (login.accessToken) {
+              // succesfully registered
+              setAccessToken(login.accessToken);
+              router.push('/');
             }
-          }}
-        >
-          {({ isSubmitting, errors }) => (
-            <Form>
-              <FormControl>
+          }
+        }}
+      >
+        {({ isSubmitting, errors }) => (
+          <Form>
+            <FormControl>
+              <InputField
+                label="Email or Username"
+                name="emailOrUsername"
+                placeholder="email address or username"
+              />
+              <Box mt={4}>
                 <InputField
-                  label="Email or Username"
-                  name="emailOrUsername"
-                  placeholder="email address or username"
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="password"
                 />
-                <Box mt={4}>
-                  <InputField
-                    label="Password"
-                    name="password"
-                    type="password"
-                    placeholder="password"
-                  />
-                </Box>
-                <Button
-                  mt={4}
-                  isLoading={isSubmitting}
-                  type="submit"
-                  variantColor="teal"
-                >
-                  Login
-                </Button>
-                {errors.form && (
-                  <Alert mt={5} status="error">
-                    <AlertIcon />
-                    <AlertTitle mr={2}>Login failed!</AlertTitle>
-                    <AlertDescription>{errors.form}</AlertDescription>
-                  </Alert>
-                )}
-              </FormControl>
-            </Form>
-          )}
-        </Formik>
-      </Wrapper>
-    </>
+              </Box>
+              <Button
+                mt={4}
+                isLoading={isSubmitting}
+                type="submit"
+                variantColor="teal"
+              >
+                Login
+              </Button>
+              {errors.form && (
+                <Alert mt={5} status="error">
+                  <AlertIcon />
+                  <AlertTitle mr={2}>Login failed!</AlertTitle>
+                  <AlertDescription>{errors.form}</AlertDescription>
+                </Alert>
+              )}
+            </FormControl>
+          </Form>
+        )}
+      </Formik>
+    </Wrapper>
   );
 }
 

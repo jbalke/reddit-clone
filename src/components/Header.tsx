@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { Box, Heading, Flex, Text, Button } from '@chakra-ui/core';
 import { NextChakraLink } from './NextChakraLink';
+import Link from 'next/link';
 
 type MenuItemProps = {
   children: ReactNode;
@@ -50,30 +51,27 @@ const Header = (props: HeaderProps) => {
       <Box
         display={{ sm: show ? 'block' : 'none', md: 'flex' }}
         width={{ sm: 'full', md: 'auto' }}
+        justifyContent="space-between"
         alignItems="center"
         flexGrow={1}
       >
-        <MenuItems>
-          <NextChakraLink href="/">Home</NextChakraLink>
-        </MenuItems>
-        <MenuItems>
-          <NextChakraLink href="/register">Register</NextChakraLink>
-        </MenuItems>
-        <MenuItems>
-          <NextChakraLink href="/login">Login</NextChakraLink>
-        </MenuItems>
-        <MenuItems>
-          <NextChakraLink href="/token_test">Token Test</NextChakraLink>
-        </MenuItems>
-      </Box>
+        <Box display={{ sm: 'block', md: 'flex' }}>
+          <MenuItems>
+            <NextChakraLink href="/">Home</NextChakraLink>
+          </MenuItems>
+          <MenuItems>
+            <NextChakraLink href="/token_test">Token Test</NextChakraLink>
+          </MenuItems>
+        </Box>
 
-      <Box
-        display={{ sm: show ? 'block' : 'none', md: 'block' }}
-        mt={{ base: 4, md: 0 }}
-      >
-        <Button bg="transparent" border="1px">
-          Create account
-        </Button>
+        <Box display={{ sm: 'block', md: 'flex' }}>
+          <MenuItems>
+            <NextChakraLink href="/register">Register</NextChakraLink>
+          </MenuItems>
+          <MenuItems>
+            <NextChakraLink href="/login">Login</NextChakraLink>
+          </MenuItems>
+        </Box>
       </Box>
     </Flex>
   );
