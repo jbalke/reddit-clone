@@ -1,16 +1,15 @@
 import React, { ReactNode, useState } from 'react';
 import { Box, Heading, Flex, Text, Button } from '@chakra-ui/core';
 import { NextChakraLink } from './NextChakraLink';
-import { useMeQuery } from '../generated/graphql';
+import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { clearAccessToken } from '../accessToken';
 import { useRouter } from 'next/router';
+
+type HeaderProps = {};
 
 type MenuItemProps = {
   children: ReactNode;
 };
-
-type HeaderProps = {};
-
 const MenuItems = ({ children }: MenuItemProps) => (
   <Text mt={{ base: 4, sm: 0, md: 0 }} mr={6} display="block">
     {children}
@@ -22,28 +21,21 @@ const Header = (props: HeaderProps) => {
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [result, reexecuteQuery] = useMeQuery({
-    requestPolicy: 'network-only',
-  });
+  const [{ data, fetching, error }] = useMeQuery({});
+  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = ({ router }: any) => async () => {
-    const response = await fetch('http://localhost:4000/logout', {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const result = await logout();
 
-    reexecuteQuery({ requestPolicy: 'network-only' });
-
-    const data = await response.json();
-    if (data.ok) {
+    if (result.data?.logout) {
       clearAccessToken();
       router.push('/logout');
     }
   };
 
   let authBody = null;
-  if (result.fetching) {
-  } else if (!result.data?.me) {
+  if (fetching) {
+  } else if (data && !data.me) {
     authBody = (
       <>
         <MenuItems>
@@ -54,7 +46,7 @@ const Header = (props: HeaderProps) => {
         </MenuItems>
       </>
     );
-  } else {
+  } else if (data && data.me) {
     authBody = (
       <Box display={{ sm: 'block', md: 'flex' }} justifyContent="space-between">
         <Box
@@ -63,10 +55,14 @@ const Header = (props: HeaderProps) => {
           borderBottom={{ sm: '2px white solid', md: 'none' }}
           paddingBottom={{ sm: '4px', md: '0' }}
         >
-          Logged in as {result.data.me.username}
+          Logged in as {data.me.username}
         </Box>
         <Box pl={{ sm: '0', md: '4px' }}>
-          <Button variant="link" onClick={handleLogout({ router })}>
+          <Button
+            variant="link"
+            onClick={handleLogout({ router })}
+            isLoading={logoutFetching}
+          >
             Logout
           </Button>
         </Box>
@@ -114,9 +110,12 @@ const Header = (props: HeaderProps) => {
           <MenuItems>
             <NextChakraLink href="/">Home</NextChakraLink>
           </MenuItems>
-          <MenuItems>
-            <NextChakraLink href="/token_test">Token Test</NextChakraLink>
-          </MenuItems>
+
+          {!!data?.me && (
+            <MenuItems>
+              <NextChakraLink href="/token_test">Token Test</NextChakraLink>
+            </MenuItems>
+          )}
         </Box>
 
         <Box display={{ sm: 'block', md: 'flex' }}>{authBody}</Box>

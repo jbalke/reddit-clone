@@ -6,7 +6,7 @@ import { useTestTokenQuery } from '../generated/graphql';
 type token_testProps = {};
 
 function token_test(props: token_testProps) {
-  const [{ data, fetching, error }, rexecuteQuery] = useTestTokenQuery({
+  const [{ data, fetching, error }] = useTestTokenQuery({
     requestPolicy: 'network-only',
   });
 
