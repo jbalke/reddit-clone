@@ -46,6 +46,6 @@ export function sendRefreshToken(res: Response, token: string) {
   });
 }
 
-export function handleLogout(_req: Request, res: Response) {
-  return res.clearCookie(COOKIE_NAME).send({ ok: true });
+export function clearRefreshCookie(res: Response) {
+  res.clearCookie(COOKIE_NAME);
 }

@@ -16,8 +16,9 @@ import argon2 from 'argon2';
 import { MyContext } from '../types';
 import { createAccessToken, createRefreshToken } from '../tokens';
 import { __emailRE__, __maxAge__ } from '../constants';
-import { sendRefreshToken } from '../handlers/tokens';
+import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
 import { auth } from '../middleware/auth';
+
 interface Credentials {
   username: string;
   email: string;
@@ -194,6 +195,12 @@ export class UserResolver {
       user,
       accessToken: createAccessToken(user),
     };
+  }
+
+  @Mutation(() => Boolean)
+  logout(@Ctx() { res }: MyContext) {
+    clearRefreshCookie(res);
+    return true;
   }
 
   //! Don't do this in production, revoke tokens when user changes password or triggers 'forget password' flow.

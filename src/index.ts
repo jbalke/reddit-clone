@@ -8,7 +8,7 @@ import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { __prod__, __port__ } from './constants';
 import { MyContext } from './types';
-import { handleLogout, handleRefreshToken } from './handlers/tokens';
+import { handleRefreshToken } from './handlers/tokens';
 import { HelloResolver } from './resolvers/hello';
 import cors from 'cors';
 
@@ -20,7 +20,6 @@ const main = async () => {
 
   //* Routes
   app.post('/refresh_token', cookieParser(), handleRefreshToken);
-  app.post('/logout', handleLogout);
 
   //* Apollo Server setup
   const server = new ApolloServer({
