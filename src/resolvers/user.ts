@@ -11,12 +11,16 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
 import { __emailRE__ } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
 import { auth } from '../middleware/auth';
-import { createAccessToken, createRefreshToken } from '../tokens';
+import {
+  createAccessToken,
+  createPasswordResetToken,
+  createRefreshToken,
+  verifyPasswordRestToken,
+} from '../tokens';
 import { MyContext } from '../types';
 import { hashPassword, verifyPasswordHash } from '../utils/passwords';
 import { sendEmail } from '../utils/sendEmail';
@@ -69,9 +73,9 @@ class UserResponse {
 export class UserResolver {
   @Mutation(() => UserResponse)
   async changePassword(
+    @Arg('userId') userId: string,
     @Arg('token') token: string,
-    @Arg('newPassword') newPassword: string,
-    @Ctx() {}
+    @Arg('newPassword') newPassword: string
   ) {
     const errors = validateCredentials({ password: newPassword });
     if (errors.length > 0) {
@@ -80,17 +84,8 @@ export class UserResolver {
       };
     }
 
-    const user = await User.findOne({ where: { passwordResetToken: token } });
+    const user = await User.findOne({ id: userId });
     if (!user) {
-      return {
-        errors: [{ field: 'form', message: 'Token is invalid' }],
-      };
-    }
-    if (user.passwordResetTokenExpiry!.getTime() < Date.now()) {
-      user.passwordResetToken = null;
-      user.passwordResetTokenExpiry = null;
-      await user.save();
-
       return {
         errors: [
           {
@@ -101,10 +96,19 @@ export class UserResolver {
       };
     }
 
-    const hashedPassword = await hashPassword(newPassword);
-    user.password = hashedPassword;
-    user.passwordResetToken = null;
-    user.passwordResetTokenExpiry = null;
+    const isValidToken = verifyPasswordRestToken(user, token);
+    if (!isValidToken) {
+      return {
+        errors: [
+          {
+            field: 'form',
+            message: 'Token has expired',
+          },
+        ],
+      };
+    }
+
+    user.password = await hashPassword(newPassword);
     await user.save();
 
     return {
@@ -120,16 +124,8 @@ export class UserResolver {
       return true; //* so as not to tip off malicous actors
     }
 
-    const resetToken = uuidv4();
-    const resetPasswordURL = `http://localhost:3000/password-reset/${resetToken}`;
-
-    // const jwt = createPasswordResetToken(user, resetToken);
-
-    user.passwordResetToken = resetToken;
-
-    let expiry = Date.now() + 1000 * 60 * 60 * 24 * 3; //* 3 days
-    user.passwordResetTokenExpiry = new Date(expiry);
-    await user.save();
+    const jwt = createPasswordResetToken(user, '1h');
+    const resetPasswordURL = `http://localhost:3000/password-reset/${user.id}/${jwt}`;
 
     await sendEmail({
       to: user.email,
@@ -214,8 +210,6 @@ If you did not request a password reset, you can safely ignore this email.
       console.error(err);
       throw new Error(`unable to create user`);
     }
-
-    //TODO: store unique id to verify this user's email address
 
     sendEmail({
       to: user.email,

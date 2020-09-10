@@ -1,10 +1,6 @@
 import { User } from './entities/User';
 import { sign } from 'jsonwebtoken';
-import {
-  ACCESS_TOKEN_SECRET,
-  PASSWORD_RESET_TOKEN_SECRET,
-  REFRESH_TOKEN_SECRET,
-} from './constants';
+import { ACCESS_TOKEN_SECRET, REFRESH_TOKEN_SECRET } from './constants';
 import { verify } from 'jsonwebtoken';
 
 type ResetTokenPayload = {
@@ -12,20 +8,28 @@ type ResetTokenPayload = {
   resetToken: string;
 };
 
-export const createPasswordResetToken = (user: User, resetToken: string) => {
-  return sign({ userId: user.id, resetToken }, PASSWORD_RESET_TOKEN_SECRET, {
-    expiresIn: '1d',
+/** Returns a json web token containing the user's id
+ *
+ * @param user user object
+ * @param expiry Token expiry, defaults to '1d'
+ */
+export const createPasswordResetToken = (
+  user: User,
+  expiry: string | number | undefined = '1d'
+) => {
+  const secret = user.password + '-' + user.createdAt.getTime();
+  return sign({ userId: user.id }, secret, {
+    expiresIn: expiry,
   });
 };
 
-export const isPasswordResetTokenValid = (
-  token: string,
-  resetToken: string
-): boolean => {
+export const verifyPasswordRestToken = (user: User, token: string): boolean => {
+  const secret = user.password + '-' + user.createdAt.getTime();
+
   let payload;
   try {
-    payload = verify(token, PASSWORD_RESET_TOKEN_SECRET) as ResetTokenPayload;
-    return payload.userId === resetToken;
+    payload = verify(token, secret) as ResetTokenPayload;
+    return payload.userId === user.id;
   } catch (error) {
     return false;
   }

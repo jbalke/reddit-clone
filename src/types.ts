@@ -1,5 +1,9 @@
 import { Request, Response } from 'express';
 
+export interface PasswordResetTokenPayload {
+  userId: string;
+}
+
 export interface RefreshTokenPayload {
   userId: string;
   tokenVersion: number;

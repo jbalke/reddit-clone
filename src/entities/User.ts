@@ -48,11 +48,4 @@ export class User extends BaseEntity {
 
   @Column('int', { default: 0 })
   tokenVersion: number;
-
-  @Index()
-  @Column('text', { nullable: true })
-  passwordResetToken: string | null;
-
-  @Column('timestamp', { nullable: true })
-  passwordResetTokenExpiry: Date | null;
 }

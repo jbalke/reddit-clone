@@ -43,6 +43,7 @@ export function sendRefreshToken(res: Response, token: string) {
     maxAge: __maxAge__,
     sameSite: 'strict',
     secure: __prod__,
+    path: '/refresh_token',
   });
 }
 
