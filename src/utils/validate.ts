@@ -58,13 +58,8 @@ function validateEmailOrUsername(emailOrUsername: string, errors: any) {
   if (!emailOrUsername) {
     errors.emailOrUsername = 'Required';
   } else if (!__emailRE__.test(emailOrUsername)) {
-    if (emailOrUsername.length < 3) {
-      errors.emailOrUsername = 'Username must be 3 characters or more';
-    } else if (
-      emailOrUsername.split('').some((c) => __invalidCharacters__.includes(c))
-    ) {
-      errors.emailOrUsername = __invalidCharactersMessage__;
-    }
+    validateUsername(emailOrUsername, errors);
+    errors.emailOrUsername = errors.username;
   }
 }
 
