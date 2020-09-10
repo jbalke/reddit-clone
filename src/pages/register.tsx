@@ -1,41 +1,14 @@
-import React from 'react';
+import { Box, Button, FormControl, FormHelperText } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { FormControl, Button, FormHelperText, Box } from '@chakra-ui/core';
-import Wrapper from '../components/Wrapper';
+import { useRouter } from 'next/router';
+import React from 'react';
 import InputField from '../components/InputField';
+import Wrapper from '../components/Wrapper';
 import { useRegisterMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
-import { useRouter } from 'next/router';
-import { __emailRE__ } from '../constants';
+import { validateRegisterInput } from '../utils/validate';
 
 type registerProps = {};
-
-interface Credentials {
-  username: string;
-  email: string;
-  password: string;
-}
-const validate = (values: Credentials) => {
-  const errors: any = {};
-  if (!values.username) {
-    errors.username = 'Required';
-  } else if (values.username.length < 3) {
-    errors.username = 'Must be 3 characters or more';
-  }
-
-  if (!values.email) {
-    errors.email = 'Required';
-  } else if (!__emailRE__.test(values.email)) {
-    errors.email = 'Invalid email address';
-  }
-
-  if (!values.password) {
-    errors.password = 'Required';
-  } else if (values.password.length <= 6) {
-    errors.password = 'Password length must be greater than 6';
-  }
-  return errors;
-};
 
 function register(props: registerProps) {
   const router = useRouter();
@@ -48,9 +21,11 @@ function register(props: registerProps) {
           email: '',
           password: '',
         }}
-        validate={validate}
+        validate={validateRegisterInput}
         onSubmit={async (values, { setErrors }) => {
-          const response = await register(values);
+          const response = await register({
+            options: values,
+          });
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
           } else if (response.data?.register.user) {
@@ -66,6 +41,7 @@ function register(props: registerProps) {
                 label="Email"
                 name="email"
                 placeholder="email address"
+                type="email"
               />
               <FormHelperText id="email-helper-text">
                 We'll never share your email.
@@ -76,6 +52,9 @@ function register(props: registerProps) {
                   name="username"
                   placeholder="username"
                 />
+                <FormHelperText id="username-helper-text">
+                  This is visible to other users.
+                </FormHelperText>
               </Box>
               <Box mt={4}>
                 <InputField
@@ -101,5 +80,4 @@ function register(props: registerProps) {
     </Wrapper>
   );
 }
-
 export default register;

@@ -1,9 +1,10 @@
-import React, { ReactNode, useState } from 'react';
-import { Box, Heading, Flex, Text, Button } from '@chakra-ui/core';
-import { NextChakraLink } from './NextChakraLink';
-import { useLogoutMutation, useMeQuery } from '../generated/graphql';
-import { clearAccessToken } from '../accessToken';
+import { Box, Button, Flex, Heading } from '@chakra-ui/core';
 import { useRouter } from 'next/router';
+import React, { ReactNode, useState } from 'react';
+import { clearAccessToken } from '../accessToken';
+import { useLogoutMutation, useMeQuery } from '../generated/graphql';
+import { isServer } from '../utils/isServer';
+import { NextChakraLink } from './NextChakraLink';
 
 type HeaderProps = {};
 
@@ -11,9 +12,9 @@ type MenuItemProps = {
   children: ReactNode;
 };
 const MenuItems = ({ children }: MenuItemProps) => (
-  <Text mt={{ base: 4, sm: 0, md: 0 }} mr={6} display="block">
+  <Box mt={{ base: 4, sm: 0, md: 0 }} mr={6} display="block">
     {children}
-  </Text>
+  </Box>
 );
 
 const Header = (props: HeaderProps) => {
@@ -21,7 +22,7 @@ const Header = (props: HeaderProps) => {
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [{ data, fetching, error }] = useMeQuery({});
+  const [{ data, fetching, error }] = useMeQuery({ pause: isServer() }); //* Pause query is server-side rendered (nextjs server doesn't have tokens to query graphql)
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = ({ router }: any) => async () => {
@@ -33,10 +34,10 @@ const Header = (props: HeaderProps) => {
     }
   };
 
-  let authBody = null;
+  let authLinks = null;
   if (fetching) {
   } else if (data && !data.me) {
-    authBody = (
+    authLinks = (
       <>
         <MenuItems>
           <NextChakraLink href="/register">Register</NextChakraLink>
@@ -47,7 +48,7 @@ const Header = (props: HeaderProps) => {
       </>
     );
   } else if (data && data.me) {
-    authBody = (
+    authLinks = (
       <Box display={{ sm: 'block', md: 'flex' }} justifyContent="space-between">
         <Box
           pr={2}
@@ -60,6 +61,8 @@ const Header = (props: HeaderProps) => {
         <Box pl={{ sm: '0', md: '4px' }}>
           <Button
             variant="link"
+            color="white"
+            verticalAlign="baseline"
             onClick={handleLogout({ router })}
             isLoading={logoutFetching}
           >
@@ -118,7 +121,7 @@ const Header = (props: HeaderProps) => {
           )}
         </Box>
 
-        <Box display={{ sm: 'block', md: 'flex' }}>{authBody}</Box>
+        <Box display={{ sm: 'block', md: 'flex' }}>{authLinks}</Box>
       </Box>
     </Flex>
   );

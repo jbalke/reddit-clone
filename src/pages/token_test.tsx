@@ -1,7 +1,9 @@
 import { Box } from '@chakra-ui/core';
+import { withUrqlClient } from 'next-urql';
 import React from 'react';
 import Header from '../components/Header';
 import { useTestTokenQuery } from '../generated/graphql';
+import { getClientConfig } from '../utils/urqlConfig';
 
 type token_testProps = {};
 
@@ -20,4 +22,4 @@ function token_test(props: token_testProps) {
   );
 }
 
-export default token_test;
+export default withUrqlClient(getClientConfig)(token_test);

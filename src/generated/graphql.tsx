@@ -39,19 +39,21 @@ export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
   title: Scalars['String'];
+  author?: Maybe<User>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
 };
-
 
 export type User = {
   __typename?: 'User';
   id: Scalars['ID'];
   username: Scalars['String'];
   email: Scalars['String'];
+  posts: Array<Post>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
 };
+
 
 export type PayloadResponse = {
   __typename?: 'PayloadResponse';
@@ -69,6 +71,8 @@ export type Mutation = {
   createPost: Post;
   updatePost?: Maybe<Post>;
   deletePost: Scalars['Boolean'];
+  changePassword: UserResponse;
+  forgotPassword: Scalars['Boolean'];
   register: UserResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
@@ -78,7 +82,7 @@ export type Mutation = {
 
 
 export type MutationCreatePostArgs = {
-  authorID: Scalars['Int'];
+  authorID: Scalars['String'];
   title: Scalars['String'];
 };
 
@@ -91,6 +95,17 @@ export type MutationUpdatePostArgs = {
 
 export type MutationDeletePostArgs = {
   id: Scalars['ID'];
+};
+
+
+export type MutationChangePasswordArgs = {
+  newPassword: Scalars['String'];
+  token: Scalars['String'];
+};
+
+
+export type MutationForgotPasswordArgs = {
+  email: Scalars['String'];
 };
 
 
@@ -142,6 +157,26 @@ export type RegularUserFragment = (
   & Pick<User, 'id' | 'username'>
 );
 
+export type ChangePasswordMutationVariables = Exact<{
+  newPassword: Scalars['String'];
+  token: Scalars['String'];
+}>;
+
+
+export type ChangePasswordMutation = (
+  { __typename?: 'Mutation' }
+  & { changePassword: (
+    { __typename?: 'UserResponse' }
+    & { errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & Pick<FieldError, 'field' | 'message'>
+    )>>, user?: Maybe<(
+      { __typename?: 'User' }
+      & Pick<User, 'username'>
+    )> }
+  ) }
+);
+
 export type LoginMutationVariables = Exact<{
   options: UserLoginInput;
 }>;
@@ -171,9 +206,7 @@ export type LogoutMutation = (
 );
 
 export type RegisterMutationVariables = Exact<{
-  username: Scalars['String'];
-  email: Scalars['String'];
-  password: Scalars['String'];
+  options: UserRegisterInput;
 }>;
 
 
@@ -202,6 +235,17 @@ export type MeQuery = (
   )> }
 );
 
+export type PostsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type PostsQuery = (
+  { __typename?: 'Query' }
+  & { posts: Array<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'createdAt' | 'updatedAt' | 'title'>
+  )> }
+);
+
 export type TestTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -222,6 +266,23 @@ export const RegularUserFragmentDoc = gql`
   username
 }
     `;
+export const ChangePasswordDocument = gql`
+    mutation ChangePassword($newPassword: String!, $token: String!) {
+  changePassword(newPassword: $newPassword, token: $token) {
+    errors {
+      field
+      message
+    }
+    user {
+      username
+    }
+  }
+}
+    `;
+
+export function useChangePasswordMutation() {
+  return Urql.useMutation<ChangePasswordMutation, ChangePasswordMutationVariables>(ChangePasswordDocument);
+};
 export const LoginDocument = gql`
     mutation Login($options: UserLoginInput!) {
   login(options: $options) {
@@ -250,8 +311,8 @@ export function useLogoutMutation() {
   return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(LogoutDocument);
 };
 export const RegisterDocument = gql`
-    mutation Register($username: String!, $email: String!, $password: String!) {
-  register(options: {username: $username, email: $email, password: $password}) {
+    mutation Register($options: UserRegisterInput!) {
+  register(options: $options) {
     errors {
       field
       message
@@ -276,6 +337,20 @@ export const MeDocument = gql`
 
 export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
+};
+export const PostsDocument = gql`
+    query Posts {
+  posts {
+    id
+    createdAt
+    updatedAt
+    title
+  }
+}
+    `;
+
+export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
 };
 export const TestTokenDocument = gql`
     query TestToken {

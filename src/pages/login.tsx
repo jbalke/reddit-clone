@@ -1,21 +1,21 @@
-import React from 'react';
-import { Form, Formik, FormikErrors } from 'formik';
 import {
-  FormControl,
-  Box,
-  Button,
-  AlertDescription,
   Alert,
+  AlertDescription,
   AlertIcon,
   AlertTitle,
+  Box,
+  Button,
+  FormControl,
 } from '@chakra-ui/core';
-import Wrapper from '../components/Wrapper';
+import { Form, Formik } from 'formik';
+import { useRouter } from 'next/router';
+import React from 'react';
+import { setAccessToken } from '../accessToken';
 import InputField from '../components/InputField';
+import Wrapper from '../components/Wrapper';
 import { useLoginMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
-import { useRouter } from 'next/router';
-import { __emailRE__ } from '../constants';
-import { setAccessToken } from '../accessToken';
+import { validateLoginInput } from '../utils/validate';
 
 type loginProps = {};
 
@@ -31,14 +31,14 @@ function login(props: loginProps) {
           password: '',
           form: '',
         }}
-        validate={validate}
+        validate={validateLoginInput}
         onSubmit={async (values, { setErrors }) => {
           const response = await login({
             options: {
               emailOrUsername: values.emailOrUsername,
               password: values.password,
             },
-          }); //* compare login.graphql and register.graphql for different ways to declare mutation/query variables
+          });
           if (response && response.data) {
             const { login } = response.data;
             if (login.errors) {
@@ -89,30 +89,5 @@ function login(props: loginProps) {
     </Wrapper>
   );
 }
-
-interface Credentials {
-  emailOrUsername: string;
-  password: string;
-}
-
-const validate = (values: any) => {
-  const errors: FormikErrors<Credentials> = {};
-
-  if (!values.emailOrUsername) {
-    errors.emailOrUsername = 'Required';
-  } else if (
-    !__emailRE__.test(values.emailOrUsername) &&
-    values.emailOrUsername.length < 3
-  ) {
-    errors.emailOrUsername = 'Username must be 3 characters or more';
-  }
-
-  if (!values.password) {
-    errors.password = 'Required';
-  } else if (values.password.length <= 6) {
-    errors.password = 'Password length must be greater than 6';
-  }
-  return errors;
-};
 
 export default login;
