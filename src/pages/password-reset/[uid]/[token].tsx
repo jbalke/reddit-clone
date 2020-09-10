@@ -9,18 +9,20 @@ import {
 import { Form, Formik } from 'formik';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
-import React from 'react';
-import InputField from '../../components/InputField';
-import Wrapper from '../../components/Wrapper';
-import { useChangePasswordMutation } from '../../generated/graphql';
-import { toErrorMap } from '../../utils/toErrorMap';
-import { validatePasswordInput } from '../../utils/validate';
+import React, { useState } from 'react';
+import InputField from '../../../components/InputField';
+import Wrapper from '../../../components/Wrapper';
+import { useChangePasswordMutation } from '../../../generated/graphql';
+import { toErrorMap } from '../../../utils/toErrorMap';
+import { validatePasswordInput } from '../../../utils/validate';
 
 interface Props {
+  userId: string;
   token: string;
 }
 
-const PasswordReset = ({ token }: Props) => {
+const PasswordReset = ({ userId, token }: Props) => {
+  const [hasSubmitted, setSubmitted] = useState(false);
   const [{ data }, changePassword] = useChangePasswordMutation();
   const router = useRouter();
 
@@ -35,14 +37,14 @@ const PasswordReset = ({ token }: Props) => {
         onSubmit={async (values, { setErrors }) => {
           const response = await changePassword({
             newPassword: values.password,
-            token: token,
+            token,
+            userId,
           });
           if (response?.data) {
+            setSubmitted(true);
             const { changePassword } = response.data;
             if (changePassword.errors) {
               setErrors(toErrorMap(changePassword.errors));
-            } else {
-              router.push('/login');
             }
           }
         }}
@@ -55,12 +57,14 @@ const PasswordReset = ({ token }: Props) => {
                 name="password"
                 placeholder="new password"
                 type="password"
+                disabled={hasSubmitted}
               />
               <Button
                 mt={4}
                 isLoading={isSubmitting}
                 type="submit"
                 variantColor="teal"
+                isDisabled={hasSubmitted}
               >
                 change password
               </Button>
@@ -71,7 +75,7 @@ const PasswordReset = ({ token }: Props) => {
                   <AlertDescription>{errors.form}</AlertDescription>
                 </Alert>
               )}
-              {data && !errors.form && (
+              {hasSubmitted && !errors.form && (
                 <Alert mt={5} status="success">
                   <AlertIcon />
                   <AlertTitle mr={2}>Success!</AlertTitle>
@@ -93,6 +97,7 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
 }) => {
   return {
     props: {
+      userId: query.uid as string,
       token: query.token as string,
     },
   };
