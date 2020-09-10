@@ -58,8 +58,8 @@ function validateEmailOrUsername(emailOrUsername: string, errors: any) {
   if (!emailOrUsername) {
     errors.emailOrUsername = 'Required';
   } else if (!__emailRE__.test(emailOrUsername)) {
-    validateUsername(emailOrUsername, errors);
-    errors.emailOrUsername = errors.username;
+    const error = validateUsername(emailOrUsername);
+    if (error) errors.emailOrUsername = error;
   }
 }
 
@@ -79,14 +79,22 @@ function validateEmail(email: string, errors: any) {
   }
 }
 
-function validateUsername(username: string, errors: any) {
+function validateUsername(username: string, errors?: any) {
+  let errorMsg: string | null = null;
+
   if (!username) {
-    errors.username = 'Required';
+    errorMsg = 'Required';
   } else if (username.length < 3) {
-    errors.username = 'Must be 3 characters or more';
+    errorMsg = 'Must be 3 characters or more';
   } else if (
     username.split('').some((c) => __invalidCharacters__.includes(c))
   ) {
-    errors.username = __invalidCharactersMessage__;
+    errorMsg = __invalidCharactersMessage__;
   }
+
+  if (typeof errors === 'object' && errorMsg) {
+    errors.username = errorMsg;
+  }
+
+  return errorMsg;
 }

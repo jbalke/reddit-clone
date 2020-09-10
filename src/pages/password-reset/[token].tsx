@@ -24,7 +24,6 @@ const PasswordReset = ({ token }: Props) => {
   const [{ data }, changePassword] = useChangePasswordMutation();
   const router = useRouter();
 
-  //TODO notify when password changed successfully
   return (
     <Wrapper size="small">
       <Formik
