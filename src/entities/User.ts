@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   BaseEntity,
   OneToMany,
+  Index,
 } from 'typeorm';
 import { Post } from './Post';
 
@@ -21,19 +22,21 @@ export class User extends BaseEntity {
   @Column()
   username!: string;
 
-  @Column({ unique: true })
+  @Index({ unique: true })
+  @Column()
   username_lookup: string;
 
+  @Index({ unique: true })
   @Field()
-  @Column('text', { unique: true })
+  @Column('text')
   email!: string;
 
   @Column('text')
   password!: string;
 
-  // @Field(() => [Post])
-  // @OneToMany(type => Post, post => post.author)
-  // posts: Post[];
+  @Field(() => [Post])
+  @OneToMany((type) => Post, (post) => post.author)
+  posts: Post[];
 
   @Field()
   @UpdateDateColumn()
@@ -45,4 +48,11 @@ export class User extends BaseEntity {
 
   @Column('int', { default: 0 })
   tokenVersion: number;
+
+  @Index()
+  @Column('text', { nullable: true })
+  passwordResetToken: string | null;
+
+  @Column('timestamp', { nullable: true })
+  passwordResetTokenExpiry: Date | null;
 }

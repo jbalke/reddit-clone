@@ -41,7 +41,7 @@ export function sendRefreshToken(res: Response, token: string) {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     maxAge: __maxAge__,
-    sameSite: 'lax',
+    sameSite: 'strict',
     secure: __prod__,
   });
 }

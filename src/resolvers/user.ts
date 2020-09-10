@@ -1,4 +1,3 @@
-import { User } from '../entities/User';
 import {
   Arg,
   Ctx,
@@ -12,14 +11,18 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import argon2 from 'argon2';
-import { MyContext } from '../types';
-import { createAccessToken, createRefreshToken } from '../tokens';
-import { __emailRE__, __maxAge__ } from '../constants';
+import { v4 as uuidv4 } from 'uuid';
+import { __emailRE__ } from '../constants';
+import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
 import { auth } from '../middleware/auth';
+import { createAccessToken, createRefreshToken } from '../tokens';
+import { MyContext } from '../types';
+import { hashPassword, verifyPasswordHash } from '../utils/passwords';
+import { sendEmail } from '../utils/sendEmail';
+import { validateCredentials } from './validateCredentials';
 
-interface Credentials {
+export interface Credentials {
   username: string;
   email: string;
   password: string;
@@ -43,7 +46,7 @@ class UserLoginInput {
 }
 
 @ObjectType()
-class FieldError {
+export class FieldError {
   @Field()
   field: string;
   @Field()
@@ -64,6 +67,87 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => UserResponse)
+  async changePassword(
+    @Arg('token') token: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() {}
+  ) {
+    const errors = validateCredentials({ password: newPassword });
+    if (errors.length > 0) {
+      return {
+        errors,
+      };
+    }
+
+    const user = await User.findOne({ where: { passwordResetToken: token } });
+    if (!user) {
+      return {
+        errors: [{ field: 'form', message: 'Token is invalid' }],
+      };
+    }
+    if (user.passwordResetTokenExpiry!.getTime() < Date.now()) {
+      user.passwordResetToken = null;
+      user.passwordResetTokenExpiry = null;
+      await user.save();
+
+      return {
+        errors: [
+          {
+            field: 'form',
+            message: 'Token has expired',
+          },
+        ],
+      };
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    user.password = hashedPassword;
+    user.passwordResetToken = null;
+    user.passwordResetTokenExpiry = null;
+    await user.save();
+
+    return {
+      user,
+    };
+  }
+
+  @Mutation(() => Boolean)
+  async forgotPassword(@Arg('email') email: string, @Ctx() { res }: MyContext) {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return true; //* so as not to tip off malicous actors
+    }
+
+    const resetToken = uuidv4();
+    const resetPasswordURL = `http://localhost:3000/password-reset/${resetToken}`;
+
+    // const jwt = createPasswordResetToken(user, resetToken);
+
+    user.passwordResetToken = resetToken;
+
+    let expiry = Date.now() + 1000 * 60 * 60 * 24 * 3; //* 3 days
+    user.passwordResetTokenExpiry = new Date(expiry);
+    await user.save();
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Password Reset',
+      text: `A password reset has been triggered on your account, please copy and paste this link into your browser to rest your password:
+      
+${resetPasswordURL}
+
+If you did not request a password reset, you can safely ignore this email.
+      `,
+      html: `<p>A password reset has been triggered on your account, to continue click the following link:</p>
+      <p><a href="${resetPasswordURL}">Reset Password</a></p>
+      <p>If you did not request a password reset, you can safely ignore this email.</p>
+      `,
+    });
+    return true;
+  }
+
   @Query(() => User, { nullable: true })
   @UseMiddleware(auth)
   me(@Ctx() { user }: MyContext): Promise<User | undefined> {
@@ -118,7 +202,7 @@ export class UserResolver {
     user.username_lookup = options.username.toLowerCase();
     user.email = options.email.toLowerCase();
     try {
-      const hashedPassword = await argon2.hash(options.password);
+      const hashedPassword = await hashPassword(options.password);
       user.password = hashedPassword;
     } catch (err) {
       throw new Error(err.message);
@@ -130,6 +214,16 @@ export class UserResolver {
       console.error(err);
       throw new Error(`unable to create user`);
     }
+
+    //TODO: store unique id to verify this user's email address
+
+    sendEmail({
+      to: user.email,
+      subject: 'Please verify your email address',
+      text:
+        'Copy and paste this url into your browser to verify your email address: <>',
+      html: `<p>Please click the following link to verify your email address: <a href="#">verfiy email address</a></p>`,
+    });
 
     sendRefreshToken(res, createRefreshToken(user));
     return {
@@ -177,7 +271,7 @@ export class UserResolver {
       };
     }
     try {
-      const valid = await argon2.verify(user.password, options.password);
+      const valid = await verifyPasswordHash(user.password, options.password);
       if (!valid) {
         // password did not match
         return {
@@ -254,34 +348,4 @@ export class UserResolver {
       throw new Error(err.message);
     }
   }
-}
-
-function validateCredentials({
-  email,
-  username,
-  password,
-}: Partial<Credentials>): FieldError[] {
-  const errors: FieldError[] = [];
-  if (email && !__emailRE__.test(email)) {
-    errors.push({
-      field: 'email',
-      message: 'does not appear to be a valid email address',
-    });
-  }
-
-  if (username && username.length <= 2) {
-    errors.push({
-      field: 'username',
-      message: 'username must contain 3 or more characters',
-    });
-  }
-
-  if (password && password.length <= 6) {
-    errors.push({
-      field: 'password',
-      message: 'password length must be greater than 6',
-    });
-  }
-
-  return errors;
 }

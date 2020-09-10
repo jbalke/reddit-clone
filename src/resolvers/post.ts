@@ -1,28 +1,21 @@
-import { Post } from '../entities/Post';
 import {
   Arg,
   Ctx,
-  Field,
-  FieldResolver,
   ID,
-  Int,
   Mutation,
-  ObjectType,
   Query,
   Resolver,
-  ResolverInterface,
-  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { MyContext } from '../types';
+import { Post } from '../entities/Post';
 import { auth } from '../middleware/auth';
-import { User } from '../entities/User';
+import { MyContext } from '../types';
 
 @Resolver((of) => Post)
 export class PostResolver {
   @Query(() => [Post])
-  posts(): Promise<Post[]> {
+  async posts(): Promise<Post[]> {
     return Post.find({});
   }
 
@@ -40,7 +33,7 @@ export class PostResolver {
   @UseMiddleware(auth)
   createPost(
     @Arg('title') title: string,
-    @Arg('authorID', () => Int) authorID: number,
+    @Arg('authorID', () => String) authorID: string,
     @Ctx() { user }: MyContext
   ): Promise<Post> {
     const post = new Post();
