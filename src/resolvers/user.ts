@@ -75,7 +75,8 @@ export class UserResolver {
   async changePassword(
     @Arg('userId') userId: string,
     @Arg('token') token: string,
-    @Arg('newPassword') newPassword: string
+    @Arg('newPassword') newPassword: string,
+    @Ctx() { res }: MyContext
   ) {
     const errors = validateCredentials({ password: newPassword });
     if (errors.length > 0) {
@@ -89,7 +90,7 @@ export class UserResolver {
       return {
         errors: [
           {
-            field: 'form',
+            field: 'token',
             message: 'Token has expired',
           },
         ],
@@ -101,7 +102,7 @@ export class UserResolver {
       return {
         errors: [
           {
-            field: 'form',
+            field: 'token',
             message: 'Token has expired',
           },
         ],
@@ -111,13 +112,26 @@ export class UserResolver {
     user.password = await hashPassword(newPassword);
     await user.save();
 
+    // log user in
+    sendRefreshToken(res, createRefreshToken(user));
+
     return {
       user,
+      accessToken: createAccessToken(user),
     };
   }
 
   @Mutation(() => Boolean)
   async forgotPassword(@Arg('email') email: string, @Ctx() { res }: MyContext) {
+    email = email.trim().toLowerCase();
+    const errors = validateCredentials({ email });
+
+    console.log(errors);
+
+    if (errors.length !== 0) {
+      return false;
+    }
+
     const user = await User.findOne({ email });
 
     if (!user) {
@@ -179,8 +193,9 @@ If you did not request a password reset, you can safely ignore this email.
       errors.push({ field: 'username', message: 'username not available' });
     }
 
+    const email = options.email.trim().toLowerCase();
     const existingEmail = await User.findOne({
-      email: options.email.toLowerCase(),
+      email,
     });
 
     if (existingEmail) {
@@ -196,7 +211,7 @@ If you did not request a password reset, you can safely ignore this email.
     const user = new User();
     user.username = options.username;
     user.username_lookup = options.username.toLowerCase();
-    user.email = options.email.toLowerCase();
+    user.email = email;
     try {
       const hashedPassword = await hashPassword(options.password);
       user.password = hashedPassword;
@@ -222,6 +237,7 @@ If you did not request a password reset, you can safely ignore this email.
     sendRefreshToken(res, createRefreshToken(user));
     return {
       user,
+      accessToken: createAccessToken(user),
     };
   }
 
@@ -261,7 +277,7 @@ If you did not request a password reset, you can safely ignore this email.
 
     if (!user) {
       return {
-        errors: [{ field: 'form', message: 'Incorrect login details.' }],
+        errors: [{ field: 'login', message: 'Incorrect login details.' }],
       };
     }
     try {
@@ -269,7 +285,7 @@ If you did not request a password reset, you can safely ignore this email.
       if (!valid) {
         // password did not match
         return {
-          errors: [{ field: 'form', message: 'Incorrect login details.' }],
+          errors: [{ field: 'login', message: 'Incorrect login details.' }],
         };
       }
     } catch (err) {

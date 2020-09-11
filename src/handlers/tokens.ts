@@ -48,5 +48,7 @@ export function sendRefreshToken(res: Response, token: string) {
 }
 
 export function clearRefreshCookie(res: Response) {
-  res.clearCookie(COOKIE_NAME);
+  res.clearCookie(COOKIE_NAME, {
+    path: '/refresh_token',
+  });
 }
