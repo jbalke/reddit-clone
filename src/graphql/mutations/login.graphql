@@ -1,12 +1,5 @@
 mutation Login($options: UserLoginInput!) {
   login(options: $options) {
-    errors {
-      message
-      field
-    }
-    accessToken
-    user {
-      ...RegularUser
-    }
+    ...RegularUserResponse
   }
 }

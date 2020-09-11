@@ -54,6 +54,17 @@ export const validatePasswordInput = ({ password }: PasswordResetInput) => {
   return errors;
 };
 
+interface ForgotPasswordInput {
+  email: string;
+}
+
+export const validateForgotPasswordInput = ({ email }: ForgotPasswordInput) => {
+  const errors: FormikErrors<ForgotPasswordInput> = {};
+
+  validateEmail(email, errors);
+  return errors;
+};
+
 function validateEmailOrUsername(emailOrUsername: string, errors: any) {
   if (!emailOrUsername) {
     errors.emailOrUsername = 'Required';

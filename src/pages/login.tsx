@@ -5,13 +5,16 @@ import {
   AlertTitle,
   Box,
   Button,
+  Flex,
   FormControl,
+  Text,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useState } from 'react';
 import { setAccessToken } from '../accessToken';
 import InputField from '../components/InputField';
+import { NextChakraLink } from '../components/NextChakraLink';
 import Wrapper from '../components/Wrapper';
 import { useLoginMutation } from '../generated/graphql';
 import { toErrorMap } from '../utils/toErrorMap';
@@ -22,6 +25,7 @@ type loginProps = {};
 function login(props: loginProps) {
   const router = useRouter();
   const [, login] = useLoginMutation();
+  const [loginError, setLoginError] = useState('');
 
   return (
     <Wrapper size="small">
@@ -29,10 +33,10 @@ function login(props: loginProps) {
         initialValues={{
           emailOrUsername: '',
           password: '',
-          form: '',
         }}
         validate={validateLoginInput}
         onSubmit={async (values, { setErrors }) => {
+          setLoginError('');
           const response = await login({
             options: {
               emailOrUsername: values.emailOrUsername,
@@ -42,6 +46,10 @@ function login(props: loginProps) {
           if (response && response.data) {
             const { login } = response.data;
             if (login.errors) {
+              const errorMap = toErrorMap(login.errors);
+              if ('login' in errorMap) {
+                setLoginError(errorMap.login);
+              }
               setErrors(toErrorMap(login.errors));
             } else if (login.accessToken) {
               // succesfully registered
@@ -51,7 +59,7 @@ function login(props: loginProps) {
           }
         }}
       >
-        {({ isSubmitting, errors }) => (
+        {({ isSubmitting }) => (
           <Form>
             <FormControl>
               <InputField
@@ -67,19 +75,30 @@ function login(props: loginProps) {
                   placeholder="password"
                 />
               </Box>
-              <Button
-                mt={4}
-                isLoading={isSubmitting}
-                type="submit"
-                variantColor="teal"
-              >
-                Login
-              </Button>
-              {errors.form && (
+              <Flex justifyContent="space-between">
+                <Button
+                  mt={4}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                >
+                  Login
+                </Button>
+                <Box mt={2}>
+                  <NextChakraLink
+                    fontSize="sm"
+                    href="/forgot-password"
+                    color="teal.500"
+                  >
+                    forgot password?
+                  </NextChakraLink>
+                </Box>
+              </Flex>
+              {!!loginError && (
                 <Alert mt={5} status="error">
                   <AlertIcon />
                   <AlertTitle mr={2}>Login failed!</AlertTitle>
-                  <AlertDescription>{errors.form}</AlertDescription>
+                  <AlertDescription>{loginError}</AlertDescription>
                 </Alert>
               )}
             </FormControl>

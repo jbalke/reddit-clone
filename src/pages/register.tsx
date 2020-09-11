@@ -2,6 +2,7 @@ import { Box, Button, FormControl, FormHelperText } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { useRouter } from 'next/router';
 import React from 'react';
+import { setAccessToken } from '../accessToken';
 import InputField from '../components/InputField';
 import Wrapper from '../components/Wrapper';
 import { useRegisterMutation } from '../generated/graphql';
@@ -28,8 +29,9 @@ function register(props: registerProps) {
           });
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
-          } else if (response.data?.register.user) {
+          } else if (response.data?.register.accessToken) {
             // succesfully registered
+            setAccessToken(response.data?.register.accessToken);
             router.push('/');
           }
         }}

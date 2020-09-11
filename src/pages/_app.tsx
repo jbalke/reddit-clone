@@ -1,16 +1,12 @@
+import { CSSReset, ThemeProvider } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
-import { getClientConfig } from '../utils/urqlConfig';
-import { ThemeProvider, CSSReset } from '@chakra-ui/core';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { setAccessToken } from '../accessToken';
-import { useRouter } from 'next/router';
 import Header from '../components/Header';
 import theme from '../theme';
+import { getClientConfig } from '../utils/urqlConfig';
 
 function MyApp({ Component, pageProps }: any) {
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
-
   useEffect(() => {
     fetch('http://localhost:4000/refresh_token', {
       method: 'POST',
@@ -20,14 +16,10 @@ function MyApp({ Component, pageProps }: any) {
       .then((data) => {
         if (data.ok) {
           setAccessToken(data.accessToken);
-          setLoading(false);
-        } else {
-          setLoading(false);
         }
       })
       .catch((err) => {
         console.error(err);
-        setLoading(false);
       });
   }, []);
 

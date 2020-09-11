@@ -10,9 +10,12 @@ import { Form, Formik } from 'formik';
 import { GetServerSideProps } from 'next';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
+import { setAccessToken } from '../../../accessToken';
 import InputField from '../../../components/InputField';
+import { NextChakraLink } from '../../../components/NextChakraLink';
 import Wrapper from '../../../components/Wrapper';
 import { useChangePasswordMutation } from '../../../generated/graphql';
+import { isServer } from '../../../utils/isServer';
 import { toErrorMap } from '../../../utils/toErrorMap';
 import { validatePasswordInput } from '../../../utils/validate';
 
@@ -21,73 +24,83 @@ interface Props {
   token: string;
 }
 
-const PasswordReset = ({ userId, token }: Props) => {
-  const [hasSubmitted, setSubmitted] = useState(false);
-  const [{ data }, changePassword] = useChangePasswordMutation();
+const ChangePassword = ({ userId, token }: Props) => {
+  const [, changePassword] = useChangePasswordMutation();
+  const [tokenError, setTokenError] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+
   const router = useRouter();
 
   return (
     <Wrapper size="small">
-      <Formik
-        initialValues={{
-          password: '',
-          form: '',
-        }}
-        validate={validatePasswordInput}
-        onSubmit={async (values, { setErrors }) => {
-          const response = await changePassword({
-            newPassword: values.password,
-            token,
-            userId,
-          });
-          if (response?.data) {
-            setSubmitted(true);
-            const { changePassword } = response.data;
-            if (changePassword.errors) {
-              setErrors(toErrorMap(changePassword.errors));
+      {!!tokenError ? (
+        <Alert mt={5} status="error">
+          <AlertIcon />
+          <AlertTitle mr={2}>Token expired</AlertTitle>
+          <AlertDescription>
+            <NextChakraLink href="/forgot-password">
+              click here to get a new one
+            </NextChakraLink>
+          </AlertDescription>
+        </Alert>
+      ) : submitted ? (
+        <Alert mt={5} status="success">
+          <AlertIcon />
+          <AlertTitle mr={4}>Success!</AlertTitle>
+          {/* <AlertDescription>Your password has been changed.</AlertDescription> */}
+        </Alert>
+      ) : (
+        <Formik
+          initialValues={{
+            password: '',
+          }}
+          validate={validatePasswordInput}
+          onSubmit={async (values, { setErrors }) => {
+            const response = await changePassword({
+              newPassword: values.password,
+              token,
+              userId,
+            });
+            if (response?.data) {
+              setSubmitted(true);
+              const { changePassword } = response.data;
+              if (changePassword.errors) {
+                const errorMap = toErrorMap(changePassword.errors);
+                if ('token' in errorMap) {
+                  setTokenError(errorMap.token);
+                }
+                setErrors(errorMap);
+              } else if (response.data.changePassword.accessToken) {
+                setAccessToken(response.data.changePassword.accessToken);
+                router.push('/');
+              }
             }
-          }
-        }}
-      >
-        {({ isSubmitting, errors }) => (
-          <Form>
-            <FormControl>
-              <InputField
-                label="New Password"
-                name="password"
-                placeholder="new password"
-                type="password"
-                disabled={hasSubmitted}
-              />
-              <Button
-                mt={4}
-                isLoading={isSubmitting}
-                type="submit"
-                variantColor="teal"
-                isDisabled={hasSubmitted}
-              >
-                change password
-              </Button>
-              {errors.form && (
-                <Alert mt={5} status="error">
-                  <AlertIcon />
-                  <AlertTitle mr={2}>Password reset failed</AlertTitle>
-                  <AlertDescription>{errors.form}</AlertDescription>
-                </Alert>
-              )}
-              {hasSubmitted && !errors.form && (
-                <Alert mt={5} status="success">
-                  <AlertIcon />
-                  <AlertTitle mr={2}>Success!</AlertTitle>
-                  <AlertDescription>
-                    Your password has been changed.
-                  </AlertDescription>
-                </Alert>
-              )}
-            </FormControl>
-          </Form>
-        )}
-      </Formik>
+          }}
+        >
+          {({ isSubmitting, errors }) => (
+            <Form>
+              <FormControl>
+                <InputField
+                  label="New Password"
+                  name="password"
+                  placeholder="new password"
+                  type="password"
+                  disabled={!!tokenError}
+                />
+                <Button
+                  mt={4}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                  isDisabled={!!tokenError}
+                >
+                  change password
+                </Button>
+              </FormControl>
+            </Form>
+          )}
+        </Formik>
+      )}
     </Wrapper>
   );
 };
@@ -103,4 +116,4 @@ export const getServerSideProps: GetServerSideProps<Props> = async ({
   };
 };
 
-export default PasswordReset;
+export default ChangePassword;

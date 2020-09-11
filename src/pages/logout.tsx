@@ -10,7 +10,7 @@ function logout(props: logoutProps) {
 
   return (
     <Box m={5}>
-      <div>Good bye! {!fetching && <p>You are logged out.</p>}</div>
+      <div>Good bye! {data && <p>You are logged out.</p>}</div>
     </Box>
   );
 }
