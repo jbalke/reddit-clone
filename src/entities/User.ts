@@ -28,10 +28,10 @@ export class User extends BaseEntity {
 
   @Index({ unique: true })
   @Field()
-  @Column('text')
+  @Column()
   email!: string;
 
-  @Column('text')
+  @Column()
   password!: string;
 
   @Field(() => [Post])

@@ -16,12 +16,12 @@ import { MyContext } from '../types';
 export class PostResolver {
   @Query(() => [Post])
   async posts(): Promise<Post[]> {
-    return Post.find({});
+    return Post.find();
   }
 
   @Query(() => Post, { nullable: true })
   post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
-    return Post.findOne({ id });
+    return Post.findOne(id);
   }
 
   // @FieldResolver((of) => User)
@@ -36,9 +36,7 @@ export class PostResolver {
     @Arg('authorID', () => String) authorID: string,
     @Ctx() { user }: MyContext
   ): Promise<Post> {
-    const post = new Post();
-    post.title = title;
-    return post.save();
+    return Post.create({ title }).save();
   }
 
   @Mutation(() => Post, { nullable: true })

@@ -161,7 +161,7 @@ If you did not request a password reset, you can safely ignore this email.
   @Query(() => User, { nullable: true })
   @UseMiddleware(auth)
   me(@Ctx() { user }: MyContext): Promise<User | undefined> {
-    return User.findOne({ id: user!.userId });
+    return User.findOne(user!.userId);
   }
 
   @Query(() => [User])
@@ -171,7 +171,7 @@ If you did not request a password reset, you can safely ignore this email.
 
   @Query(() => User, { nullable: true })
   user(@Arg('id', () => ID) id: string): Promise<User | undefined> {
-    return User.findOne({ id });
+    return User.findOne(id);
   }
 
   @Mutation(() => UserResponse)
@@ -212,6 +212,7 @@ If you did not request a password reset, you can safely ignore this email.
     user.username = options.username;
     user.username_lookup = options.username.toLowerCase();
     user.email = email;
+
     try {
       const hashedPassword = await hashPassword(options.password);
       user.password = hashedPassword;
