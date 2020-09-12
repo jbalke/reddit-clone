@@ -15,7 +15,6 @@ import InputField from '../../../components/InputField';
 import { NextChakraLink } from '../../../components/NextChakraLink';
 import Wrapper from '../../../components/Wrapper';
 import { useChangePasswordMutation } from '../../../generated/graphql';
-import { isServer } from '../../../utils/isServer';
 import { toErrorMap } from '../../../utils/toErrorMap';
 import { validatePasswordInput } from '../../../utils/validate';
 
@@ -55,21 +54,20 @@ const ChangePassword = ({ userId, token }: Props) => {
             password: '',
           }}
           validate={validatePasswordInput}
-          onSubmit={async (values, { setErrors }) => {
+          onSubmit={async (values) => {
             const response = await changePassword({
               newPassword: values.password,
               token,
               userId,
             });
             if (response?.data) {
-              setSubmitted(true);
               const { changePassword } = response.data;
               if (changePassword.errors) {
                 const errorMap = toErrorMap(changePassword.errors);
                 if ('token' in errorMap) {
                   setTokenError(errorMap.token);
                 }
-                setErrors(errorMap);
+                setSubmitted(true);
               } else if (response.data.changePassword.accessToken) {
                 setAccessToken(response.data.changePassword.accessToken);
                 router.push('/');
@@ -77,7 +75,7 @@ const ChangePassword = ({ userId, token }: Props) => {
             }
           }}
         >
-          {({ isSubmitting, errors }) => (
+          {({ isSubmitting }) => (
             <Form>
               <FormControl>
                 <InputField

@@ -7,21 +7,22 @@ import theme from '../theme';
 import { getClientConfig } from '../utils/urqlConfig';
 
 function MyApp({ Component, pageProps }: any) {
-  useEffect(() => {
-    fetch('http://localhost:4000/refresh_token', {
-      method: 'POST',
-      credentials: 'include',
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.ok) {
-          setAccessToken(data.accessToken);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
+  //* retryExchange takes care of this for us!
+  // useEffect(() => {
+  //   fetch('http://localhost:4000/refresh_token', {
+  //     method: 'POST',
+  //     credentials: 'include',
+  //   })
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       if (data.ok) {
+  //         setAccessToken(data.accessToken);
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error(err);
+  //     });
+  // }, []);
 
   return (
     <ThemeProvider theme={theme}>
