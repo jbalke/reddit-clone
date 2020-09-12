@@ -4,6 +4,7 @@ import { CombinedError, dedupExchange, fetchExchange } from 'urql';
 import { getAccessToken } from '../accessToken';
 import { authExchange } from '../authExchange';
 import {
+  ChangePasswordMutation,
   LoginMutation,
   LogoutMutation,
   MeDocument,
@@ -94,6 +95,22 @@ const cache = cacheExchange({
           () => ({
             me: null,
           })
+        );
+      },
+      changePassword: (_result, args, cache, info) => {
+        betterUpdateQuery<ChangePasswordMutation, MeQuery>(
+          cache,
+          { query: MeDocument },
+          _result,
+          (result, query) => {
+            if (result.changePassword.errors) {
+              return query;
+            } else {
+              return {
+                me: result.changePassword.user,
+              };
+            }
+          }
         );
       },
     },
