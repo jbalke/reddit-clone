@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -10,6 +10,14 @@ import {
 } from 'typeorm';
 import { User } from './User';
 
+@InputType()
+export class PostInput {
+  @Field()
+  title: string;
+  @Field()
+  text: string;
+}
+
 @ObjectType()
 @Entity('posts')
 export class Post extends BaseEntity {
@@ -18,11 +26,23 @@ export class Post extends BaseEntity {
   id: string;
 
   @Field()
-  @Column()
+  @Column('text')
   title: string;
 
-  @Field(() => User, { nullable: true })
-  @ManyToOne((type) => User, (author) => author.posts)
+  @Field()
+  @Column('text')
+  text: string;
+
+  @Field()
+  @Column('int', { default: 0 })
+  points: number;
+
+  @Field()
+  @Column()
+  authorId: string;
+
+  @Field()
+  @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
   @Field()

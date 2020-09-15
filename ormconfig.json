@@ -5,8 +5,8 @@
   "logging": true,
   "synchronize": true,
   "entities": ["dist/entities/**/*.js"],
-  "migrations": ["migration/**/*.js"],
-  "subscribers": ["subscriber/**/*.js"],
+  "migrations": ["dist/migration/**/*.js"],
+  "subscribers": ["dist/subscriber/**/*.js"],
   "ssl": true,
   "extra": {
     "ssl": {
@@ -16,8 +16,8 @@
   "cache": true,
   "dropSchema": false,
   "cli": {
-    "entitiesDir": "dist/entities",
-    "migrationsDir": "migration",
-    "subscribersDir": "subscriber "
+    "entitiesDir": "src/entities",
+    "migrationsDir": "src/migration",
+    "subscribersDir": "src/subscriber "
   }
 }

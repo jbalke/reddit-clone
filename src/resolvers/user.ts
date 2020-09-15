@@ -109,8 +109,10 @@ export class UserResolver {
       };
     }
 
-    user.password = await hashPassword(newPassword);
-    await user.save();
+    await User.update(
+      { id: userId },
+      { password: await hashPassword(newPassword) }
+    );
 
     // log user in
     sendRefreshToken(res, createRefreshToken(user));
@@ -160,8 +162,12 @@ If you did not request a password reset, you can safely ignore this email.
 
   @Query(() => User, { nullable: true })
   @UseMiddleware(auth)
-  me(@Ctx() { user }: MyContext): Promise<User | undefined> {
-    return User.findOne(user!.userId);
+  me(@Ctx() { user }: MyContext) {
+    if (!user) {
+      return undefined;
+    }
+
+    return User.findOne(user.userId);
   }
 
   @Query(() => [User])
@@ -170,7 +176,7 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   @Query(() => User, { nullable: true })
-  user(@Arg('id', () => ID) id: string): Promise<User | undefined> {
+  user(@Arg('id', () => ID) id: string) {
     return User.findOne(id);
   }
 

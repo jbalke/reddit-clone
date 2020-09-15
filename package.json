@@ -6,8 +6,9 @@
     "start:build": "tsc -w",
     "start:run": "nodemon dist/index.js",
     "dev": "concurrently npm:start:*",
-    "migration:generate": "npx typeorm migration:generate -n ModelChange",
-    "migration:create": "npx typeorm migration:create -n ModelChange"
+    "migration:generate": "npx typeorm migration:generate",
+    "migration:create": "npx typeorm migration:create",
+    "migration:run": "npx typeorm migration:run"
   },
   "license": "MIT",
   "devDependencies": {
