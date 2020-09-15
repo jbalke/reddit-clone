@@ -18,12 +18,7 @@ import { useChangePasswordMutation } from '../../../generated/graphql';
 import { toErrorMap } from '../../../utils/toErrorMap';
 import { validatePasswordInput } from '../../../utils/validate';
 
-interface Props {
-  userId: string;
-  token: string;
-}
-
-const ChangePassword = ({ userId, token }: Props) => {
+const ChangePassword = () => {
   const [, changePassword] = useChangePasswordMutation();
   const [tokenError, setTokenError] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -57,8 +52,10 @@ const ChangePassword = ({ userId, token }: Props) => {
           onSubmit={async (values) => {
             const response = await changePassword({
               newPassword: values.password,
-              token,
-              userId,
+              token:
+                typeof router.query.token == 'string' ? router.query.token : '',
+              userId:
+                typeof router.query.uid == 'string' ? router.query.uid : '',
             });
             if (response?.data) {
               const { changePassword } = response.data;
@@ -101,17 +98,6 @@ const ChangePassword = ({ userId, token }: Props) => {
       )}
     </Wrapper>
   );
-};
-
-export const getServerSideProps: GetServerSideProps<Props> = async ({
-  query,
-}) => {
-  return {
-    props: {
-      userId: query.uid as string,
-      token: query.token as string,
-    },
-  };
 };
 
 export default ChangePassword;

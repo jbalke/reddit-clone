@@ -27,6 +27,8 @@ function login(props: loginProps) {
   const [, login] = useLoginMutation();
   const [loginError, setLoginError] = useState('');
 
+  const { next } = router.query;
+
   return (
     <Wrapper size="small">
       <Formik
@@ -54,7 +56,11 @@ function login(props: loginProps) {
             } else if (login.accessToken) {
               // succesfully registered
               setAccessToken(login.accessToken);
-              router.push('/');
+              if (typeof next == 'string') {
+                router.push(next);
+              } else {
+                router.push('/');
+              }
             }
           }
         }}

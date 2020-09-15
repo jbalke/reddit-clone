@@ -1,17 +1,24 @@
-import { cacheExchange } from '@urql/exchange-graphcache';
+import { cacheExchange, Resolver } from '@urql/exchange-graphcache';
 import { retryExchange } from '@urql/exchange-retry';
-import { CombinedError, dedupExchange, fetchExchange } from 'urql';
+import {
+  CombinedError,
+  dedupExchange,
+  fetchExchange,
+  stringifyVariables,
+} from 'urql';
 import { getAccessToken } from '../accessToken';
-import { authExchange } from '../authExchange';
 import {
   ChangePasswordMutation,
   LoginMutation,
   LogoutMutation,
   MeDocument,
   MeQuery,
+  Post,
   RegisterMutation,
 } from '../generated/graphql';
-import { betterUpdateQuery } from './betterUpdateQuery';
+import { betterUpdateQuery } from '../utils/betterUpdateQuery';
+import { authExchange } from './authExchange';
+import { errorExchange } from './errorExchange';
 
 export const getClientConfig = (ssrExchange: any) => ({
   url: 'http://localhost:4000/graphql',
@@ -31,6 +38,7 @@ export const getClientConfig = (ssrExchange: any) => ({
     retryExchange(options), // Use the retryExchange factory to add a new exchange
     authExchange(),
     ssrExchange,
+    errorExchange,
     fetchExchange,
   ],
 });
@@ -48,10 +56,60 @@ const options = {
   },
 };
 
+const cursorPagination = (): Resolver => {
+  return (_parent, fieldArgs, cache, info) => {
+    const { parentKey: entityKey, fieldName } = info;
+    const allFields = cache.inspectFields(entityKey);
+    const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
+    if (fieldInfos.length === 0) {
+      return undefined;
+    }
+
+    const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
+    const isItInTheCache = cache.resolve(
+      cache.resolveFieldByKey(entityKey, fieldKey) as string,
+      'posts'
+    );
+    info.partial = !isItInTheCache;
+
+    let hasMore = true;
+    const results: string[] = [];
+    fieldInfos.forEach((fi) => {
+      const key = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
+      const data = cache.resolve(key, 'posts') as string[];
+      const _hasMore = cache.resolve(key, 'hasMore');
+      if (!_hasMore) {
+        hasMore = _hasMore as boolean;
+      }
+      results.push(...data);
+    });
+
+    return {
+      __typename: 'PaginatedPosts',
+      hasMore,
+      posts: results,
+    };
+  };
+};
+
 const cache = cacheExchange({
+  resolvers: {
+    Post: {
+      createdAt(parent, args, cache, info) {
+        return new Date(parent.createdAt as string);
+      },
+      updatedAt(parent, args, cache, info) {
+        return new Date(parent.updatedAt as string);
+      },
+    },
+    Query: {
+      posts: cursorPagination(),
+    },
+  },
   keys: {
     PayloadResponse: () => null,
     Payload: () => null,
+    PaginatedPosts: () => null,
   },
   updates: {
     Mutation: {
@@ -113,6 +171,18 @@ const cache = cacheExchange({
           }
         );
       },
+      // createPost: (_result, args, cache, info) => {
+      //   betterUpdateQuery<CreatePostMutation, PostsQuery>(
+      //     cache,
+      //     { query: PostsDocument },
+      //     _result,
+      //     (result, query) => {
+      //         return {
+      //           posts: result.createPost.,
+      //         };
+      //       }
+      //   )
+      // }
     },
   },
 });

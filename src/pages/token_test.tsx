@@ -3,7 +3,7 @@ import { withUrqlClient } from 'next-urql';
 import React from 'react';
 import Header from '../components/Header';
 import { useTestTokenQuery } from '../generated/graphql';
-import { getClientConfig } from '../utils/urqlConfig';
+import { getClientConfig } from '../urql/urqlConfig';
 
 type token_testProps = {};
 

@@ -16,7 +16,7 @@ import {
   getAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
-} from './accessToken';
+} from '../accessToken';
 
 const addTokenToOperation = (operation: Operation, token: string) => {
   const fetchOptions =

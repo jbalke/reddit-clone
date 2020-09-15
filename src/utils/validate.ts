@@ -65,6 +65,36 @@ export const validateForgotPasswordInput = ({ email }: ForgotPasswordInput) => {
   return errors;
 };
 
+interface PostInput {
+  title: string;
+  text: string;
+}
+
+export const validatePostInput = ({ title, text }: PostInput) => {
+  const errors: FormikErrors<PostInput> = {};
+
+  validateTitle(title, errors);
+  validateText(text, errors);
+
+  return errors;
+};
+
+function validateTitle(title: string, errors: any) {
+  if (!title) {
+    errors.title = 'Required';
+  } else if (title.trim().length < 6) {
+    errors.title = 'Title length must be 6 or greater';
+  }
+}
+
+function validateText(text: string, errors: any) {
+  if (!text) {
+    errors.text = 'Required';
+  } else if (text.trim().length === 0) {
+    errors.text = 'Text cannot be an empty string';
+  }
+}
+
 function validateEmailOrUsername(emailOrUsername: string, errors: any) {
   if (!emailOrUsername) {
     errors.emailOrUsername = 'Required';
