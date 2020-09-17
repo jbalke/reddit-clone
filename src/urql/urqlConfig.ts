@@ -13,7 +13,6 @@ import {
   LogoutMutation,
   MeDocument,
   MeQuery,
-  Post,
   RegisterMutation,
 } from '../generated/graphql';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
@@ -66,7 +65,7 @@ const cursorPagination = (): Resolver => {
     }
 
     const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
-    const isItInTheCache = cache.resolve(
+    const isItInTheCache = !!cache.resolve(
       cache.resolveFieldByKey(entityKey, fieldKey) as string,
       'posts'
     );
@@ -74,13 +73,16 @@ const cursorPagination = (): Resolver => {
 
     let hasMore = true;
     const results: string[] = [];
+
     fieldInfos.forEach((fi) => {
-      const key = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
-      const data = cache.resolve(key, 'posts') as string[];
-      const _hasMore = cache.resolve(key, 'hasMore');
+      const field = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
+      const data = cache.resolve(field, 'posts') as string[];
+
+      const _hasMore = cache.resolve(field, 'hasMore');
       if (!_hasMore) {
         hasMore = _hasMore as boolean;
       }
+
       results.push(...data);
     });
 
@@ -94,14 +96,6 @@ const cursorPagination = (): Resolver => {
 
 const cache = cacheExchange({
   resolvers: {
-    Post: {
-      createdAt(parent, args, cache, info) {
-        return new Date(parent.createdAt as string);
-      },
-      updatedAt(parent, args, cache, info) {
-        return new Date(parent.updatedAt as string);
-      },
-    },
     Query: {
       posts: cursorPagination(),
     },
@@ -171,18 +165,15 @@ const cache = cacheExchange({
           }
         );
       },
-      // createPost: (_result, args, cache, info) => {
-      //   betterUpdateQuery<CreatePostMutation, PostsQuery>(
-      //     cache,
-      //     { query: PostsDocument },
-      //     _result,
-      //     (result, query) => {
-      //         return {
-      //           posts: result.createPost.,
-      //         };
-      //       }
-      //   )
-      // }
+      createPost: (_result, args, cache, info) => {
+        const allFields = cache.inspectFields('Query');
+        const fieldInfos = allFields.filter(
+          (info) => info.fieldName === 'posts'
+        );
+        fieldInfos.forEach((fi) => {
+          cache.invalidate('Query', 'posts', fi.arguments || undefined);
+        });
+      },
     },
   },
 });

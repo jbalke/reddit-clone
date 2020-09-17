@@ -30,7 +30,6 @@ function CreatePost() {
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
-          console.log(values);
           const { error } = await createPost({ input: values });
           if (!error) {
             router.push('/');

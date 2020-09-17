@@ -4,7 +4,6 @@ mutation CreatePost($input: PostInput!) {
     title
     text
     points
-    authorId
     createdAt
     updatedAt
   }

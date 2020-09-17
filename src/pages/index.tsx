@@ -1,14 +1,14 @@
-import { Box, Stack, Flex, Heading, Button } from '@chakra-ui/core';
-import { Post, usePostsQuery } from '../generated/graphql';
-import Feature from '../components/Feature';
-import Wrapper from '../components/Wrapper';
-import { NextChakraLink } from '../components/NextChakraLink';
+import { Box, Button, Flex, Heading, Stack } from '@chakra-ui/core';
 import { useState } from 'react';
+import Feature from '../components/Feature';
+import { NextChakraLink } from '../components/NextChakraLink';
+import Wrapper from '../components/Wrapper';
+import { usePostsQuery } from '../generated/graphql';
 
 const Index = () => {
   const [variables, setVariables] = useState({
     limit: 20,
-    cursor: null as null | string,
+    cursor: undefined as undefined | string,
   });
   const [{ data, fetching }] = usePostsQuery({ variables });
 
@@ -34,6 +34,8 @@ const Index = () => {
                   key={p.id}
                   title={p.title}
                   text={p.textSnippet}
+                  author={p.author}
+                  points={p.points}
                   date={p.createdAt}
                 ></Feature>
               ))}
@@ -46,8 +48,7 @@ const Index = () => {
             onClick={() => {
               setVariables({
                 limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1]
-                  .createdAt as string,
+                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
               });
             }}
             my={8}

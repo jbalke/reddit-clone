@@ -53,8 +53,8 @@ export type Post = {
   title: Scalars['String'];
   text: Scalars['String'];
   points: Scalars['Float'];
-  authorId: Scalars['String'];
   author: User;
+  upvotes: Array<Upvote>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   textSnippet: Scalars['String'];
@@ -66,8 +66,15 @@ export type User = {
   username: Scalars['String'];
   email: Scalars['String'];
   posts: Array<Post>;
+  upvotes: Array<Upvote>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
+};
+
+export type Upvote = {
+  __typename?: 'Upvote';
+  user: User;
+  post: Post;
 };
 
 
@@ -84,6 +91,7 @@ export type Payload = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  vote: Scalars['Boolean'];
   createPost: Post;
   updatePost?: Maybe<Post>;
   deletePost: Scalars['Boolean'];
@@ -94,6 +102,12 @@ export type Mutation = {
   logout: Scalars['Boolean'];
   revokeRefreshTokenForUser: Scalars['Boolean'];
   deleteUser: Scalars['Boolean'];
+};
+
+
+export type MutationVoteArgs = {
+  vote: Vote;
+  postId: Scalars['ID'];
 };
 
 
@@ -143,6 +157,12 @@ export type MutationRevokeRefreshTokenForUserArgs = {
 export type MutationDeleteUserArgs = {
   id: Scalars['ID'];
 };
+
+/** UP or DOWN vote a post */
+export enum Vote {
+  Up = 'UP',
+  Down = 'DOWN'
+}
 
 export type PostInput = {
   title: Scalars['String'];
@@ -219,7 +239,7 @@ export type CreatePostMutation = (
   { __typename?: 'Mutation' }
   & { createPost: (
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text' | 'points' | 'authorId' | 'createdAt' | 'updatedAt'>
+    & Pick<Post, 'id' | 'title' | 'text' | 'points' | 'createdAt' | 'updatedAt'>
   ) }
 );
 
@@ -291,7 +311,11 @@ export type PostsQuery = (
     & Pick<PaginatedPosts, 'hasMore'>
     & { posts: Array<(
       { __typename?: 'Post' }
-      & Pick<Post, 'id' | 'title' | 'textSnippet' | 'createdAt' | 'updatedAt'>
+      & Pick<Post, 'id' | 'title' | 'textSnippet' | 'points' | 'createdAt' | 'updatedAt'>
+      & { author: (
+        { __typename?: 'User' }
+        & Pick<User, 'id' | 'username'>
+      ) }
     )> }
   ) }
 );
@@ -352,7 +376,6 @@ export const CreatePostDocument = gql`
     title
     text
     points
-    authorId
     createdAt
     updatedAt
   }
@@ -416,14 +439,19 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
 export const PostsDocument = gql`
     query Posts($limit: Int, $cursor: String) {
   posts(limit: $limit, cursor: $cursor) {
+    hasMore
     posts {
       id
       title
       textSnippet
+      points
+      author {
+        id
+        username
+      }
       createdAt
       updatedAt
     }
-    hasMore
   }
 }
     `;
