@@ -1,6 +1,7 @@
 import { Box, Heading, Text, Flex, Link as ChakraLink } from '@chakra-ui/core';
 import { User } from '../generated/graphql';
 import Link from 'next/link';
+import { __DateOptions__ } from '../constants';
 
 interface Author {
   userId: string;
@@ -14,16 +15,6 @@ interface FeatureProps {
   date: Date;
 }
 
-const DateOptions = {
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-  second: 'numeric',
-  hour12: false,
-};
-
 function Feature({ title, text, author, date, points }: FeatureProps) {
   return (
     <Box p={5} shadow="md" borderWidth="1px">
@@ -34,11 +25,14 @@ function Feature({ title, text, author, date, points }: FeatureProps) {
             <Link href={`/user/${author.id}`}>{`by ${author.username}`}</Link>
           </ChakraLink>
         </Box>
-        <Text as="sup">
-          {new Intl.DateTimeFormat('default', DateOptions).format(
-            new Date(date)
-          )}
-        </Text>
+        <Flex direction="column" alignItems="flex-end">
+          <Text as="sup">
+            {new Intl.DateTimeFormat('default', __DateOptions__).format(
+              new Date(date)
+            )}
+          </Text>
+          <Text>{points}</Text>
+        </Flex>
       </Flex>
       <Text mt={4}>{text}</Text>
     </Box>

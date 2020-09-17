@@ -10,7 +10,7 @@ const Index = () => {
     limit: 20,
     cursor: undefined as undefined | string,
   });
-  const [{ data, fetching }] = usePostsQuery({ variables });
+  const [{ data, fetching, stale }] = usePostsQuery({ variables });
 
   if (!fetching && !data) {
     return <div>Could not retrieve any posts.</div>;
@@ -24,7 +24,7 @@ const Index = () => {
       </Flex>
       <br />
       <Box>
-        {!data && fetching ? (
+        {!data && (fetching || stale) ? (
           <div>loading...</div>
         ) : (
           <Stack spacing={8}>
@@ -51,6 +51,7 @@ const Index = () => {
                 cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
               });
             }}
+            isLoading={fetching || stale}
             my={8}
           >
             load more
