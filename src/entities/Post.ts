@@ -4,10 +4,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Upvote } from './Upvote';
 import { User } from './User';
 
 @InputType()
@@ -34,10 +37,9 @@ export class Post extends BaseEntity {
   text: string;
 
   @Field()
-  @Column('int', { default: 0 })
+  @Column({ type: 'int', default: 0 })
   points: number;
 
-  @Field()
   @Column()
   authorId: string;
 
@@ -45,11 +47,16 @@ export class Post extends BaseEntity {
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
-  @Field()
-  @UpdateDateColumn()
-  updatedAt: Date;
+  @Field(() => [Upvote])
+  @OneToMany((type) => Upvote, (upvote) => upvote.post)
+  upvotes: Upvote[];
 
   @Field()
-  @CreateDateColumn()
+  @UpdateDateColumn({ type: 'timestamptz' })
+  updatedAt: Date;
+
+  @Index({ unique: false })
+  @Field()
+  @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

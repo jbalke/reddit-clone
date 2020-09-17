@@ -2,19 +2,21 @@ import {
   Arg,
   Ctx,
   Field,
+  FieldResolver,
   ID,
   InputType,
   Mutation,
   ObjectType,
   Query,
   Resolver,
+  Root,
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { __emailRE__ } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
-import { auth } from '../middleware/auth';
+import { authorize, authenticate } from '../middleware/auth';
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -69,8 +71,19 @@ class UserResponse {
   accessToken?: string;
 }
 
-@Resolver()
+@Resolver((of) => User)
 export class UserResolver {
+  @FieldResolver(() => String)
+  @UseMiddleware(authenticate)
+  email(@Root() user: User, @Ctx() { user: creds }: MyContext) {
+    // a user can see their own email
+    if (creds && (creds.userId === user.id || creds.isAdmin)) {
+      return user.email;
+    }
+
+    return '';
+  }
+
   @Mutation(() => UserResponse)
   async changePassword(
     @Arg('userId') userId: string,
@@ -161,7 +174,7 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   @Query(() => User, { nullable: true })
-  @UseMiddleware(auth)
+  @UseMiddleware(authorize)
   me(@Ctx() { user }: MyContext) {
     if (!user) {
       return undefined;

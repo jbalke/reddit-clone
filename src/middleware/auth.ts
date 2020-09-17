@@ -4,7 +4,7 @@ import { MiddlewareFn } from 'type-graphql';
 import { ACCESS_TOKEN_SECRET, __bearerRE__ } from '../constants';
 import { AuthenticationError } from 'apollo-server-express';
 
-export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
+export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
   const authorization = context.req.headers['authorization'];
 
   if (!authorization) {
@@ -30,5 +30,24 @@ export const auth: MiddlewareFn<MyContext> = ({ context }, next) => {
     throw new AuthenticationError('not authenticated');
   }
 
+  return next();
+};
+
+export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
+  const authorization = context.req.headers['authorization'];
+
+  if (authorization) {
+    const tokenRegExMatch = authorization.match(__bearerRE__);
+
+    if (tokenRegExMatch) {
+      const token = tokenRegExMatch[1];
+      try {
+        const payload = verify(token, ACCESS_TOKEN_SECRET);
+        if (typeof payload === 'object') {
+          context.user = payload as AccessTokenPayload;
+        }
+      } catch (err) {}
+    }
+  }
   return next();
 };

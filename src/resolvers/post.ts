@@ -4,6 +4,7 @@ import {
   Field,
   FieldResolver,
   ID,
+  Info,
   InputType,
   Int,
   Mutation,
@@ -12,11 +13,23 @@ import {
   Resolver,
   Root,
   UseMiddleware,
+  registerEnumType,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { Post, PostInput } from '../entities/Post';
-import { auth } from '../middleware/auth';
+import { Upvote } from '../entities/Upvote';
+import { authorize, authenticate } from '../middleware/auth';
 import { MyContext } from '../types';
+
+enum Vote {
+  UP,
+  DOWN,
+}
+
+registerEnumType(Vote, {
+  name: 'Vote',
+  description: 'UP or DOWN vote a post',
+});
 
 @InputType()
 class PostsOptions {
@@ -39,25 +52,60 @@ export class PostResolver {
     return root.text.length > 150 ? root.text.slice(0, 150) + '...' : root.text;
   }
 
+  @Mutation(() => Boolean)
+  @UseMiddleware(authorize)
+  async vote(
+    @Arg('postId', () => ID) postId: string,
+    @Arg('vote', () => Vote) vote: Vote,
+    @Ctx() { user }: MyContext
+  ) {
+    const value = vote === Vote.UP ? 1 : -1;
+    try {
+      await getConnection().transaction(async (transactionalEntityManager) => {
+        await transactionalEntityManager
+          .getRepository(Upvote)
+          .insert({ userId: user!.userId, postId, value });
+
+        await transactionalEntityManager
+          .createQueryBuilder()
+          .update(Post)
+          .set({ points: () => `points + ${value}` })
+          .where('id = :id', { id: postId })
+          .execute();
+      });
+    } catch (error) {
+      return false;
+    }
+
+    return true;
+  }
+
   @Query(() => PaginatedPosts)
   async posts(
     @Arg('limit', () => Int, { defaultValue: 10 }) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
+    @Info() info: any
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
-    const qb = getConnection()
-      .getRepository(Post)
-      .createQueryBuilder('p')
-      .orderBy(`"createdAt"`, 'DESC')
-      .take(realLimitPlusOne);
-
-    if (cursor) {
-      qb.where('"createdAt" < :cursor', { cursor: new Date(cursor) });
-    }
-
-    const posts = await qb.getMany();
+    const posts = await getConnection().query(
+      `
+    select p.*,
+    json_build_object(
+      'id', u.id, 
+      'username', u.username, 
+      'email', u.email,
+      'createdAt', u."createdAt",
+      'updatedAt', u."updatedAt"
+      ) author
+    from reddit.posts p
+    inner join reddit.users u on p."authorId" = u.id
+    ${cursor ? `where p."createdAt" < '${cursor}'` : ''}
+    order by p."createdAt" DESC
+    limit ${realLimitPlusOne}
+    `
+    );
 
     return {
       posts: posts.slice(0, realLimit),
@@ -76,7 +124,7 @@ export class PostResolver {
   // }
 
   @Mutation(() => Post)
-  @UseMiddleware(auth)
+  @UseMiddleware(authorize)
   createPost(
     @Arg('input') input: PostInput,
     @Ctx() { user }: MyContext
@@ -85,7 +133,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
-  @UseMiddleware(auth)
+  @UseMiddleware(authorize)
   async updatePost(
     @Arg('id', () => ID) id: string,
     @Arg('title', () => String, { nullable: true }) title: string,
@@ -106,7 +154,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(auth)
+  @UseMiddleware(authorize)
   async deletePost(@Arg('id', () => ID) id: string): Promise<Boolean> {
     await Post.delete(id);
     return true;
