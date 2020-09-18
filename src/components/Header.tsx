@@ -22,7 +22,7 @@ const Header = (props: HeaderProps) => {
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [{ data, fetching, error }] = useMeQuery();
+  const [{ data, fetching, error }] = useMeQuery({ pause: isServer() });
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = ({ router }: any) => async () => {

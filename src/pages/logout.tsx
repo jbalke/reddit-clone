@@ -20,4 +20,4 @@ function logout(props: logoutProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(logout);
+export default withUrqlClient(getClientConfig)(logout);
