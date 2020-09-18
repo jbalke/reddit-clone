@@ -68,4 +68,4 @@ function CreatePost() {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(CreatePost);
+export default withUrqlClient(getClientConfig, { ssr: false })(CreatePost);

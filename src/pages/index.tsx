@@ -1,23 +1,19 @@
 import { Box, Button, Flex, Heading, Stack } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Layout from '../components/Layout';
 import { NextChakraLink } from '../components/NextChakraLink';
 import PostSummary from '../components/PostSummary';
 import Wrapper from '../components/Wrapper';
 import { usePostsQuery } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
-import { isServer } from '../utils/isServer';
 
 const Index = () => {
   const [variables, setVariables] = useState({
     limit: 20,
     cursor: undefined as undefined | string,
   });
-  const [{ data, fetching, stale }] = usePostsQuery({
-    variables,
-    // pause: isServer(),
-  });
+  const [{ data, fetching, stale }] = usePostsQuery({ variables });
 
   if (!fetching && !data) {
     return <div>Could not retrieve any posts.</div>;

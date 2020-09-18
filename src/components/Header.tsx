@@ -22,10 +22,7 @@ const Header = (props: HeaderProps) => {
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [{ data, fetching, error }] = useMeQuery({
-    // requestPolicy: 'network-only',
-    pause: isServer(),
-  }); //* Pause query is server-side rendered (nextjs server doesn't have tokens to query graphql)
+  const [{ data, fetching, error }] = useMeQuery();
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = ({ router }: any) => async () => {

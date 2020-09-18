@@ -7,6 +7,7 @@ import {
   FormControl,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
+import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { setAccessToken } from '../../../accessToken';
@@ -15,6 +16,7 @@ import Layout from '../../../components/Layout';
 import { NextChakraLink } from '../../../components/NextChakraLink';
 import Wrapper from '../../../components/Wrapper';
 import { useChangePasswordMutation } from '../../../generated/graphql';
+import { getClientConfig } from '../../../urql/urqlConfig';
 import { toErrorMap } from '../../../utils/toErrorMap';
 import { validatePasswordInput } from '../../../utils/validate';
 
@@ -104,4 +106,4 @@ const ChangePassword = () => {
   );
 };
 
-export default ChangePassword;
+export default withUrqlClient(getClientConfig, { ssr: false })(ChangePassword);

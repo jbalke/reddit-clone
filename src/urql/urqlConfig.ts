@@ -70,27 +70,35 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
       retryExchange(options), // Use the retryExchange factory to add a new exchange
       authExchange(),
       fetchOptionsExchange(async (fetchOptions: any) => {
-        let token = '';
-        if (isServer()) {
-          const cookie = ctx.req.headers.cookie;
+        try {
+          let token = '';
+          if (isServer() && ctx) {
+            const cookie = ctx.req.headers.cookie;
 
-          const response = await fetch('http://localhost:4000/refresh_token', {
-            method: 'POST',
+            const response = await fetch(
+              'http://localhost:4000/refresh_token',
+              {
+                method: 'POST',
+                credentials: 'include',
+                headers: cookie ? { cookie } : undefined,
+              }
+            );
+
+            const data = await response.json();
+            token = data.accessToken;
+          } else {
+            token = getAccessToken();
+          }
+          return Promise.resolve({
+            ...fetchOptions,
             credentials: 'include',
-            headers: cookie ? { cookie } : undefined,
+            headers: {
+              Authorization: token ? `Bearer ${token}` : undefined,
+            },
           });
-
-          const data = await response.json();
-          token = data.accessToken;
-        } else {
-          token = getAccessToken();
+        } catch (err) {
+          console.error(err);
         }
-        return Promise.resolve({
-          ...fetchOptions,
-          headers: {
-            Authorization: token ? `Bearer ${token}` : undefined,
-          },
-        });
       }),
       ssrExchange,
       errorExchange,

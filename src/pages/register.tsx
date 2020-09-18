@@ -87,4 +87,4 @@ function register(props: registerProps) {
     </Layout>
   );
 }
-export default withUrqlClient(getClientConfig, { ssr: true })(register);
+export default withUrqlClient(getClientConfig)(register);

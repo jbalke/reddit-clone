@@ -32,7 +32,7 @@ const addTokenToOperation = (operation: Operation, token: string) => {
         ...fetchOptions,
         headers: {
           ...fetchOptions.headers,
-          authorization: token ? `Bearer ${token}` : '',
+          Authorization: token ? `Bearer ${token}` : '',
         },
       },
     },

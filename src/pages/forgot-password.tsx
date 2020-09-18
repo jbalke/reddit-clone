@@ -78,4 +78,4 @@ function forgotPassword(props: forgotPasswordProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(forgotPassword);
+export default withUrqlClient(getClientConfig, { ssr: false })(forgotPassword);
