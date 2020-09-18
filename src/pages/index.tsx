@@ -1,65 +1,68 @@
 import { Box, Button, Flex, Heading, Stack } from '@chakra-ui/core';
-import { useState } from 'react';
-import Feature from '../components/Feature';
+import { withUrqlClient } from 'next-urql';
+import { useEffect, useState } from 'react';
+import Layout from '../components/Layout';
 import { NextChakraLink } from '../components/NextChakraLink';
+import PostSummary from '../components/PostSummary';
 import Wrapper from '../components/Wrapper';
 import { usePostsQuery } from '../generated/graphql';
+import { getClientConfig } from '../urql/urqlConfig';
+import { isServer } from '../utils/isServer';
 
 const Index = () => {
   const [variables, setVariables] = useState({
     limit: 20,
     cursor: undefined as undefined | string,
   });
-  const [{ data, fetching, stale }] = usePostsQuery({ variables });
+  const [{ data, fetching, stale }] = usePostsQuery({
+    variables,
+    // pause: isServer(),
+  });
 
   if (!fetching && !data) {
     return <div>Could not retrieve any posts.</div>;
   }
 
   return (
-    <Wrapper size="regular">
-      <Flex justifyContent="space-between" alignItems="center">
-        <Heading>Reddit Clone</Heading>
-        <NextChakraLink href="/create-post">create post</NextChakraLink>
-      </Flex>
-      <br />
-      <Box>
-        {!data && (fetching || stale) ? (
-          <div>loading...</div>
-        ) : (
-          <Stack spacing={8}>
-            {data &&
-              data.posts.posts.map((p) => (
-                <Feature
-                  key={p.id}
-                  title={p.title}
-                  text={p.textSnippet}
-                  author={p.author}
-                  points={p.points}
-                  date={p.createdAt}
-                ></Feature>
-              ))}
-          </Stack>
-        )}
-      </Box>
-      {data && data.posts.hasMore && (
-        <Flex justifyContent="center" alignItems="center">
-          <Button
-            onClick={() => {
-              setVariables({
-                limit: variables.limit,
-                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
-              });
-            }}
-            isLoading={fetching || stale}
-            my={8}
-          >
-            load more
-          </Button>
+    <Layout>
+      <Wrapper size="regular">
+        <Flex justifyContent="space-between" alignItems="center">
+          <Heading>Reddit Clone</Heading>
+          <NextChakraLink href="/create-post">create post</NextChakraLink>
         </Flex>
-      )}
-    </Wrapper>
+        <br />
+        <Box>
+          {!data && (fetching || stale) ? (
+            <div>loading...</div>
+          ) : (
+            <Stack>
+              {data &&
+                data.posts.posts.map((p) => (
+                  <PostSummary key={p.id} post={p}></PostSummary>
+                ))}
+            </Stack>
+          )}
+        </Box>
+        {data && data.posts.hasMore && (
+          <Flex justifyContent="center" alignItems="center">
+            <Button
+              onClick={() => {
+                setVariables({
+                  limit: variables.limit,
+                  cursor:
+                    data.posts.posts[data.posts.posts.length - 1].createdAt,
+                });
+              }}
+              isLoading={fetching || stale}
+              my={4}
+            >
+              load more
+            </Button>
+          </Flex>
+        )}
+      </Wrapper>
+    </Layout>
   );
 };
 
-export default Index;
+export default withUrqlClient(getClientConfig, { ssr: true })(Index);

@@ -3,7 +3,9 @@ import { retryExchange } from '@urql/exchange-retry';
 import {
   CombinedError,
   dedupExchange,
+  Exchange,
   fetchExchange,
+  Operation,
   stringifyVariables,
 } from 'urql';
 import { getAccessToken } from '../accessToken';
@@ -14,33 +16,37 @@ import {
   MeDocument,
   MeQuery,
   RegisterMutation,
+  Vote,
+  VoteMutation,
+  VoteMutationVariables,
 } from '../generated/graphql';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
+import { isServer } from '../utils/isServer';
 import { authExchange } from './authExchange';
 import { errorExchange } from './errorExchange';
+import { pipe, mergeMap, fromPromise, fromValue, map } from 'wonka';
+import gql from 'graphql-tag';
 
-export const getClientConfig = (ssrExchange: any) => ({
-  url: 'http://localhost:4000/graphql',
-  fetchOptions: () => {
-    const token = getAccessToken();
-
-    return {
-      headers: {
-        authorization: token ? `Bearer ${token}` : '',
-      },
-      credentials: 'include' as const,
-    };
-  },
-  exchanges: [
-    dedupExchange,
-    cache,
-    retryExchange(options), // Use the retryExchange factory to add a new exchange
-    authExchange(),
-    ssrExchange,
-    errorExchange,
-    fetchExchange,
-  ],
-});
+export const fetchOptionsExchange = (fn: any): Exchange => ({ forward }) => (
+  ops$
+) => {
+  return pipe(
+    ops$,
+    mergeMap((operation: Operation) => {
+      const result = fn(operation.context.fetchOptions);
+      return pipe(
+        (typeof result.then === 'function'
+          ? fromPromise(result)
+          : fromValue(result)) as any,
+        map((fetchOptions: RequestInit | (() => RequestInit)) => ({
+          ...operation,
+          context: { ...operation.context, fetchOptions },
+        }))
+      );
+    }),
+    forward
+  );
+};
 
 const options = {
   initialDelayMs: 1000,
@@ -53,6 +59,44 @@ const options = {
 
     return err && !!err.networkError;
   },
+};
+
+export const getClientConfig = (ssrExchange: any, ctx: any) => {
+  return {
+    url: 'http://localhost:4000/graphql',
+    exchanges: [
+      dedupExchange,
+      cache,
+      retryExchange(options), // Use the retryExchange factory to add a new exchange
+      authExchange(),
+      fetchOptionsExchange(async (fetchOptions: any) => {
+        let token = '';
+        if (isServer()) {
+          const cookie = ctx.req.headers.cookie;
+
+          const response = await fetch('http://localhost:4000/refresh_token', {
+            method: 'POST',
+            credentials: 'include',
+            headers: cookie ? { cookie } : undefined,
+          });
+
+          const data = await response.json();
+          token = data.accessToken;
+        } else {
+          token = getAccessToken();
+        }
+        return Promise.resolve({
+          ...fetchOptions,
+          headers: {
+            Authorization: token ? `Bearer ${token}` : undefined,
+          },
+        });
+      }),
+      ssrExchange,
+      errorExchange,
+      fetchExchange,
+    ],
+  };
 };
 
 const cursorPagination = (): Resolver => {
@@ -173,6 +217,39 @@ const cache = cacheExchange({
         fieldInfos.forEach((fi) => {
           cache.invalidate('Query', 'posts', fi.arguments || undefined);
         });
+      },
+      vote: (_result, args, cache, info) => {
+        const { postId, vote } = args as VoteMutationVariables;
+
+        const data = cache.readFragment(
+          gql`
+            fragment _ on Post {
+              id
+              points
+              voteStatus
+            }
+          `,
+          { id: postId } as any
+        );
+
+        if (data) {
+          const newVoteStatus = vote === Vote.Up ? 1 : -1;
+          if (data.voteStatus === newVoteStatus) {
+            return;
+          }
+          const newPoints =
+            (data.points as number) +
+            (!data.voteStatus ? 1 : 2) * newVoteStatus;
+          cache.writeFragment(
+            gql`
+              fragment __ on Post {
+                points
+                voteStatus
+              }
+            `,
+            { id: postId, points: newPoints, voteStatus: newVoteStatus } as any
+          );
+        }
       },
     },
   },

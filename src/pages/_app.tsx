@@ -27,10 +27,9 @@ function MyApp({ Component, pageProps }: any) {
   return (
     <ThemeProvider theme={theme}>
       <CSSReset />
-      <Header />
       <Component {...pageProps} />
     </ThemeProvider>
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(MyApp);
+export default MyApp;
