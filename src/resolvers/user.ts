@@ -26,7 +26,7 @@ import {
 import { MyContext } from '../types';
 import { hashPassword, verifyPasswordHash } from '../utils/passwords';
 import { sendEmail } from '../utils/sendEmail';
-import { validateCredentials } from './validateCredentials';
+import { validateCredentials } from '../utils/validateCredentials';
 
 export interface Credentials {
   username: string;

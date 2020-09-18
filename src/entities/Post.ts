@@ -1,4 +1,4 @@
-import { Field, ID, InputType, ObjectType } from 'type-graphql';
+import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -47,15 +47,17 @@ export class Post extends BaseEntity {
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
-  @Field(() => [Upvote])
   @OneToMany((type) => Upvote, (upvote) => upvote.post)
   upvotes: Upvote[];
+
+  @Field(() => Int, { nullable: true })
+  voteStatus: number | null;
 
   @Field()
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @Index({ unique: false })
+  @Index('CREATED_AT_INDEX', { synchronize: false })
   @Field()
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

@@ -22,8 +22,8 @@ import { authorize, authenticate } from '../middleware/auth';
 import { MyContext } from '../types';
 
 enum Vote {
-  UP,
-  DOWN,
+  UP = 1,
+  DOWN = -1,
 }
 
 registerEnumType(Vote, {
@@ -59,35 +59,80 @@ export class PostResolver {
     @Arg('vote', () => Vote) vote: Vote,
     @Ctx() { user }: MyContext
   ) {
-    const value = vote === Vote.UP ? 1 : -1;
-    try {
-      await getConnection().transaction(async (transactionalEntityManager) => {
-        await transactionalEntityManager
-          .getRepository(Upvote)
-          .insert({ userId: user!.userId, postId, value });
+    const { userId } = user!;
 
-        await transactionalEntityManager
-          .createQueryBuilder()
-          .update(Post)
-          .set({ points: () => `points + ${value}` })
-          .where('id = :id', { id: postId })
-          .execute();
-      });
-    } catch (error) {
-      return false;
+    const upvote = await Upvote.findOne({
+      where: { userId, postId },
+    });
+
+    if (upvote && upvote.value !== vote) {
+      // User has already voted but changed vote
+      try {
+        await getConnection().transaction(async (tm) => {
+          await tm
+            .createQueryBuilder()
+            .update(Post)
+            .set({ points: () => `points + ${vote * 2}` })
+            .where('id = :id', { id: postId })
+            .execute();
+          await tm
+            .createQueryBuilder()
+            .update(Upvote)
+            .set({ value: vote })
+            .where('userId = :userId and postId = :postId', {
+              userId,
+              postId,
+            })
+            .execute();
+        });
+      } catch (error) {
+        console.error(error);
+        return false;
+      }
+    } else if (!upvote) {
+      // Has not voted yet
+      try {
+        await getConnection().transaction(async (tm) => {
+          await tm
+            .getRepository(Upvote)
+            .insert({ userId, postId, value: vote });
+
+          await tm
+            .createQueryBuilder()
+            .update(Post)
+            .set({ points: () => `points + ${vote}` })
+            .where('id = :postId', { postId })
+            .execute();
+        });
+      } catch (error) {
+        return false;
+      }
     }
 
     return true;
   }
 
   @Query(() => PaginatedPosts)
+  @UseMiddleware(authenticate)
   async posts(
     @Arg('limit', () => Int, { defaultValue: 10 }) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-    @Info() info: any
-  ): Promise<PaginatedPosts> {
+    @Ctx() { user }: MyContext
+  ): // @Info() info: any
+  Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
+
+    const parameters: any[] = [realLimitPlusOne];
+    if (user?.userId) {
+      parameters.push(user.userId);
+    }
+
+    let cursorIdx;
+    if (cursor) {
+      parameters.push(cursor);
+      cursorIdx = parameters.length;
+    }
 
     const posts = await getConnection().query(
       `
@@ -98,13 +143,19 @@ export class PostResolver {
       'email', u.email,
       'createdAt', u."createdAt",
       'updatedAt', u."updatedAt"
-      ) author
+      ) author,
+    ${
+      user?.userId
+        ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
+        : 'null as "voteStatus"'
+    }
     from reddit.posts p
     inner join reddit.users u on p."authorId" = u.id
-    ${cursor ? `where p."createdAt" < '${cursor}'` : ''}
+    ${cursor ? `where p."createdAt" < $${cursorIdx}` : ''}
     order by p."createdAt" DESC
-    limit ${realLimitPlusOne}
-    `
+    limit $1
+    `,
+      parameters
     );
 
     return {

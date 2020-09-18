@@ -1,18 +1,18 @@
 import { Request, Response } from 'express';
 
-export interface PasswordResetTokenPayload {
+export type PasswordResetTokenPayload = {
   userId: string;
-}
+};
 
-export interface RefreshTokenPayload {
+export type RefreshTokenPayload = {
   userId: string;
   tokenVersion: number;
-}
+};
 
-export interface AccessTokenPayload {
+export type AccessTokenPayload = {
   userId: string;
   isAdmin: boolean;
-}
+};
 
 export interface MyContext {
   req: Request;

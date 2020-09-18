@@ -43,12 +43,12 @@ export function sendRefreshToken(res: Response, token: string) {
     maxAge: __maxAge__,
     sameSite: 'strict',
     secure: __prod__,
-    path: '/refresh_token',
+    // path: '/refresh_token',
   });
 }
 
 export function clearRefreshCookie(res: Response) {
   res.clearCookie(COOKIE_NAME, {
-    path: '/refresh_token',
+    // path: '/refresh_token',
   });
 }
