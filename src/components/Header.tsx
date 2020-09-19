@@ -30,7 +30,7 @@ const Header = (props: HeaderProps) => {
 
     if (result.data?.logout) {
       clearAccessToken();
-      router.push('/logout');
+      // router.push('/logout');
     }
   };
 

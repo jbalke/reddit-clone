@@ -40,13 +40,12 @@ export async function refreshAccessToken(): Promise<string> {
     const response = await fetch('http://localhost:4000/refresh_token', {
       credentials: 'include',
       method: 'POST',
-      headers: {
-        authorization: accessToken ? `Bearer ${accessToken}` : '',
-      },
+      // headers: {
+      //   Authorization: accessToken ? `Bearer ${accessToken}` : '',
+      // },
     });
 
     const data: myResponse = await response.json();
-
     if (data.ok) {
       setAccessToken(data.accessToken);
     } else {

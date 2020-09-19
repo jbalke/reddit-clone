@@ -174,6 +174,7 @@ const cache = cacheExchange({
             }
           }
         );
+        invalidatePosts(cache);
       },
       register: (_result, args, cache, info) => {
         betterUpdateQuery<RegisterMutation, MeQuery>(
@@ -218,13 +219,7 @@ const cache = cacheExchange({
         );
       },
       createPost: (_result, args, cache, info) => {
-        const allFields = cache.inspectFields('Query');
-        const fieldInfos = allFields.filter(
-          (info) => info.fieldName === 'posts'
-        );
-        fieldInfos.forEach((fi) => {
-          cache.invalidate('Query', 'posts', fi.arguments || undefined);
-        });
+        invalidatePosts(cache);
       },
       vote: (_result, args, cache, info) => {
         const { postId, vote } = args as VoteMutationVariables;
@@ -262,3 +257,10 @@ const cache = cacheExchange({
     },
   },
 });
+function invalidatePosts(cache) {
+  const allFields = cache.inspectFields('Query');
+  const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
+  fieldInfos.forEach((fi) => {
+    cache.invalidate('Query', 'posts', fi.arguments || undefined);
+  });
+}
