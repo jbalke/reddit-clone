@@ -30,6 +30,7 @@
   "license": "MIT",
   "devDependencies": {
     "@graphql-codegen/cli": "1.17.8",
+    "@graphql-codegen/introspection": "^1.17.8",
     "@graphql-codegen/typescript": "1.17.8",
     "@graphql-codegen/typescript-operations": "1.17.8",
     "@graphql-codegen/typescript-urql": "^2.0.1",

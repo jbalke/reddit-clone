@@ -9,11 +9,14 @@ import {
   ChangePasswordMutation,
   VoteMutationVariables,
   Vote,
+  DeletePostMutationVariables,
 } from '../generated/graphql';
+import schema from './introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
 import gql from 'graphql-tag';
 
 export const cache = cacheExchange({
+  schema: schema as any,
   resolvers: {
     Query: {
       posts: cursorPagination(),
@@ -120,6 +123,12 @@ export const cache = cacheExchange({
             { id: postId, points: newPoints, voteStatus: newVoteStatus } as any
           );
         }
+      },
+      deletePost: (_result, args, cache, info) => {
+        cache.invalidate({
+          __typename: 'Post',
+          id: (args as DeletePostMutationVariables).id,
+        });
       },
     },
   },
