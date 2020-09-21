@@ -122,9 +122,15 @@ export class UserResolver {
       };
     }
 
+    //* increment tokenVersion to invalidate existing refresh tokens.
+    user.tokenVersion++;
+
     await User.update(
       { id: userId },
-      { password: await hashPassword(newPassword) }
+      {
+        password: await hashPassword(newPassword),
+        tokenVersion: user.tokenVersion,
+      }
     );
 
     // log user in
