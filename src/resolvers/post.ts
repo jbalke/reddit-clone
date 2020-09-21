@@ -118,8 +118,7 @@ export class PostResolver {
     @Arg('limit', () => Int, { defaultValue: 10 }) limit: number,
     @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
     @Ctx() { user }: MyContext
-  ): // @Info() info: any
-  Promise<PaginatedPosts> {
+  ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
@@ -139,10 +138,7 @@ export class PostResolver {
     select p.*,
     json_build_object(
       'id', u.id, 
-      'username', u.username, 
-      'email', u.email,
-      'createdAt', u."createdAt",
-      'updatedAt', u."updatedAt"
+      'username', u.username 
       ) author,
     ${
       user?.userId
@@ -165,8 +161,36 @@ export class PostResolver {
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
-    return Post.findOne(id);
+  @UseMiddleware(authenticate)
+  async post(
+    @Arg('id', () => ID) id: string,
+    @Ctx() { user }: MyContext
+  ): Promise<Post | undefined> {
+    const parameters: any[] = [id];
+    if (user?.userId) {
+      parameters.push(user.userId);
+    }
+
+    const post = await getConnection().query(
+      `
+    select p.*,
+    json_build_object(
+      'id', u.id, 
+      'username', u.username
+      ) author,
+    ${
+      user?.userId
+        ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
+        : 'null as "voteStatus"'
+    }
+    from reddit.posts p
+    inner join reddit.users u on p."authorId" = u.id
+    where p.id = $1
+    `,
+      parameters
+    );
+
+    return post instanceof Array ? post[0] : undefined;
   }
 
   // @FieldResolver((of) => User)
