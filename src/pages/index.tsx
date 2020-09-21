@@ -22,11 +22,6 @@ const Index = () => {
   return (
     <Layout>
       <Wrapper size="regular">
-        <Flex justifyContent="space-between" alignItems="center">
-          <Heading>Reddit Clone</Heading>
-          <NextChakraLink href="/create-post">create post</NextChakraLink>
-        </Flex>
-        <br />
         <Box>
           {!data && (fetching || stale) ? (
             <div>loading...</div>

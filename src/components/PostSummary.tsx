@@ -1,8 +1,8 @@
-import { Flex, Heading, Link as ChakraLink, Text } from '@chakra-ui/core';
-import Link from 'next/link';
+import { Flex, Heading, Text } from '@chakra-ui/core';
+import { NextChakraLink } from '../components/NextChakraLink';
 import VoteSection from '../components/VoteSection';
 import { __DateOptions__ } from '../constants';
-import { PostSummaryFragment, User } from '../generated/graphql';
+import { PostSummaryFragment } from '../generated/graphql';
 
 interface Author {
   userId: string;
@@ -19,12 +19,16 @@ function PostSummary({ post }: PostSummaryProps) {
       <Flex direction="column" flexGrow={1}>
         <Flex justifyContent="space-between">
           <Flex direction="column">
-            <Heading fontSize="xl">{post.title}</Heading>
-            <ChakraLink fontSize="xs" fontWeight="bold">
-              <Link
-                href={`/user/${post.author.id}`}
-              >{`by ${post.author.username}`}</Link>
-            </ChakraLink>
+            <NextChakraLink href={`/post/${post.id}`}>
+              <Heading fontSize="xl">{post.title}</Heading>
+            </NextChakraLink>
+            <NextChakraLink
+              fontSize="xs"
+              fontWeight="bold"
+              href={`/user/${post.author.id}`}
+            >
+              {`by ${post.author.username}`}
+            </NextChakraLink>
           </Flex>
           <Flex direction="column" alignItems="flex-end">
             <Text as="sup">

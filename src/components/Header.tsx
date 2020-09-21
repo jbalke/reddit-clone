@@ -1,23 +1,30 @@
-import { Box, Button, Flex, Heading } from '@chakra-ui/core';
+import {
+  Box,
+  BoxProps,
+  Button,
+  Flex,
+  Heading,
+  Link as ChakraLink,
+} from '@chakra-ui/core';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useState } from 'react';
 import { clearAccessToken } from '../accessToken';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
 import { NextChakraLink } from './NextChakraLink';
-
-type HeaderProps = {};
+import Link from 'next/link';
 
 type MenuItemProps = {
   children: ReactNode;
-};
-const MenuItems = ({ children }: MenuItemProps) => (
-  <Box mt={{ base: 4, sm: 0, md: 0 }} mr={6} display="block">
+} & BoxProps;
+
+const MenuItem = ({ children, ...props }: MenuItemProps) => (
+  <Box mt={{ base: 4, sm: 0, md: 0 }} mr={6} display="block" {...props}>
     {children}
   </Box>
 );
 
-const Header = (props: HeaderProps) => {
+const Header = () => {
   const [show, setShow] = useState(false);
   const handleToggle = () => setShow(!show);
   const router = useRouter();
@@ -39,19 +46,29 @@ const Header = (props: HeaderProps) => {
   } else if (data && !data.me) {
     authLinks = (
       <>
-        <MenuItems>
+        <MenuItem>
           <NextChakraLink href="/register">Register</NextChakraLink>
-        </MenuItems>
-        <MenuItems>
+        </MenuItem>
+        <MenuItem>
           <NextChakraLink href="/login">Login</NextChakraLink>
-        </MenuItems>
+        </MenuItem>
       </>
     );
   } else if (data && data.me) {
     authLinks = (
-      <Box display={{ sm: 'block', md: 'flex' }} justifyContent="space-between">
+      <>
+        <Link href="/create-post">
+          <Button
+            mx={{ sm: 0, md: 2 }}
+            my={{ sm: 2, md: 0 }}
+            variantColor="whiteAlpha"
+            aria-label="create post"
+          >
+            create post
+          </Button>
+        </Link>
         <Box
-          pr={2}
+          px={{ sm: 0, md: 2 }}
           borderRight={{ sm: 'none', md: '2px white solid' }}
           borderBottom={{ sm: '2px white solid', md: 'none' }}
           paddingBottom={{ sm: '4px', md: '0' }}
@@ -69,60 +86,72 @@ const Header = (props: HeaderProps) => {
             Logout
           </Button>
         </Box>
-      </Box>
+      </>
     );
   }
 
   return (
     <Flex
       as="nav"
-      align="center"
-      justify="space-between"
-      wrap="wrap"
       padding="1.5rem"
       bg="teal.500"
       color="white"
-      {...props}
+      justifyContent="center"
     >
-      <Flex align="center" mr={5}>
-        <Heading as="h1" size="lg">
-          Chakra UI
-        </Heading>
-      </Flex>
-
-      <Box display={{ sm: 'block', md: 'none' }} onClick={handleToggle}>
-        <svg
-          fill="white"
-          width="12px"
-          viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <title>Menu</title>
-          <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
-        </svg>
-      </Box>
-
-      <Box
-        display={{ sm: show ? 'block' : 'none', md: 'flex' }}
-        width={{ sm: 'full', md: 'auto' }}
-        justifyContent="space-between"
+      <Flex
+        maxW={{ sm: '100%', md: '800px' }}
         alignItems="center"
+        justifyContent="space-between"
         flexGrow={1}
       >
-        <Box display={{ sm: 'block', md: 'flex' }}>
-          <MenuItems>
-            <NextChakraLink href="/">Home</NextChakraLink>
-          </MenuItems>
+        <Flex align="center" mr={5}>
+          <NextChakraLink href="/">
+            <Heading as="h1" size="lg">
+              Reddit Clone
+            </Heading>
+          </NextChakraLink>
+        </Flex>
 
-          {!!data?.me && (
-            <MenuItems>
-              <NextChakraLink href="/token_test">Token Test</NextChakraLink>
-            </MenuItems>
-          )}
+        <Box display={{ sm: 'block', md: 'none' }} onClick={handleToggle}>
+          <svg
+            fill="white"
+            width="12px"
+            viewBox="0 0 20 20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <title>Menu</title>
+            <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
+          </svg>
         </Box>
 
-        <Box display={{ sm: 'block', md: 'flex' }}>{authLinks}</Box>
-      </Box>
+        <Box
+          display={{ sm: show ? 'block' : 'none', md: 'flex' }}
+          width={{ sm: 'full', md: 'auto' }}
+          justifyContent="space-between"
+          alignItems="center"
+          flexGrow={1}
+        >
+          <Box display={{ sm: 'block', md: 'flex' }}>
+            <MenuItem>
+              <NextChakraLink href="/">Home</NextChakraLink>
+            </MenuItem>
+
+            {!!data?.me && (
+              <MenuItem>
+                <NextChakraLink href="/token_test">Token Test</NextChakraLink>
+              </MenuItem>
+            )}
+          </Box>
+
+          <Box
+            display={{ sm: 'block', md: 'flex' }}
+            justifyContent="space-between"
+            alignItems="center"
+          >
+            {authLinks}
+          </Box>
+        </Box>
+      </Flex>
     </Flex>
   );
 };
