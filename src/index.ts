@@ -23,6 +23,7 @@ const main = async () => {
 
   //* Apollo Server setup
   const server = new ApolloServer({
+    introspection: !__prod__,
     schema: await buildSchema({
       resolvers: [PostResolver, UserResolver, HelloResolver],
       validate: false,
