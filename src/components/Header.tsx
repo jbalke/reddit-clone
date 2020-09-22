@@ -32,12 +32,12 @@ const Header = () => {
   const [{ data, fetching, error }] = useMeQuery({ pause: isServer() });
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
-  const handleLogout = ({ router }: any) => async () => {
+  const handleLogout = () => async () => {
     const result = await logout();
 
     if (result.data?.logout) {
       clearAccessToken();
-      // router.push('/logout');
+      router.reload();
     }
   };
 
@@ -80,7 +80,7 @@ const Header = () => {
             variant="link"
             color="white"
             verticalAlign="baseline"
-            onClick={handleLogout({ router })}
+            onClick={handleLogout()}
             isLoading={logoutFetching}
           >
             Logout
