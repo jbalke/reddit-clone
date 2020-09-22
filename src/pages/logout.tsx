@@ -12,7 +12,7 @@ function logout(props: logoutProps) {
   const [{ data, fetching, error }] = useMeQuery({ pause: isServer() });
 
   return (
-    <Layout>
+    <Layout size="small">
       <Box m={5}>
         <div>Good bye! {data && <p>You are logged out.</p>}</div>
       </Box>

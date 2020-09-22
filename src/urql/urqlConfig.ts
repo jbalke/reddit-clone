@@ -32,7 +32,7 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
         try {
           let token = '';
           if (isServer() && ctx) {
-            const cookie = ctx.req.headers.cookie;
+            const cookie = ctx.req?.headers?.cookie;
 
             const response = await fetch(
               'http://localhost:4000/refresh_token',

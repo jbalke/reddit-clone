@@ -23,57 +23,55 @@ function forgotPassword(props: forgotPasswordProps) {
   const [submitted, setSubmitted] = useState(false);
 
   return (
-    <Layout>
-      <Wrapper size="small">
-        {submitted ? (
-          <Alert mt={5} status="success">
-            <AlertIcon />
-            <AlertTitle mr={4}>Success!</AlertTitle>
-            <AlertDescription fontSize="sm">
-              If an account with that email exists, an email has been sent.
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <Formik
-            initialValues={{
-              email: '',
-            }}
-            validate={validateForgotPasswordInput}
-            onSubmit={async (values) => {
-              setSubmitted(false);
-              const response = await forgotPassword({
-                email: values.email,
-              });
-              if (response?.data) {
-                setSubmitted(true);
-              }
-            }}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <FormControl>
-                  <InputField
-                    label="Email Address"
-                    name="email"
-                    placeholder="your email address"
-                    type="email"
-                    disabled={submitted}
-                  />
-                  <Button
-                    mt={4}
-                    isLoading={isSubmitting}
-                    type="submit"
-                    variantColor="teal"
-                    isDisabled={submitted}
-                  >
-                    forgot password
-                  </Button>
-                </FormControl>
-              </Form>
-            )}
-          </Formik>
-        )}
-      </Wrapper>
+    <Layout size="small">
+      {submitted ? (
+        <Alert mt={5} status="success">
+          <AlertIcon />
+          <AlertTitle mr={4}>Success!</AlertTitle>
+          <AlertDescription fontSize="sm">
+            If an account with that email exists, an email has been sent.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <Formik
+          initialValues={{
+            email: '',
+          }}
+          validate={validateForgotPasswordInput}
+          onSubmit={async (values) => {
+            setSubmitted(false);
+            const response = await forgotPassword({
+              email: values.email,
+            });
+            if (response?.data) {
+              setSubmitted(true);
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <FormControl>
+                <InputField
+                  label="Email Address"
+                  name="email"
+                  placeholder="your email address"
+                  type="email"
+                  disabled={submitted}
+                />
+                <Button
+                  mt={4}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                  isDisabled={submitted}
+                >
+                  forgot password
+                </Button>
+              </FormControl>
+            </Form>
+          )}
+        </Formik>
+      )}
     </Layout>
   );
 }

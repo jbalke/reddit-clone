@@ -1,15 +1,12 @@
 import React from 'react';
 import Header from './Header';
+import Wrapper, { WrapperProps } from './Wrapper';
 
-type LayoutProps = {
-  children: React.ReactNode;
-};
-
-function Layout({ children }: LayoutProps) {
+function Layout({ children, ...props }: WrapperProps) {
   return (
     <>
       <Header />
-      {children}
+      <Wrapper {...props}>{children}</Wrapper>
     </>
   );
 }

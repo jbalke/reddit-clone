@@ -28,80 +28,76 @@ const ChangePassword = () => {
   const router = useRouter();
 
   return (
-    <Layout>
-      <Wrapper size="small">
-        {!!tokenError ? (
-          <Alert mt={5} status="error">
-            <AlertIcon />
-            <AlertTitle mr={2}>Token expired</AlertTitle>
-            <AlertDescription>
-              <NextChakraLink href="/forgot-password">
-                click here to get a new one
-              </NextChakraLink>
-            </AlertDescription>
-          </Alert>
-        ) : submitted ? (
-          <Alert mt={5} status="success">
-            <AlertIcon />
-            <AlertTitle mr={4}>Success!</AlertTitle>
-            {/* <AlertDescription>Your password has been changed.</AlertDescription> */}
-          </Alert>
-        ) : (
-          <Formik
-            initialValues={{
-              password: '',
-            }}
-            validate={validatePasswordInput}
-            onSubmit={async (values) => {
-              const response = await changePassword({
-                newPassword: values.password,
-                token:
-                  typeof router.query.token == 'string'
-                    ? router.query.token
-                    : '',
-                userId:
-                  typeof router.query.uid == 'string' ? router.query.uid : '',
-              });
-              if (response?.data) {
-                const { changePassword } = response.data;
-                if (changePassword.errors) {
-                  const errorMap = toErrorMap(changePassword.errors);
-                  if ('token' in errorMap) {
-                    setTokenError(errorMap.token);
-                  }
-                  setSubmitted(true);
-                } else if (response.data.changePassword.accessToken) {
-                  setAccessToken(response.data.changePassword.accessToken);
-                  router.push('/');
+    <Layout size="small">
+      {!!tokenError ? (
+        <Alert mt={5} status="error">
+          <AlertIcon />
+          <AlertTitle mr={2}>Token expired</AlertTitle>
+          <AlertDescription>
+            <NextChakraLink href="/forgot-password">
+              click here to get a new one
+            </NextChakraLink>
+          </AlertDescription>
+        </Alert>
+      ) : submitted ? (
+        <Alert mt={5} status="success">
+          <AlertIcon />
+          <AlertTitle mr={4}>Success!</AlertTitle>
+          {/* <AlertDescription>Your password has been changed.</AlertDescription> */}
+        </Alert>
+      ) : (
+        <Formik
+          initialValues={{
+            password: '',
+          }}
+          validate={validatePasswordInput}
+          onSubmit={async (values) => {
+            const response = await changePassword({
+              newPassword: values.password,
+              token:
+                typeof router.query.token == 'string' ? router.query.token : '',
+              userId:
+                typeof router.query.uid == 'string' ? router.query.uid : '',
+            });
+            if (response?.data) {
+              const { changePassword } = response.data;
+              if (changePassword.errors) {
+                const errorMap = toErrorMap(changePassword.errors);
+                if ('token' in errorMap) {
+                  setTokenError(errorMap.token);
                 }
+                setSubmitted(true);
+              } else if (response.data.changePassword.accessToken) {
+                setAccessToken(response.data.changePassword.accessToken);
+                router.push('/');
               }
-            }}
-          >
-            {({ isSubmitting }) => (
-              <Form>
-                <FormControl>
-                  <InputField
-                    label="New Password"
-                    name="password"
-                    placeholder="new password"
-                    type="password"
-                    disabled={!!tokenError}
-                  />
-                  <Button
-                    mt={4}
-                    isLoading={isSubmitting}
-                    type="submit"
-                    variantColor="teal"
-                    isDisabled={!!tokenError}
-                  >
-                    change password
-                  </Button>
-                </FormControl>
-              </Form>
-            )}
-          </Formik>
-        )}
-      </Wrapper>
+            }
+          }}
+        >
+          {({ isSubmitting }) => (
+            <Form>
+              <FormControl>
+                <InputField
+                  label="New Password"
+                  name="password"
+                  placeholder="new password"
+                  type="password"
+                  disabled={!!tokenError}
+                />
+                <Button
+                  mt={4}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                  isDisabled={!!tokenError}
+                >
+                  change password
+                </Button>
+              </FormControl>
+            </Form>
+          )}
+        </Formik>
+      )}
     </Layout>
   );
 };

@@ -12,13 +12,11 @@ function Profile(props: ProfileProps) {
   const router = useRouter();
 
   return (
-    <Layout>
-      <Wrapper size="regular">
-        <Box>
-          <Heading>Profile</Heading>
-          <Text>UserId: {router.query.uid}</Text>
-        </Box>
-      </Wrapper>
+    <Layout size="small">
+      <Box>
+        <Heading>Profile</Heading>
+        <Text>UserId: {router.query.uid}</Text>
+      </Box>
     </Layout>
   );
 }

@@ -32,89 +32,87 @@ function login(props: loginProps) {
   const { next } = router.query;
 
   return (
-    <Layout>
-      <Wrapper size="small">
-        <Formik
-          initialValues={{
-            emailOrUsername: '',
-            password: '',
-          }}
-          validate={validateLoginInput}
-          onSubmit={async (values, { setErrors }) => {
-            setLoginError('');
-            const response = await login({
-              options: {
-                emailOrUsername: values.emailOrUsername,
-                password: values.password,
-              },
-            });
-            if (response && response.data) {
-              const { login } = response.data;
-              if (login.errors) {
-                const errorMap = toErrorMap(login.errors);
-                if ('login' in errorMap) {
-                  setLoginError(errorMap.login);
-                }
-                setErrors(toErrorMap(login.errors));
-              } else if (login.accessToken) {
-                // succesfully registered
-                setAccessToken(login.accessToken);
-                if (typeof next == 'string') {
-                  router.push(next);
-                } else {
-                  router.push('/');
-                }
+    <Layout size="small">
+      <Formik
+        initialValues={{
+          emailOrUsername: '',
+          password: '',
+        }}
+        validate={validateLoginInput}
+        onSubmit={async (values, { setErrors }) => {
+          setLoginError('');
+          const response = await login({
+            options: {
+              emailOrUsername: values.emailOrUsername,
+              password: values.password,
+            },
+          });
+          if (response && response.data) {
+            const { login } = response.data;
+            if (login.errors) {
+              const errorMap = toErrorMap(login.errors);
+              if ('login' in errorMap) {
+                setLoginError(errorMap.login);
+              }
+              setErrors(toErrorMap(login.errors));
+            } else if (login.accessToken) {
+              // succesfully registered
+              setAccessToken(login.accessToken);
+              if (typeof next == 'string') {
+                router.push(next);
+              } else {
+                router.push('/');
               }
             }
-          }}
-        >
-          {({ isSubmitting }) => (
-            <Form>
-              <FormControl>
+          }
+        }}
+      >
+        {({ isSubmitting }) => (
+          <Form>
+            <FormControl>
+              <InputField
+                label="Email or Username"
+                name="emailOrUsername"
+                placeholder="email address or username"
+              />
+              <Box mt={4}>
                 <InputField
-                  label="Email or Username"
-                  name="emailOrUsername"
-                  placeholder="email address or username"
+                  label="Password"
+                  name="password"
+                  type="password"
+                  placeholder="password"
                 />
-                <Box mt={4}>
-                  <InputField
-                    label="Password"
-                    name="password"
-                    type="password"
-                    placeholder="password"
-                  />
-                </Box>
-                <Flex justifyContent="space-between">
-                  <Button
-                    mt={4}
-                    isLoading={isSubmitting}
-                    type="submit"
-                    variantColor="teal"
+              </Box>
+              <Flex justifyContent="space-between">
+                <Button
+                  mt={4}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                >
+                  Login
+                </Button>
+                <Box mt={2}>
+                  <NextChakraLink
+                    fontSize="sm"
+                    href="/forgot-password"
+                    color="teal.500"
                   >
-                    Login
-                  </Button>
-                  <Box mt={2}>
-                    <NextChakraLink
-                      fontSize="sm"
-                      href="/forgot-password"
-                      color="teal.500"
-                    >
-                      forgot password?
-                    </NextChakraLink>
-                  </Box>
-                </Flex>
-                {!!loginError && (
-                  <Alert mt={5} status="error">
-                    <AlertIcon />
-                    <AlertTitle mr={2}>Login failed!</AlertTitle>
-                    <AlertDescription>{loginError}</AlertDescription>
-                  </Alert>
-                )}
-              </FormControl>
-            </Form>
-          )}
-        </Formik>
-      </Wrapper>
+                    forgot password?
+                  </NextChakraLink>
+                </Box>
+              </Flex>
+              {!!loginError && (
+                <Alert mt={5} status="error">
+                  <AlertIcon />
+                  <AlertTitle mr={2}>Login failed!</AlertTitle>
+                  <AlertDescription>{loginError}</AlertDescription>
+                </Alert>
+              )}
+            </FormControl>
+          </Form>
+        )}
+      </Formik>
     </Layout>
   );
 }

@@ -1,11 +1,9 @@
-import { Flex, Heading, IconButton, Text } from '@chakra-ui/core';
+import { Flex, Heading, Text } from '@chakra-ui/core';
 import { NextChakraLink } from '../components/NextChakraLink';
 import VoteSection from '../components/VoteSection';
 import { __DateOptions__ } from '../constants';
-import {
-  PostSummaryFragment,
-  useDeletePostMutation,
-} from '../generated/graphql';
+import { PostSummaryFragment, useMeQuery } from '../generated/graphql';
+import EditDeletePostButtons from './EditDeletePostButtons';
 
 interface Author {
   userId: string;
@@ -16,7 +14,7 @@ interface PostSummaryProps {
 }
 
 function PostSummary({ post }: PostSummaryProps) {
-  const [, deletePost] = useDeletePostMutation();
+  const [{ data, fetching }] = useMeQuery();
 
   return (
     <Flex p={5} shadow="md" borderWidth="1px" mb={4}>
@@ -44,16 +42,13 @@ function PostSummary({ post }: PostSummaryProps) {
           </Flex>
         </Flex>
         <Text mt={4}>{post.textSnippet}</Text>
-        <IconButton
-          alignSelf="flex-end"
-          icon="delete"
-          aria-label="Delete Post"
-          title="Delete Post"
-          variantColor="red"
-          onClick={async () => {
-            await deletePost({ id: post.id });
-          }}
-        />
+        {data?.me?.id === post.author.id ? (
+          <EditDeletePostButtons
+            postId={post.id}
+            display="flex"
+            alignSelf="flex-end"
+          />
+        ) : null}
       </Flex>
     </Flex>
   );

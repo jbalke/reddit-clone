@@ -5,7 +5,7 @@ import Layout from '../components/Layout';
 import { NextChakraLink } from '../components/NextChakraLink';
 import PostSummary from '../components/PostSummary';
 import Wrapper from '../components/Wrapper';
-import { usePostsQuery } from '../generated/graphql';
+import { useMeQuery, usePostsQuery } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 
 const Index = () => {
@@ -20,38 +20,35 @@ const Index = () => {
   }
 
   return (
-    <Layout>
-      <Wrapper size="regular">
-        <Box>
-          {!data && (fetching || stale) ? (
-            <div>loading...</div>
-          ) : (
-            <Stack>
-              {data &&
-                data.posts.posts.map((p) => (
-                  <PostSummary key={p.id} post={p}></PostSummary>
-                ))}
-            </Stack>
-          )}
-        </Box>
-        {data && data.posts.hasMore && (
-          <Flex justifyContent="center" alignItems="center">
-            <Button
-              onClick={() => {
-                setVariables({
-                  limit: variables.limit,
-                  cursor:
-                    data.posts.posts[data.posts.posts.length - 1].createdAt,
-                });
-              }}
-              isLoading={fetching || stale}
-              my={4}
-            >
-              load more
-            </Button>
-          </Flex>
+    <Layout size="regular">
+      <Box>
+        {!data && (fetching || stale) ? (
+          <div>loading...</div>
+        ) : (
+          <Stack>
+            {data &&
+              data.posts.posts.map((p) => (
+                <PostSummary key={p.id} post={p}></PostSummary>
+              ))}
+          </Stack>
         )}
-      </Wrapper>
+      </Box>
+      {data && data.posts.hasMore && (
+        <Flex justifyContent="center" alignItems="center">
+          <Button
+            onClick={() => {
+              setVariables({
+                limit: variables.limit,
+                cursor: data.posts.posts[data.posts.posts.length - 1].createdAt,
+              });
+            }}
+            isLoading={fetching || stale}
+            my={4}
+          >
+            load more
+          </Button>
+        </Flex>
+      )}
     </Layout>
   );
 };
