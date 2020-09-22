@@ -12,6 +12,7 @@ import { handleRefreshToken } from './handlers/tokens';
 import { HelloResolver } from './resolvers/hello';
 import cors from 'cors';
 import { createUserLoader } from './utils/createUserLoader';
+import { createUpvoteLoader } from './utils/createUpvoteLoader';
 
 const main = async () => {
   const conn = await createConnection();
@@ -34,6 +35,7 @@ const main = async () => {
       res,
       user,
       userLoader: createUserLoader(),
+      upVoteLoader: createUpvoteLoader(),
     }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.

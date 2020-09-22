@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { createUpvoteLoader } from './utils/createUpvoteLoader';
 import { createUserLoader } from './utils/createUserLoader';
 
 export type PasswordResetTokenPayload = {
@@ -20,4 +21,5 @@ export interface MyContext {
   res: Response;
   user?: AccessTokenPayload;
   userLoader: ReturnType<typeof createUserLoader>;
+  upVoteLoader: ReturnType<typeof createUpvoteLoader>;
 }

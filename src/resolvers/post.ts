@@ -58,6 +58,23 @@ export class PostResolver {
     return userLoader.load(post.authorId);
   }
 
+  @FieldResolver(() => Upvote, { nullable: true })
+  async voteStatus(
+    @Root() post: Post,
+    @Ctx() { upVoteLoader, user }: MyContext
+  ) {
+    if (!user?.userId) {
+      return null;
+    }
+
+    const upvote = await upVoteLoader.load({
+      postId: post.id,
+      userId: user.userId,
+    });
+
+    return upvote ? upvote.value : null;
+  }
+
   @Mutation(() => Boolean)
   @UseMiddleware(authorize)
   async vote(
@@ -123,34 +140,21 @@ export class PostResolver {
   @UseMiddleware(authenticate)
   async posts(
     @Arg('limit', () => Int, { defaultValue: 10 }) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null,
-    @Ctx() { user }: MyContext
+    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
   ): Promise<PaginatedPosts> {
     const realLimit = Math.min(50, limit);
     const realLimitPlusOne = realLimit + 1;
 
     const parameters: any[] = [realLimitPlusOne];
-    if (user?.userId) {
-      parameters.push(user.userId);
-    }
-
-    let cursorIdx;
     if (cursor) {
       parameters.push(cursor);
-      cursorIdx = parameters.length;
     }
 
     const posts = await getConnection().query(
       `
-    select p.*,
-    ${
-      user?.userId
-        ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
-        : 'null as "voteStatus"'
-    }
+    select p.*
     from reddit.posts p
-    inner join reddit.users u on p."authorId" = u.id
-    ${cursor ? `where p."createdAt" < $${cursorIdx}` : ''}
+    ${cursor ? `where p."createdAt" < $2` : ''}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -165,31 +169,8 @@ export class PostResolver {
 
   @Query(() => Post, { nullable: true })
   @UseMiddleware(authenticate)
-  async post(
-    @Arg('id', () => ID) id: string,
-    @Ctx() { user }: MyContext
-  ): Promise<Post | undefined> {
-    const parameters: any[] = [id];
-    if (user?.userId) {
-      parameters.push(user.userId);
-    }
-
-    const post = await getConnection().query(
-      `
-    select p.*,
-    ${
-      user?.userId
-        ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
-        : 'null as "voteStatus"'
-    }
-    from reddit.posts p
-    inner join reddit.users u on p."authorId" = u.id
-    where p.id = $1
-    `,
-      parameters
-    );
-
-    return post instanceof Array ? post[0] : undefined;
+  async post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
+    return await Post.findOne({ id });
   }
 
   @Mutation(() => Post)
