@@ -193,11 +193,6 @@ export class PostResolver {
     return post instanceof Array ? post[0] : undefined;
   }
 
-  // @FieldResolver((of) => User)
-  // async author(@Root() post: Post): Promise<User> {
-  //   return (await User.findOne(post.author.id))!;
-  // }
-
   @Mutation(() => Post)
   @UseMiddleware(authorize)
   createPost(
@@ -211,20 +206,18 @@ export class PostResolver {
   @UseMiddleware(authorize)
   async updatePost(
     @Arg('id', () => ID) id: string,
-    @Arg('title', () => String, { nullable: true }) title: string,
+    @Arg('title', () => String) title: string,
+    @Arg('text', () => String) text: string,
     @Ctx() { user }: MyContext
   ): Promise<Post | undefined> {
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ title })
-      .where('id = :id', { id })
+      .set({ title, text })
+      .where('id = :id and authorId = :userId', { id, userId: user!.userId })
       .returning('*')
       .execute();
 
-    if (result.affected === 0) {
-      return undefined;
-    }
     return result.raw[0];
   }
 
