@@ -11,6 +11,7 @@ import { MyContext } from './types';
 import { handleRefreshToken } from './handlers/tokens';
 import { HelloResolver } from './resolvers/hello';
 import cors from 'cors';
+import { createUserLoader } from './utils/createUserLoader';
 
 const main = async () => {
   const conn = await createConnection();
@@ -28,7 +29,12 @@ const main = async () => {
       resolvers: [PostResolver, UserResolver, HelloResolver],
       validate: false,
     }),
-    context: ({ req, res, user }: MyContext) => ({ req, res, user }),
+    context: ({ req, res, user }: MyContext) => ({
+      req,
+      res,
+      user,
+      userLoader: createUserLoader(),
+    }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.
   app.listen(__port__, () => {

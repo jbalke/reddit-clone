@@ -18,6 +18,7 @@ import {
 import { getConnection } from 'typeorm';
 import { Post, PostInput } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
+import { User } from '../entities/User';
 import { authorize, authenticate } from '../middleware/auth';
 import { MyContext } from '../types';
 
@@ -48,8 +49,13 @@ class PaginatedPosts {
 @Resolver((of) => Post)
 export class PostResolver {
   @FieldResolver(() => String)
-  textSnippet(@Root() root: Post) {
-    return root.text.length > 150 ? root.text.slice(0, 150) + '...' : root.text;
+  textSnippet(@Root() post: Post) {
+    return post.text.length > 150 ? post.text.slice(0, 150) + '...' : post.text;
+  }
+
+  @FieldResolver(() => User)
+  author(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    return userLoader.load(post.authorId);
   }
 
   @Mutation(() => Boolean)
@@ -75,6 +81,7 @@ export class PostResolver {
             .set({ points: () => `points + ${vote * 2}` })
             .where('id = :id', { id: postId })
             .execute();
+
           await tm
             .createQueryBuilder()
             .update(Upvote)
@@ -136,10 +143,6 @@ export class PostResolver {
     const posts = await getConnection().query(
       `
     select p.*,
-    json_build_object(
-      'id', u.id, 
-      'username', u.username 
-      ) author,
     ${
       user?.userId
         ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
@@ -174,10 +177,6 @@ export class PostResolver {
     const post = await getConnection().query(
       `
     select p.*,
-    json_build_object(
-      'id', u.id, 
-      'username', u.username
-      ) author,
     ${
       user?.userId
         ? '(select value from reddit.upvotes v where v."userId" = $2 and v."postId" = p."id") as "voteStatus"'
