@@ -1,13 +1,13 @@
-import { Field, ID, Int, ObjectType } from 'type-graphql';
+import { Field, ID, ObjectType } from 'type-graphql';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  UpdateDateColumn,
-  CreateDateColumn,
   BaseEntity,
-  OneToMany,
+  Column,
+  CreateDateColumn,
+  Entity,
   Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Post } from './Post';
 import { Upvote } from './Upvote';
@@ -36,11 +36,11 @@ export class User extends BaseEntity {
   password!: string;
 
   @Field(() => [Post])
-  @OneToMany((type) => Post, (post) => post.author)
+  @OneToMany(() => Post, (post) => post.author)
   posts: Post[];
 
   @Field(() => [Upvote])
-  @OneToMany((type) => Upvote, (upvote) => upvote.user)
+  @OneToMany(() => Upvote, (upvote) => upvote.user)
   upvotes: Upvote[];
 
   @Field()
@@ -54,6 +54,7 @@ export class User extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   tokenVersion: number;
 
+  @Field()
   @Column({ type: 'boolean', default: false })
   verified: boolean;
 }

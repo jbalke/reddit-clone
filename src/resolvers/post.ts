@@ -4,22 +4,21 @@ import {
   Field,
   FieldResolver,
   ID,
-  Info,
   InputType,
   Int,
   Mutation,
   ObjectType,
   Query,
+  registerEnumType,
   Resolver,
   Root,
   UseMiddleware,
-  registerEnumType,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import { Post, PostInput } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
-import { authorize, authenticate } from '../middleware/auth';
+import { authenticate, authorize, verified } from '../middleware/auth';
 import { MyContext } from '../types';
 
 enum Vote {
@@ -44,6 +43,14 @@ class PaginatedPosts {
   posts: Post[];
   @Field()
   hasMore: boolean;
+}
+
+@ObjectType()
+class PostResponse {
+  @Field(() => Post, { nullable: true })
+  post?: Post;
+  @Field()
+  error?: string;
 }
 
 @Resolver((of) => Post)
@@ -174,7 +181,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post)
-  @UseMiddleware(authorize)
+  @UseMiddleware(authorize, verified)
   createPost(
     @Arg('input') input: PostInput,
     @Ctx() { user }: MyContext

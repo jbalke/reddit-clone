@@ -21,7 +21,9 @@ import {
   createAccessToken,
   createPasswordResetToken,
   createRefreshToken,
+  createVerifyEmailToken,
   verifyPasswordRestToken,
+  verifyVerifyEmailToken,
 } from '../tokens';
 import { MyContext } from '../types';
 import { hashPassword, verifyPasswordHash } from '../utils/passwords';
@@ -60,6 +62,15 @@ export class FieldError {
 }
 
 @ObjectType()
+class VerifyResponse {
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
+
+  @Field(() => Boolean, { nullable: true })
+  verified: boolean;
+}
+
+@ObjectType()
 class UserResponse {
   @Field(() => [FieldError], { nullable: true })
   errors?: FieldError[];
@@ -86,7 +97,7 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async changePassword(
-    @Arg('userId') userId: string,
+    @Arg('userId', () => ID) userId: string,
     @Arg('token') token: string,
     @Arg('newPassword') newPassword: string,
     @Ctx() { res }: MyContext
@@ -252,18 +263,65 @@ If you did not request a password reset, you can safely ignore this email.
       throw new Error(`unable to create user`);
     }
 
-    sendEmail({
-      to: user.email,
-      subject: 'Please verify your email address',
-      text:
-        'Copy and paste this url into your browser to verify your email address: <>',
-      html: `<p>Please click the following link to verify your email address: <a href="#">verfiy email address</a></p>`,
-    });
+    const jwt = createVerifyEmailToken(user, '3d');
+    const verifyUrl = `http://localhost:3000/verify-email/${user.id}/${jwt}`;
+
+    sendEmail(createVerificationEmail(user, verifyUrl));
 
     sendRefreshToken(res, createRefreshToken(user));
     return {
       user,
       accessToken: createAccessToken(user),
+    };
+  }
+
+  @Mutation(() => Boolean)
+  async sendVerifyEmail(@Arg('email') email: string): Promise<boolean> {
+    const user = await User.findOne({ email });
+
+    if (user && !user.verified) {
+      const jwt = createVerifyEmailToken(user, '3d');
+      const verifyUrl = `http://localhost:3000/verify-email/${user.id}/${jwt}`;
+      sendEmail(createVerificationEmail(user, verifyUrl));
+    }
+
+    return true;
+  }
+
+  @Mutation(() => VerifyResponse)
+  async verifyEmail(
+    @Arg('userId', () => ID) userId: string,
+    @Arg('token') token: string
+  ): Promise<VerifyResponse> {
+    const user = await User.findOne({ id: userId });
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: 'token',
+            message: 'Token has expired',
+          },
+        ],
+        verified: false,
+      };
+    }
+    const isValidToken = verifyVerifyEmailToken(user, token);
+    if (!isValidToken) {
+      return {
+        errors: [
+          {
+            field: 'token',
+            message: 'Token has expired',
+          },
+        ],
+        verified: false,
+      };
+    }
+
+    await User.update({ id: user.id, verified: false }, { verified: true });
+
+    return {
+      verified: true,
     };
   }
 
@@ -384,4 +442,13 @@ If you did not request a password reset, you can safely ignore this email.
       throw new Error(err.message);
     }
   }
+}
+
+function createVerificationEmail(user: User, verifyUrl: string) {
+  return {
+    to: user.email,
+    subject: 'Please verify your email address',
+    text: `Copy and paste this url into your browser to verify your email address: ${verifyUrl}`,
+    html: `<p>Please click the following link to verify your email address: <a href="${verifyUrl}">verfiy email address</a></p>`,
+  };
 }

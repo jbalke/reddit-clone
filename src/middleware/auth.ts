@@ -3,6 +3,29 @@ import { AccessTokenPayload, MyContext } from '../types';
 import { MiddlewareFn } from 'type-graphql';
 import { ACCESS_TOKEN_SECRET, __bearerRE__ } from '../constants';
 import { AuthenticationError } from 'apollo-server-express';
+import { User } from '../entities/User';
+
+export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
+  if (!context.user?.userId) {
+    throw new AuthenticationError('not authenticated');
+  }
+
+  const user = await User.findOne({
+    id: context.user.userId,
+  });
+
+  if (!user) {
+    throw new AuthenticationError('not authenticated');
+  }
+
+  if (!user.verified) {
+    throw new Error('email address not verified');
+  }
+
+  console.log('verifying user: ', user);
+
+  return next();
+};
 
 export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
   const authorization = context.req.headers['authorization'];

@@ -5,7 +5,6 @@ import { verify } from 'jsonwebtoken';
 
 type ResetTokenPayload = {
   userId: string;
-  resetToken: string;
 };
 
 /** Returns a json web token containing the user's id
@@ -25,6 +24,28 @@ export const createPasswordResetToken = (
 
 export const verifyPasswordRestToken = (user: User, token: string): boolean => {
   const secret = user.password + '-' + user.createdAt.getTime();
+
+  let payload;
+  try {
+    payload = verify(token, secret) as ResetTokenPayload;
+    return payload.userId === user.id;
+  } catch (error) {
+    return false;
+  }
+};
+
+export const createVerifyEmailToken = (
+  user: User,
+  expiry: string | number | undefined = '1d'
+) => {
+  const secret = user.password + '-' + user.updatedAt.getTime();
+  return sign({ userId: user.id }, secret, {
+    expiresIn: expiry,
+  });
+};
+
+export const verifyVerifyEmailToken = (user: User, token: string): boolean => {
+  const secret = user.password + '-' + user.updatedAt.getTime();
 
   let payload;
   try {
