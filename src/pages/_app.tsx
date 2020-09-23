@@ -1,10 +1,5 @@
 import { CSSReset, ThemeProvider } from '@chakra-ui/core';
-import { withUrqlClient } from 'next-urql';
-import { useEffect } from 'react';
-import { setAccessToken } from '../accessToken';
-import Header from '../components/Header';
 import theme from '../theme';
-import { getClientConfig } from '../urql/urqlConfig';
 
 function MyApp({ Component, pageProps }: any) {
   //* retryExchange takes care of this for us!

@@ -1,18 +1,11 @@
-import {
-  Box,
-  BoxProps,
-  Button,
-  Flex,
-  Heading,
-  Link as ChakraLink,
-} from '@chakra-ui/core';
+import { Box, BoxProps, Button, Flex, Heading } from '@chakra-ui/core';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useState } from 'react';
 import { clearAccessToken } from '../accessToken';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
 import { NextChakraLink } from './NextChakraLink';
-import Link from 'next/link';
 
 type MenuItemProps = {
   children: ReactNode;
@@ -29,7 +22,7 @@ const Header = () => {
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [{ data, fetching, error }] = useMeQuery({ pause: isServer() });
+  const [{ data, fetching }] = useMeQuery({ pause: isServer() });
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = () => async () => {
@@ -37,7 +30,7 @@ const Header = () => {
 
     if (result.data?.logout) {
       clearAccessToken();
-      router.reload();
+      router.push('/');
     }
   };
 

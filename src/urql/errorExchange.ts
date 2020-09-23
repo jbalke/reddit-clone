@@ -17,6 +17,10 @@ export const errorExchange: Exchange = ({ forward }) => (ops$) => {
           )
         ) {
           Router.replace('/login');
+        } else if (
+          error.graphQLErrors.some((e) => /not verified/i.test(e.message))
+        ) {
+          Router.push('/resend-verification');
         }
       }
     })

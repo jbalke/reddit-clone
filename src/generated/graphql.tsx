@@ -69,6 +69,7 @@ export type User = {
   upvotes: Array<Upvote>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
+  verified: Scalars['Boolean'];
 };
 
 export type Upvote = {
@@ -98,6 +99,8 @@ export type Mutation = {
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
+  sendVerifyEmail: Scalars['Boolean'];
+  verifyEmail: VerifyResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
   revokeRefreshTokenForUser: Scalars['Boolean'];
@@ -131,7 +134,7 @@ export type MutationDeletePostArgs = {
 export type MutationChangePasswordArgs = {
   newPassword: Scalars['String'];
   token: Scalars['String'];
-  userId: Scalars['String'];
+  userId: Scalars['ID'];
 };
 
 
@@ -142,6 +145,17 @@ export type MutationForgotPasswordArgs = {
 
 export type MutationRegisterArgs = {
   options: UserRegisterInput;
+};
+
+
+export type MutationSendVerifyEmailArgs = {
+  email: Scalars['String'];
+};
+
+
+export type MutationVerifyEmailArgs = {
+  token: Scalars['String'];
+  userId: Scalars['ID'];
 };
 
 
@@ -189,6 +203,12 @@ export type UserRegisterInput = {
   password: Scalars['String'];
 };
 
+export type VerifyResponse = {
+  __typename?: 'VerifyResponse';
+  errors?: Maybe<Array<FieldError>>;
+  verified?: Maybe<Scalars['Boolean']>;
+};
+
 export type UserLoginInput = {
   emailOrUsername: Scalars['String'];
   password: Scalars['String'];
@@ -228,7 +248,7 @@ export type RegularUserResponseFragment = (
 export type ChangePasswordMutationVariables = Exact<{
   newPassword: Scalars['String'];
   token: Scalars['String'];
-  userId: Scalars['String'];
+  userId: Scalars['ID'];
 }>;
 
 
@@ -307,6 +327,16 @@ export type RegisterMutation = (
   ) }
 );
 
+export type SendVerifyEmailMutationVariables = Exact<{
+  email: Scalars['String'];
+}>;
+
+
+export type SendVerifyEmailMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'sendVerifyEmail'>
+);
+
 export type UpdatePostMutationVariables = Exact<{
   id: Scalars['ID'];
   title: Scalars['String'];
@@ -320,6 +350,24 @@ export type UpdatePostMutation = (
     { __typename?: 'Post' }
     & Pick<Post, 'id' | 'title' | 'text' | 'textSnippet'>
   )> }
+);
+
+export type VerifyEmailMutationVariables = Exact<{
+  userId: Scalars['ID'];
+  token: Scalars['String'];
+}>;
+
+
+export type VerifyEmailMutation = (
+  { __typename?: 'Mutation' }
+  & { verifyEmail: (
+    { __typename?: 'VerifyResponse' }
+    & Pick<VerifyResponse, 'verified'>
+    & { errors?: Maybe<Array<(
+      { __typename?: 'FieldError' }
+      & Pick<FieldError, 'field' | 'message'>
+    )>> }
+  ) }
 );
 
 export type VoteMutationVariables = Exact<{
@@ -433,7 +481,7 @@ export const RegularUserResponseFragmentDoc = gql`
     ${RegularErrorFragmentDoc}
 ${RegularUserFragmentDoc}`;
 export const ChangePasswordDocument = gql`
-    mutation ChangePassword($newPassword: String!, $token: String!, $userId: String!) {
+    mutation ChangePassword($newPassword: String!, $token: String!, $userId: ID!) {
   changePassword(newPassword: $newPassword, token: $token, userId: $userId) {
     ...RegularUserResponse
   }
@@ -508,6 +556,15 @@ export const RegisterDocument = gql`
 export function useRegisterMutation() {
   return Urql.useMutation<RegisterMutation, RegisterMutationVariables>(RegisterDocument);
 };
+export const SendVerifyEmailDocument = gql`
+    mutation SendVerifyEmail($email: String!) {
+  sendVerifyEmail(email: $email)
+}
+    `;
+
+export function useSendVerifyEmailMutation() {
+  return Urql.useMutation<SendVerifyEmailMutation, SendVerifyEmailMutationVariables>(SendVerifyEmailDocument);
+};
 export const UpdatePostDocument = gql`
     mutation UpdatePost($id: ID!, $title: String!, $text: String!) {
   updatePost(id: $id, title: $title, text: $text) {
@@ -521,6 +578,21 @@ export const UpdatePostDocument = gql`
 
 export function useUpdatePostMutation() {
   return Urql.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument);
+};
+export const VerifyEmailDocument = gql`
+    mutation VerifyEmail($userId: ID!, $token: String!) {
+  verifyEmail(userId: $userId, token: $token) {
+    errors {
+      field
+      message
+    }
+    verified
+  }
+}
+    `;
+
+export function useVerifyEmailMutation() {
+  return Urql.useMutation<VerifyEmailMutation, VerifyEmailMutationVariables>(VerifyEmailDocument);
 };
 export const VoteDocument = gql`
     mutation Vote($vote: Vote!, $postId: ID!) {

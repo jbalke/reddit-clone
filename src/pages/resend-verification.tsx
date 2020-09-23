@@ -5,25 +5,39 @@ import {
   AlertTitle,
   Button,
   FormControl,
+  Heading,
+  Text,
 } from '@chakra-ui/core';
-import { Form, Formik } from 'formik';
+import { Formik, Form } from 'formik';
 import { withUrqlClient } from 'next-urql';
 import React, { useState } from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
-import Wrapper from '../components/Wrapper';
-import { useForgotPasswordMutation } from '../generated/graphql';
+import { useSendVerifyEmailMutation } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 import { validateEmailInput } from '../utils/validate';
+import forgotPassword from './forgot-password';
 
-type forgotPasswordProps = {};
+type resendVerificationProps = {};
 
-function forgotPassword(props: forgotPasswordProps) {
-  const [, forgotPassword] = useForgotPasswordMutation();
+function ResendVerification(props: resendVerificationProps) {
   const [submitted, setSubmitted] = useState(false);
+  const [, sendVerificationEmail] = useSendVerifyEmailMutation();
 
   return (
-    <Layout size="small">
+    <Layout size="regular">
+      <Heading mb={4}>Email Verification</Heading>
+      <Text>
+        If you have yet to verify your email address, your access to this site
+        will be restricted. After registration and when changing the your email
+        address, an email will have been sent with a link to verify the email
+        address you provided (please check your junk/spam folder).
+      </Text>
+      <Text mt={2} mb={4}>
+        If you would like to send another verification email, enter the email
+        address you registered with below.
+      </Text>
+
       {submitted ? (
         <Alert mt={5} status="success">
           <AlertIcon />
@@ -40,10 +54,10 @@ function forgotPassword(props: forgotPasswordProps) {
           validate={validateEmailInput}
           onSubmit={async (values) => {
             setSubmitted(false);
-            const response = await forgotPassword({
+            const response = await sendVerificationEmail({
               email: values.email,
             });
-            if (response?.data) {
+            if (response.data) {
               setSubmitted(true);
             }
           }}
@@ -54,7 +68,7 @@ function forgotPassword(props: forgotPasswordProps) {
                 <InputField
                   label="Email Address"
                   name="email"
-                  placeholder="your email address"
+                  placeholder="your registered email address"
                   type="email"
                   disabled={submitted}
                 />
@@ -65,7 +79,7 @@ function forgotPassword(props: forgotPasswordProps) {
                   variantColor="teal"
                   isDisabled={submitted}
                 >
-                  forgot password
+                  send verification
                 </Button>
               </FormControl>
             </Form>
@@ -76,4 +90,4 @@ function forgotPassword(props: forgotPasswordProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: false })(forgotPassword);
+export default withUrqlClient(getClientConfig)(ResendVerification);

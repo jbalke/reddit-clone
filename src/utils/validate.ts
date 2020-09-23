@@ -58,7 +58,7 @@ interface ForgotPasswordInput {
   email: string;
 }
 
-export const validateForgotPasswordInput = ({ email }: ForgotPasswordInput) => {
+export const validateEmailInput = ({ email }: ForgotPasswordInput) => {
   const errors: FormikErrors<ForgotPasswordInput> = {};
 
   validateEmail(email, errors);

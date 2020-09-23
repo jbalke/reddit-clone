@@ -16,7 +16,6 @@ import { setAccessToken } from '../accessToken';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
 import { NextChakraLink } from '../components/NextChakraLink';
-import Wrapper from '../components/Wrapper';
 import { useLoginMutation } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 import { toErrorMap } from '../utils/toErrorMap';

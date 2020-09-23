@@ -1,11 +1,9 @@
-import { Box, Button, Flex, Heading, Stack } from '@chakra-ui/core';
+import { Box, Button, Flex, Stack } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
 import { useState } from 'react';
 import Layout from '../components/Layout';
-import { NextChakraLink } from '../components/NextChakraLink';
 import PostSummary from '../components/PostSummary';
-import Wrapper from '../components/Wrapper';
-import { useMeQuery, usePostsQuery } from '../generated/graphql';
+import { usePostsQuery } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 
 const Index = () => {
