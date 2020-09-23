@@ -21,6 +21,14 @@ export class PostInput {
   text: string;
 }
 
+@InputType()
+export class ReplyPostInput {
+  @Field(() => ID)
+  parentId: string;
+  @Field()
+  text: string;
+}
+
 @ObjectType()
 @Entity('posts')
 export class Post extends BaseEntity {
@@ -28,15 +36,15 @@ export class Post extends BaseEntity {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Field()
-  @Column('text')
-  title: string;
+  @Field(() => String, { nullable: true })
+  @Column({ type: 'text', nullable: true })
+  title: string | null;
 
   @Field()
   @Column('text')
   text: string;
 
-  @Field()
+  @Field(() => Int)
   @Column({ type: 'int', default: 0 })
   points: number;
 
@@ -46,6 +54,14 @@ export class Post extends BaseEntity {
   @Field()
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
+
+  @Field(() => ID, { nullable: true })
+  @Column({ type: 'uuid', nullable: true })
+  parentId: string | null;
+
+  @Field(() => Int)
+  @Column({ type: 'int', default: 0 })
+  replies: number;
 
   @OneToMany((type) => Upvote, (upvote) => upvote.post)
   upvotes: Upvote[];
@@ -57,8 +73,8 @@ export class Post extends BaseEntity {
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
-  @Index('CREATED_AT_INDEX', { synchronize: false })
   @Field()
+  @Index('CREATED_AT_INDEX', { synchronize: false })
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }

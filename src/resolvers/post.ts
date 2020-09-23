@@ -15,7 +15,7 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { Post, PostInput } from '../entities/Post';
+import { Post, PostInput, ReplyPostInput } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
 import { authenticate, authorize, verified } from '../middleware/auth';
@@ -46,10 +46,10 @@ class PaginatedPosts {
 }
 
 @ObjectType()
-class PostResponse {
+class ReplyPostResponse {
   @Field(() => Post, { nullable: true })
   post?: Post;
-  @Field()
+  @Field(() => String, { nullable: true })
   error?: string;
 }
 
@@ -174,10 +174,35 @@ export class PostResolver {
     };
   }
 
-  @Query(() => Post, { nullable: true })
+  @Query(() => [Post], { nullable: true })
   @UseMiddleware(authenticate)
-  async post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
-    return await Post.findOne({ id });
+  async post(@Arg('id', () => ID) id: string): Promise<Post[] | undefined> {
+    // return await Post.findOne({ id });
+
+    const posts = await getConnection().query(
+      `
+    WITH RECURSIVE replies AS (
+      SELECT
+        *
+      FROM 
+        reddit.posts
+      WHERE
+        posts.id = $1
+      UNION
+        SELECT
+          p.*
+        FROM
+          reddit.posts p
+        INNER JOIN replies r ON r.id = p."parentId"
+    ) SELECT
+        *
+    FROM
+      replies;
+    `,
+      [id]
+    );
+
+    return posts;
   }
 
   @Mutation(() => Post)
@@ -216,5 +241,35 @@ export class PostResolver {
   ): Promise<Boolean> {
     await Post.delete({ id, authorId: user?.userId });
     return true;
+  }
+
+  @Mutation(() => ReplyPostResponse)
+  @UseMiddleware(authorize)
+  async postReply(
+    @Arg('input') input: ReplyPostInput,
+    @Ctx() { user }: MyContext
+  ): Promise<ReplyPostResponse> {
+    const parentPost = await Post.findOne({ id: input.parentId });
+
+    if (!parentPost) {
+      return {
+        error: 'parent post not found',
+      };
+    }
+
+    if (parentPost.authorId === user?.userId) {
+      return {
+        error: 'cannot reply to own post',
+      };
+    }
+
+    await Post.update(
+      { id: input.parentId },
+      { replies: parentPost.replies + 1 }
+    );
+
+    return {
+      post: await Post.create({ ...input, authorId: user!.userId }).save(),
+    };
   }
 }
