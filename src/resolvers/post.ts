@@ -176,9 +176,9 @@ export class PostResolver {
 
   @Query(() => [Post], { nullable: true })
   @UseMiddleware(authenticate)
-  async post(
+  async thread(
     @Arg('id', () => ID) id: string,
-    @Arg('maxLevel', () => Int, { defaultValue: 1 }) maxLevel: number
+    @Arg('maxLevel', () => Int, { defaultValue: 0 }) maxLevel: number
   ): Promise<Post[] | undefined> {
     // return await Post.findOne({ id });
 
@@ -208,6 +208,27 @@ export class PostResolver {
     return posts;
   }
 
+  @Query(() => Post, { nullable: true })
+  @UseMiddleware(authenticate)
+  async post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
+    // return await Post.findOne({ id });
+
+    const posts = await getConnection().query(
+      `
+      SELECT
+        *
+      FROM 
+        reddit.posts
+      WHERE
+        posts.id = $1
+     
+    `,
+      [id]
+    );
+
+    return posts[0];
+  }
+
   @Mutation(() => Post)
   @UseMiddleware(authorize, verified)
   createPost(
@@ -228,7 +249,7 @@ export class PostResolver {
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ title, text })
+      .set({ title: title ? title : undefined, text })
       .where('id = :id and authorId = :userId', { id, userId: user!.userId })
       .returning('*')
       .execute();
