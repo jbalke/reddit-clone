@@ -16,6 +16,8 @@ import { createUpvoteLoader } from './utils/createUpvoteLoader';
 
 const main = async () => {
   const conn = await createConnection();
+  //* Run new migrations (i.e. initial db creation)
+  // await conn.runMigrations();
 
   const app = express();
   app.use(cors({ origin: 'http://localhost:3000', credentials: true })); //* cors policy applied to all routes globally
@@ -39,7 +41,7 @@ const main = async () => {
     }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.
-  app.listen(__port__, () => {
+  app.listen(parseInt(__port__), () => {
     console.log(
       `Server ready at http://localhost:${__port__}${server.graphqlPath}`
     );

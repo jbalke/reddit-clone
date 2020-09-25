@@ -60,6 +60,9 @@ export class Post extends BaseEntity {
   parentId: string | null;
 
   @Field(() => Int)
+  level: number;
+
+  @Field(() => Int)
   @Column({ type: 'int', default: 0 })
   replies: number;
 

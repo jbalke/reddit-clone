@@ -31,12 +31,6 @@ registerEnumType(Vote, {
   description: 'UP or DOWN vote a post',
 });
 
-@InputType()
-class PostsOptions {
-  limit: number;
-  cursor: string;
-}
-
 @ObjectType()
 class PaginatedPosts {
   @Field(() => [Post])
@@ -55,6 +49,11 @@ class ReplyPostResponse {
 
 @Resolver((of) => Post)
 export class PostResolver {
+  @FieldResolver(() => Int)
+  level(@Root() post: Post) {
+    return post.level ? post.level : 0;
+  }
+
   @FieldResolver(() => String)
   textSnippet(@Root() post: Post) {
     return post.text.length > 150 ? post.text.slice(0, 150) + '...' : post.text;
@@ -161,7 +160,8 @@ export class PostResolver {
       `
     select p.*
     from reddit.posts p
-    ${cursor ? `where p."createdAt" < $2` : ''}
+    where p."parentId" is null
+    ${cursor ? `and p."createdAt" < $2` : ''}
     order by p."createdAt" DESC
     limit $1
     `,
@@ -176,30 +176,33 @@ export class PostResolver {
 
   @Query(() => [Post], { nullable: true })
   @UseMiddleware(authenticate)
-  async post(@Arg('id', () => ID) id: string): Promise<Post[] | undefined> {
+  async post(
+    @Arg('id', () => ID) id: string,
+    @Arg('maxLevel', () => Int, { defaultValue: 1 }) maxLevel: number
+  ): Promise<Post[] | undefined> {
     // return await Post.findOne({ id });
 
     const posts = await getConnection().query(
       `
     WITH RECURSIVE replies AS (
       SELECT
-        *
+        *, 0 as level
       FROM 
         reddit.posts
       WHERE
         posts.id = $1
       UNION
         SELECT
-          p.*
+          p.*, r.level + 1 as level
         FROM
           reddit.posts p
-        INNER JOIN replies r ON r.id = p."parentId"
+        INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
     ) SELECT
         *
     FROM
       replies;
     `,
-      [id]
+      [id, maxLevel]
     );
 
     return posts;

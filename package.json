@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start:build": "tsc -w",
+    "build": "tsc",
+    "start:watch": "tsc -w",
     "start:run": "nodemon dist/index.js",
     "dev": "concurrently npm:start:*",
     "migration:generate": "npx typeorm migration:generate",
