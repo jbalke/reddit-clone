@@ -28,29 +28,16 @@ export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
 };
 
 export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
-  const authorization = context.req.headers['authorization'];
+  requireUserPayload(context);
 
-  if (!authorization) {
-    throw new AuthenticationError('missing authorization header');
-  }
+  return next();
+};
 
-  const tokenRegExMatch = authorization.match(__bearerRE__);
+export const admin: MiddlewareFn<MyContext> = ({ context }, next) => {
+  const token = requireUserPayload(context);
 
-  if (!tokenRegExMatch) {
-    throw new AuthenticationError('invalid token');
-  }
-
-  const token = tokenRegExMatch[1];
-  try {
-    const payload = verify(token, ACCESS_TOKEN_SECRET);
-    if (typeof payload === 'object') {
-      context.user = payload as AccessTokenPayload;
-    }
-  } catch (err) {
-    if (err.name === 'TokenExpiredError') {
-      throw new AuthenticationError('token expired');
-    }
-    throw new AuthenticationError('not authenticated');
+  if (!token?.isAdmin) {
+    throw new AuthenticationError('not authorised');
   }
 
   return next();
@@ -74,3 +61,34 @@ export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
   }
   return next();
 };
+
+function requireUserPayload(context: MyContext) {
+  const authorization = context.req.headers['authorization'];
+
+  if (!authorization) {
+    throw new AuthenticationError('missing authorization header');
+  }
+
+  const tokenRegExMatch = authorization.match(__bearerRE__);
+
+  if (!tokenRegExMatch) {
+    throw new AuthenticationError('invalid token');
+  }
+
+  const token = tokenRegExMatch[1];
+  let verifiedPayload;
+  try {
+    const payload = verify(token, ACCESS_TOKEN_SECRET);
+    if (typeof payload === 'object') {
+      verifiedPayload = payload as AccessTokenPayload;
+      context.user = verifiedPayload;
+      return verifiedPayload;
+    }
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      throw new AuthenticationError('token expired');
+    }
+    throw new AuthenticationError('not authenticated');
+  }
+  return null;
+}

@@ -57,7 +57,7 @@ export const verifyVerifyEmailToken = (user: User, token: string): boolean => {
 };
 
 export const createAccessToken = (user: User) => {
-  return sign({ userId: user.id, isAdmin: false }, ACCESS_TOKEN_SECRET, {
+  return sign({ userId: user.id, isAdmin: user.isAdmin }, ACCESS_TOKEN_SECRET, {
     expiresIn: '15m',
   });
 };

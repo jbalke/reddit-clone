@@ -43,6 +43,17 @@ export class User extends BaseEntity {
   @OneToMany(() => Upvote, (upvote) => upvote.user)
   upvotes: Upvote[];
 
+  @Column({ type: 'int', default: 0 })
+  tokenVersion: number;
+
+  @Field()
+  @Column({ type: 'boolean', default: false })
+  verified: boolean;
+
+  @Field()
+  @Column({ type: 'boolean', default: false })
+  isAdmin: boolean;
+
   @Field()
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
@@ -50,11 +61,4 @@ export class User extends BaseEntity {
   @Field()
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
-
-  @Column({ type: 'int', default: 0 })
-  tokenVersion: number;
-
-  @Field()
-  @Column({ type: 'boolean', default: false })
-  verified: boolean;
 }

@@ -15,7 +15,7 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { Post, PostInput, ReplyPostInput } from '../entities/Post';
+import { Post, PostInput, PostReplyInput } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
 import { authenticate, authorize, verified } from '../middleware/auth';
@@ -40,7 +40,7 @@ class PaginatedPosts {
 }
 
 @ObjectType()
-class ReplyPostResponse {
+class PostReplyResponse {
   @Field(() => Post, { nullable: true })
   post?: Post;
   @Field(() => String, { nullable: true })
@@ -49,11 +49,6 @@ class ReplyPostResponse {
 
 @Resolver((of) => Post)
 export class PostResolver {
-  @FieldResolver(() => Int)
-  level(@Root() post: Post) {
-    return post.level ? post.level : 0;
-  }
-
   @FieldResolver(() => String)
   textSnippet(@Root() post: Post) {
     return post.text.length > 150 ? post.text.slice(0, 150) + '...' : post.text;
@@ -180,27 +175,27 @@ export class PostResolver {
     @Arg('id', () => ID) id: string,
     @Arg('maxLevel', () => Int, { defaultValue: 0 }) maxLevel: number
   ): Promise<Post[] | undefined> {
-    // return await Post.findOne({ id });
-
     const posts = await getConnection().query(
       `
-    WITH RECURSIVE replies AS (
-      SELECT
-        *, 0 as level
-      FROM 
-        reddit.posts
-      WHERE
-        posts.id = $1
-      UNION
-        SELECT
-          p.*, r.level + 1 as level
-        FROM
-          reddit.posts p
-        INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
-    ) SELECT
-        *
-    FROM
-      replies;
+WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level", path) AS (
+  SELECT
+    "id", title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level", ARRAY["id"]
+  FROM 
+    reddit.posts
+  WHERE
+    posts.id = $1
+  UNION
+  SELECT
+    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."parentId", p."authorId", p.replies, p."level", path || p.id
+  FROM
+    reddit.posts p
+  INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
+) 
+SELECT
+    id, title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level"
+FROM
+  replies
+ORDER BY path
     `,
       [id, maxLevel]
     );
@@ -211,8 +206,6 @@ export class PostResolver {
   @Query(() => Post, { nullable: true })
   @UseMiddleware(authenticate)
   async post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
-    // return await Post.findOne({ id });
-
     const posts = await getConnection().query(
       `
       SELECT
@@ -221,7 +214,6 @@ export class PostResolver {
         reddit.posts
       WHERE
         posts.id = $1
-     
     `,
       [id]
     );
@@ -239,7 +231,7 @@ export class PostResolver {
   }
 
   @Mutation(() => Post, { nullable: true })
-  @UseMiddleware(authorize)
+  @UseMiddleware([authorize, verified])
   async updatePost(
     @Arg('id', () => ID) id: string,
     @Arg('title', () => String) title: string,
@@ -258,21 +250,37 @@ export class PostResolver {
   }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(authorize)
+  @UseMiddleware([authorize, verified])
   async deletePost(
     @Arg('id', () => ID) id: string,
     @Ctx() { user }: MyContext
   ): Promise<Boolean> {
-    await Post.delete({ id, authorId: user?.userId });
+    const post = await Post.findOne({ id });
+
+    if (post && post.parentId) {
+      await getConnection()
+        .createQueryBuilder()
+        .update(Post)
+        .set({ replies: () => `replies - 1` })
+        .where('id = :id', { id: post.parentId })
+        .execute();
+    }
+
+    if (user!.isAdmin) {
+      await Post.delete({ id });
+    } else {
+      await Post.delete({ id, authorId: user?.userId });
+    }
+
     return true;
   }
 
-  @Mutation(() => ReplyPostResponse)
-  @UseMiddleware(authorize)
+  @Mutation(() => PostReplyResponse)
+  @UseMiddleware([authorize, verified])
   async postReply(
-    @Arg('input') input: ReplyPostInput,
+    @Arg('input') input: PostReplyInput,
     @Ctx() { user }: MyContext
-  ): Promise<ReplyPostResponse> {
+  ): Promise<PostReplyResponse> {
     const parentPost = await Post.findOne({ id: input.parentId });
 
     if (!parentPost) {
@@ -281,19 +289,39 @@ export class PostResolver {
       };
     }
 
-    if (parentPost.authorId === user?.userId) {
+    if (parentPost.authorId === user!.userId) {
       return {
         error: 'cannot reply to own post',
       };
     }
 
-    await Post.update(
-      { id: input.parentId },
-      { replies: parentPost.replies + 1 }
-    );
+    try {
+      const post = await getConnection().transaction(async (tm) => {
+        await tm
+          .getRepository(Post)
+          .update({ id: input.parentId }, { replies: parentPost.replies + 1 });
 
-    return {
-      post: await Post.create({ ...input, authorId: user!.userId }).save(),
-    };
+        const result = await tm
+          .createQueryBuilder()
+          .insert()
+          .into(Post)
+          .values({
+            ...input,
+            authorId: user!.userId,
+            level: parentPost.level + 1,
+          })
+          .returning('*')
+          .execute();
+
+        return Promise.resolve(result.raw[0] as Post);
+      });
+
+      return {
+        post,
+      };
+    } catch (error) {
+      console.error(error);
+      return { error: 'transaction failed' };
+    }
   }
 }

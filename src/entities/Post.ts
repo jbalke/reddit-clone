@@ -22,7 +22,7 @@ export class PostInput {
 }
 
 @InputType()
-export class ReplyPostInput {
+export class PostReplyInput {
   @Field(() => ID)
   parentId: string;
   @Field()
@@ -60,6 +60,7 @@ export class Post extends BaseEntity {
   parentId: string | null;
 
   @Field(() => Int)
+  @Column({ type: 'int', default: 0 })
   level: number;
 
   @Field(() => Int)

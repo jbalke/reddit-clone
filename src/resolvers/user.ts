@@ -16,7 +16,7 @@ import { getConnection } from 'typeorm';
 import { __emailRE__ } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
-import { authorize, authenticate } from '../middleware/auth';
+import { authorize, authenticate, admin } from '../middleware/auth';
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -196,16 +196,19 @@ If you did not request a password reset, you can safely ignore this email.
     if (!user) {
       return undefined;
     }
+    console.log('Me Query executing');
 
     return User.findOne(user.userId);
   }
 
   @Query(() => [User])
+  @UseMiddleware(admin)
   users(): Promise<User[]> {
     return User.find();
   }
 
   @Query(() => User, { nullable: true })
+  @UseMiddleware(admin)
   user(@Arg('id', () => ID) id: string) {
     return User.findOne(id);
   }
@@ -392,19 +395,19 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   //! Don't do this in production, revoke tokens when user changes password or triggers 'forget password' flow.
-  @Mutation(() => Boolean)
-  async revokeRefreshTokenForUser(@Arg('userId', () => ID) userId: string) {
-    try {
-      await getConnection()
-        .getRepository(User)
-        .increment({ id: userId }, 'tokenVersion', 1);
-    } catch (err) {
-      console.error(err);
-      return false;
-    }
+  // @Mutation(() => Boolean)
+  // async revokeRefreshTokenForUser(@Arg('userId', () => ID) userId: string) {
+  //   try {
+  //     await getConnection()
+  //       .getRepository(User)
+  //       .increment({ id: userId }, 'tokenVersion', 1);
+  //   } catch (err) {
+  //     console.error(err);
+  //     return false;
+  //   }
 
-    return true;
-  }
+  //   return true;
+  // }
 
   // @Mutation(() => User, { nullable: true })
   // async updateUser(
@@ -426,6 +429,7 @@ If you did not request a password reset, you can safely ignore this email.
   // }
 
   @Mutation(() => Boolean)
+  @UseMiddleware(admin)
   async deleteUser(@Arg('id', () => ID) id: string): Promise<Boolean> {
     try {
       const result = await getConnection()
