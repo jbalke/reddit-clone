@@ -1,0 +1,9 @@
+mutation PostReply($input: PostReplyInput!) {
+  postReply(input: $input) {
+    error
+    post {
+      ...BasicPost
+      text
+    }
+  }
+}

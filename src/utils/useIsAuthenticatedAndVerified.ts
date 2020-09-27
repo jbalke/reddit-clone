@@ -2,13 +2,17 @@ import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { useMeQuery } from '../generated/graphql';
 
-export const useIsAuth = () => {
+export const useIsAuthenticatedAndVerified = () => {
   const [{ data, fetching }] = useMeQuery();
   const router = useRouter();
 
   useEffect(() => {
-    if (!fetching && !data?.me) {
-      router.replace('/login?next=' + router.pathname);
+    if (!fetching) {
+      if (!data?.me) {
+        router.replace('/login?next=' + router.asPath);
+      } else if (!data.me.verified) {
+        router.replace('/resend-verification');
+      }
     }
   }, [data, fetching]);
 };

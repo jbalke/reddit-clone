@@ -12,13 +12,15 @@ import {
 } from '../../../generated/graphql';
 import { getClientConfig } from '../../../urql/urqlConfig';
 import { useGetParamFromUrl } from '../../../utils/useGetParamFromUrl';
+import { useIsAuthenticatedAndVerified } from '../../../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../../../utils/validate';
 
 type EditPostProps = {};
 
 function EditPost(props: EditPostProps) {
-  const router = useRouter();
+  useIsAuthenticatedAndVerified();
 
+  const router = useRouter();
   const id = useGetParamFromUrl('id') as string;
   const [{ data, fetching }] = usePostQuery({ variables: { id } });
   const [, updatePost] = useUpdatePostMutation();
@@ -43,8 +45,9 @@ function EditPost(props: EditPostProps) {
     <Layout size="small">
       <Formik
         initialValues={{
-          title: data.post.title,
+          title: data.post.title || '',
           text: data.post.text,
+          parentId: data.post.parentId || '',
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
@@ -58,7 +61,9 @@ function EditPost(props: EditPostProps) {
         {({ isSubmitting }) => (
           <Form>
             <FormControl>
-              <InputField label="Title" name="title" placeholder="title" />
+              {!data?.post?.parentId && (
+                <InputField label="Title" name="title" placeholder="title" />
+              )}
               <Box mt={4}>
                 <InputField
                   textarea
@@ -75,7 +80,7 @@ function EditPost(props: EditPostProps) {
                   variantColor="teal"
                   mr={2}
                 >
-                  update post
+                  {!data?.post?.parentId ? 'update post' : 'update reply'}
                 </Button>
                 <Button
                   onClick={() => {

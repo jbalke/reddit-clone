@@ -1,15 +1,5 @@
 query Post($id: ID!) {
   post(id: $id) {
-    id
-    title
-    text
-    points
-    author {
-      id
-      username
-    }
-    voteStatus
-    createdAt
-    updatedAt
+    ...PostContent
   }
 }

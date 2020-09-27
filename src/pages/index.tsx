@@ -2,7 +2,7 @@ import { Box, Button, Flex, Stack } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
 import { useState } from 'react';
 import Layout from '../components/Layout';
-import PostSummary from '../components/PostSummary';
+import Post from '../components/Post';
 import { usePostsQuery } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 
@@ -26,7 +26,14 @@ const Index = () => {
           <Stack>
             {data &&
               data.posts.posts.map((p) => (
-                <PostSummary key={p.id} post={p}></PostSummary>
+                <Post
+                  key={p.id}
+                  post={p}
+                  opId={p.id}
+                  p={5}
+                  shadow="md"
+                  borderWidth="1px"
+                />
               ))}
           </Stack>
         )}

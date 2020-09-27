@@ -1,13 +1,4 @@
 fragment PostSummary on Post {
-  id
-  title
+  ...BasicPost
   textSnippet
-  points
-  author {
-    id
-    username
-  }
-  voteStatus
-  createdAt
-  updatedAt
 }

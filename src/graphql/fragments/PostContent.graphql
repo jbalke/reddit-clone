@@ -1,0 +1,4 @@
+fragment PostContent on Post {
+  ...BasicPost
+  text
+}

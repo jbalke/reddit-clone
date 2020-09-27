@@ -11,8 +11,8 @@ function token_test(props: token_testProps) {
   const [{ data, fetching, error }] = useTestTokenQuery();
 
   return (
-    <Layout size="small">
-      <Box m={5}>
+    <Layout size="regular">
+      <Box>
         <h2>Token Test</h2>
         {fetching && <p>Loading...</p>}
         {error && <p>Oh no... {error.message}</p>}

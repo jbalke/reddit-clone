@@ -1,16 +1,16 @@
 import { Box, Flex, IconButton } from '@chakra-ui/core';
 import React, { useState } from 'react';
 import {
+  PostContentFragment,
   PostSummaryFragment,
   useMeQuery,
   useVoteMutation,
   Vote,
-  VoteMutationVariables,
 } from '../generated/graphql';
 import { isServer } from '../utils/isServer';
 
 type VoteSectionProps = {
-  post: PostSummaryFragment;
+  post: PostSummaryFragment | PostContentFragment;
 };
 
 function VoteSection({ post }: VoteSectionProps) {

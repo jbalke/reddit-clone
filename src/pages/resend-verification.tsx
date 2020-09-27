@@ -8,7 +8,7 @@ import {
   Heading,
   Text,
 } from '@chakra-ui/core';
-import { Formik, Form } from 'formik';
+import { Form, Formik } from 'formik';
 import { withUrqlClient } from 'next-urql';
 import React, { useState } from 'react';
 import InputField from '../components/InputField';
@@ -16,7 +16,6 @@ import Layout from '../components/Layout';
 import { useSendVerifyEmailMutation } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 import { validateEmailInput } from '../utils/validate';
-import forgotPassword from './forgot-password';
 
 type resendVerificationProps = {};
 

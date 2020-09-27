@@ -131,7 +131,7 @@ const Header = () => {
 
             {!!data?.me && (
               <MenuItem>
-                <NextChakraLink href="/token_test">Token Test</NextChakraLink>
+                <NextChakraLink href="/token-test">Token Test</NextChakraLink>
               </MenuItem>
             )}
           </Box>

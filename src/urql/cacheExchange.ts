@@ -10,8 +10,9 @@ import {
   VoteMutationVariables,
   Vote,
   DeletePostMutationVariables,
+  UpdatePostMutationVariables,
 } from '../generated/graphql';
-import schema from './introspection.json';
+import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
 import gql from 'graphql-tag';
 
@@ -29,7 +30,7 @@ export const cache = cacheExchange({
   },
   updates: {
     Mutation: {
-      login: (_result, args, cache, info) => {
+      login: (_result, _args, cache, _info) => {
         betterUpdateQuery<LoginMutation, MeQuery>(
           cache,
           { query: MeDocument },
@@ -46,7 +47,7 @@ export const cache = cacheExchange({
         );
         invalidatePosts(cache);
       },
-      register: (_result, args, cache, info) => {
+      register: (_result, _args, cache, _info) => {
         betterUpdateQuery<RegisterMutation, MeQuery>(
           cache,
           { query: MeDocument },
@@ -62,7 +63,7 @@ export const cache = cacheExchange({
           }
         );
       },
-      logout: (_result, args, cache, info) => {
+      logout: (_result, _args, cache, _info) => {
         betterUpdateQuery<LogoutMutation, MeQuery>(
           cache,
           { query: MeDocument },
@@ -74,7 +75,7 @@ export const cache = cacheExchange({
 
         invalidatePosts(cache);
       },
-      changePassword: (_result, args, cache, info) => {
+      changePassword: (_result, _args, cache, _info) => {
         betterUpdateQuery<ChangePasswordMutation, MeQuery>(
           cache,
           { query: MeDocument },
@@ -90,10 +91,16 @@ export const cache = cacheExchange({
           }
         );
       },
-      createPost: (_result, args, cache, info) => {
+      createPost: (_result, _args, cache, _info) => {
         invalidatePosts(cache);
       },
-      vote: (_result, args, cache, info) => {
+      postReply: (_result, _args, cache, _info) => {
+        invalidateThread(cache);
+
+        //TODO: either write fragment to update OP replies count or invalidate posts
+        invalidatePosts(cache);
+      },
+      vote: (_result, args, cache, _info) => {
         const { postId, vote } = args as VoteMutationVariables;
 
         const data = cache.readFragment(
@@ -131,6 +138,19 @@ export const cache = cacheExchange({
           __typename: 'Post',
           id: (args as DeletePostMutationVariables).id,
         });
+      },
+      updatePost: (_result, args, cache, info) => {
+        const { id, text, title } = args as UpdatePostMutationVariables;
+
+        cache.writeFragment(
+          gql`
+            fragment __ on Post {
+              title
+              text
+            }
+          `,
+          { id, title, text } as any
+        );
       },
     },
   },
@@ -180,5 +200,13 @@ function invalidatePosts(cache: Cache) {
   const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
   fieldInfos.forEach((fi) => {
     cache.invalidate('Query', 'posts', fi.arguments || undefined);
+  });
+}
+
+function invalidateThread(cache: Cache) {
+  const allFields = cache.inspectFields('Query');
+  const fieldInfos = allFields.filter((info) => info.fieldName === 'thread');
+  fieldInfos.forEach((fi) => {
+    cache.invalidate('Query', 'thread', fi.arguments || undefined);
   });
 }

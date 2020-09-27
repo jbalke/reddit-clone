@@ -17,6 +17,7 @@ export type Scalars = {
 export type Query = {
   __typename?: 'Query';
   posts: PaginatedPosts;
+  thread?: Maybe<Array<Post>>;
   post?: Maybe<Post>;
   me?: Maybe<User>;
   users: Array<User>;
@@ -29,6 +30,12 @@ export type Query = {
 export type QueryPostsArgs = {
   cursor?: Maybe<Scalars['String']>;
   limit?: Maybe<Scalars['Int']>;
+};
+
+
+export type QueryThreadArgs = {
+  maxLevel?: Maybe<Scalars['Int']>;
+  id: Scalars['ID'];
 };
 
 
@@ -50,10 +57,13 @@ export type PaginatedPosts = {
 export type Post = {
   __typename?: 'Post';
   id: Scalars['ID'];
-  title: Scalars['String'];
+  title?: Maybe<Scalars['String']>;
   text: Scalars['String'];
-  points: Scalars['Float'];
+  points: Scalars['Int'];
   author: User;
+  parentId?: Maybe<Scalars['ID']>;
+  level: Scalars['Int'];
+  replies: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
@@ -67,9 +77,10 @@ export type User = {
   email: Scalars['String'];
   posts: Array<Post>;
   upvotes: Array<Upvote>;
+  verified: Scalars['Boolean'];
+  isAdmin: Scalars['Boolean'];
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
-  verified: Scalars['Boolean'];
 };
 
 export type Upvote = {
@@ -96,6 +107,7 @@ export type Mutation = {
   createPost: Post;
   updatePost?: Maybe<Post>;
   deletePost: Scalars['Boolean'];
+  postReply: PostReplyResponse;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
@@ -103,7 +115,6 @@ export type Mutation = {
   verifyEmail: VerifyResponse;
   login: UserResponse;
   logout: Scalars['Boolean'];
-  revokeRefreshTokenForUser: Scalars['Boolean'];
   deleteUser: Scalars['Boolean'];
 };
 
@@ -128,6 +139,11 @@ export type MutationUpdatePostArgs = {
 
 export type MutationDeletePostArgs = {
   id: Scalars['ID'];
+};
+
+
+export type MutationPostReplyArgs = {
+  input: PostReplyInput;
 };
 
 
@@ -164,11 +180,6 @@ export type MutationLoginArgs = {
 };
 
 
-export type MutationRevokeRefreshTokenForUserArgs = {
-  userId: Scalars['ID'];
-};
-
-
 export type MutationDeleteUserArgs = {
   id: Scalars['ID'];
 };
@@ -181,6 +192,17 @@ export enum Vote {
 
 export type PostInput = {
   title: Scalars['String'];
+  text: Scalars['String'];
+};
+
+export type PostReplyResponse = {
+  __typename?: 'PostReplyResponse';
+  post?: Maybe<Post>;
+  error?: Maybe<Scalars['String']>;
+};
+
+export type PostReplyInput = {
+  parentId: Scalars['ID'];
   text: Scalars['String'];
 };
 
@@ -214,13 +236,25 @@ export type UserLoginInput = {
   password: Scalars['String'];
 };
 
-export type PostSummaryFragment = (
+export type BasicPostFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'title' | 'textSnippet' | 'points' | 'voteStatus' | 'createdAt' | 'updatedAt'>
+  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'parentId' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
   & { author: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
   ) }
+);
+
+export type PostContentFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'text'>
+  & BasicPostFragment
+);
+
+export type PostSummaryFragment = (
+  { __typename?: 'Post' }
+  & Pick<Post, 'textSnippet'>
+  & BasicPostFragment
 );
 
 export type RegularErrorFragment = (
@@ -230,7 +264,7 @@ export type RegularErrorFragment = (
 
 export type RegularUserFragment = (
   { __typename?: 'User' }
-  & Pick<User, 'id' | 'username'>
+  & Pick<User, 'id' | 'username' | 'verified' | 'isAdmin'>
 );
 
 export type RegularUserResponseFragment = (
@@ -269,7 +303,8 @@ export type CreatePostMutation = (
   { __typename?: 'Mutation' }
   & { createPost: (
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text' | 'points' | 'createdAt' | 'updatedAt'>
+    & Pick<Post, 'text'>
+    & BasicPostFragment
   ) }
 );
 
@@ -314,6 +349,24 @@ export type LogoutMutation = (
   & Pick<Mutation, 'logout'>
 );
 
+export type PostReplyMutationVariables = Exact<{
+  input: PostReplyInput;
+}>;
+
+
+export type PostReplyMutation = (
+  { __typename?: 'Mutation' }
+  & { postReply: (
+    { __typename?: 'PostReplyResponse' }
+    & Pick<PostReplyResponse, 'error'>
+    & { post?: Maybe<(
+      { __typename?: 'Post' }
+      & Pick<Post, 'text'>
+      & BasicPostFragment
+    )> }
+  ) }
+);
+
 export type RegisterMutationVariables = Exact<{
   options: UserRegisterInput;
 }>;
@@ -348,7 +401,8 @@ export type UpdatePostMutation = (
   { __typename?: 'Mutation' }
   & { updatePost?: Maybe<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text' | 'textSnippet'>
+    & Pick<Post, 'text'>
+    & BasicPostFragment
   )> }
 );
 
@@ -401,11 +455,7 @@ export type PostQuery = (
   { __typename?: 'Query' }
   & { post?: Maybe<(
     { __typename?: 'Post' }
-    & Pick<Post, 'id' | 'title' | 'text' | 'points' | 'voteStatus' | 'createdAt' | 'updatedAt'>
-    & { author: (
-      { __typename?: 'User' }
-      & Pick<User, 'id' | 'username'>
-    ) }
+    & PostContentFragment
   )> }
 );
 
@@ -427,6 +477,20 @@ export type PostsQuery = (
   ) }
 );
 
+export type ThreadQueryVariables = Exact<{
+  id: Scalars['ID'];
+  maxLevel?: Maybe<Scalars['Int']>;
+}>;
+
+
+export type ThreadQuery = (
+  { __typename?: 'Query' }
+  & { thread?: Maybe<Array<(
+    { __typename?: 'Post' }
+    & PostContentFragment
+  )>> }
+);
+
 export type TestTokenQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -441,21 +505,35 @@ export type TestTokenQuery = (
   ) }
 );
 
-export const PostSummaryFragmentDoc = gql`
-    fragment PostSummary on Post {
+export const BasicPostFragmentDoc = gql`
+    fragment BasicPost on Post {
   id
   title
-  textSnippet
   points
+  replies
   author {
     id
     username
   }
+  parentId
+  level
   voteStatus
   createdAt
   updatedAt
 }
     `;
+export const PostContentFragmentDoc = gql`
+    fragment PostContent on Post {
+  ...BasicPost
+  text
+}
+    ${BasicPostFragmentDoc}`;
+export const PostSummaryFragmentDoc = gql`
+    fragment PostSummary on Post {
+  ...BasicPost
+  textSnippet
+}
+    ${BasicPostFragmentDoc}`;
 export const RegularErrorFragmentDoc = gql`
     fragment RegularError on FieldError {
   message
@@ -466,6 +544,8 @@ export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
   username
+  verified
+  isAdmin
 }
     `;
 export const RegularUserResponseFragmentDoc = gql`
@@ -494,15 +574,11 @@ export function useChangePasswordMutation() {
 export const CreatePostDocument = gql`
     mutation CreatePost($input: PostInput!) {
   createPost(input: $input) {
-    id
-    title
+    ...BasicPost
     text
-    points
-    createdAt
-    updatedAt
   }
 }
-    `;
+    ${BasicPostFragmentDoc}`;
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
@@ -545,6 +621,21 @@ export const LogoutDocument = gql`
 export function useLogoutMutation() {
   return Urql.useMutation<LogoutMutation, LogoutMutationVariables>(LogoutDocument);
 };
+export const PostReplyDocument = gql`
+    mutation PostReply($input: PostReplyInput!) {
+  postReply(input: $input) {
+    error
+    post {
+      ...BasicPost
+      text
+    }
+  }
+}
+    ${BasicPostFragmentDoc}`;
+
+export function usePostReplyMutation() {
+  return Urql.useMutation<PostReplyMutation, PostReplyMutationVariables>(PostReplyDocument);
+};
 export const RegisterDocument = gql`
     mutation Register($options: UserRegisterInput!) {
   register(options: $options) {
@@ -568,13 +659,11 @@ export function useSendVerifyEmailMutation() {
 export const UpdatePostDocument = gql`
     mutation UpdatePost($id: ID!, $title: String!, $text: String!) {
   updatePost(id: $id, title: $title, text: $text) {
-    id
-    title
+    ...BasicPost
     text
-    textSnippet
   }
 }
-    `;
+    ${BasicPostFragmentDoc}`;
 
 export function useUpdatePostMutation() {
   return Urql.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument);
@@ -617,20 +706,10 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
 export const PostDocument = gql`
     query Post($id: ID!) {
   post(id: $id) {
-    id
-    title
-    text
-    points
-    author {
-      id
-      username
-    }
-    voteStatus
-    createdAt
-    updatedAt
+    ...PostContent
   }
 }
-    `;
+    ${PostContentFragmentDoc}`;
 
 export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostQuery>({ query: PostDocument, ...options });
@@ -648,6 +727,17 @@ export const PostsDocument = gql`
 
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
+};
+export const ThreadDocument = gql`
+    query Thread($id: ID!, $maxLevel: Int) {
+  thread(id: $id, maxLevel: $maxLevel) {
+    ...PostContent
+  }
+}
+    ${PostContentFragmentDoc}`;
+
+export function useThreadQuery(options: Omit<Urql.UseQueryArgs<ThreadQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<ThreadQuery>({ query: ThreadDocument, ...options });
 };
 export const TestTokenDocument = gql`
     query TestToken {

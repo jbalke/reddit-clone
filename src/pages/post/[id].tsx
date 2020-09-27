@@ -1,19 +1,16 @@
-import { Heading, Text } from '@chakra-ui/core';
+import { Stack } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
-import { useRouter } from 'next/router';
 import React from 'react';
-import EditDeletePostButtons from '../../components/EditDeletePostButtons';
 import Layout from '../../components/Layout';
-import Wrapper from '../../components/Wrapper';
-import { useMeQuery } from '../../generated/graphql';
+import Post from '../../components/Post';
 import { getClientConfig } from '../../urql/urqlConfig';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
+import { useRouter } from 'next/router';
 
-function Post() {
+function Thread() {
   const router = useRouter();
-
-  const [{ data: meData, fetching: meFetching }] = useMeQuery();
-  const [{ data, fetching }] = useGetPostFromUrl();
+  const { id } = router.query;
+  const [{ data, fetching }] = useGetPostFromUrl(10);
 
   if (fetching) {
     return (
@@ -21,20 +18,22 @@ function Post() {
         <div>Loading...</div>
       </Layout>
     );
-  } else if (data && data.post) {
-    const { post } = data;
+  } else if (data && data.thread) {
     return (
       <Layout size="regular">
-        <Heading>{post.title}</Heading>
-        <Text>{post.text}</Text>
-        {meData?.me?.id === post.author.id && (
-          <EditDeletePostButtons
-            postId={post.id}
-            mt={4}
-            display="flex"
-            justifyContent="flex-end"
-          />
-        )}
+        <Stack spacing={0}>
+          {data.thread.map((p) => (
+            <Post
+              key={p.id}
+              post={p}
+              opId={id as string}
+              shadow={!p.level ? 'md' : undefined}
+              borderWidth="1px"
+              ml={p.level * 4}
+              borderLeft={p.level ? `2px solid teal` : undefined}
+            />
+          ))}
+        </Stack>
       </Layout>
     );
   } else {
@@ -46,4 +45,4 @@ function Post() {
   }
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(Post);
+export default withUrqlClient(getClientConfig, { ssr: true })(Thread);

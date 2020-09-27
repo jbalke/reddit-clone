@@ -1,9 +1,9 @@
 import { useRouter } from 'next/router';
-import { usePostQuery } from '../generated/graphql';
+import { useThreadQuery } from '../generated/graphql';
 
-export const useGetPostFromUrl = () => {
+export const useGetPostFromUrl = (maxLevel: number = 0) => {
   const router = useRouter();
   const id = router.query.id as string;
 
-  return usePostQuery({ variables: { id } });
+  return useThreadQuery({ variables: { id, maxLevel } });
 };

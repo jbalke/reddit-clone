@@ -5,15 +5,15 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
-import Wrapper from '../components/Wrapper';
 import { useCreatePostMutation } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
-import { useIsAuth } from '../utils/useIsAuth';
+import { useIsAuthenticatedAndVerified } from '../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../utils/validate';
 
 function CreatePost() {
+  useIsAuthenticatedAndVerified();
+
   const [, createPost] = useCreatePostMutation();
-  useIsAuth();
   const router = useRouter();
 
   return (
@@ -22,6 +22,7 @@ function CreatePost() {
         initialValues={{
           title: '',
           text: '',
+          parentId: '',
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {

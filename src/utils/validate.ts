@@ -1,5 +1,6 @@
 import { FormikErrors } from 'formik';
 import { __emailRE__ } from '../constants';
+import { PostReplyInput } from '../generated/graphql';
 
 const __invalidCharacters__ = ['@', ' ', '!', '_', '-'];
 const __invalidCharactersMessage__ = `Username can not contain the following: "${__invalidCharacters__
@@ -68,12 +69,24 @@ export const validateEmailInput = ({ email }: ForgotPasswordInput) => {
 interface PostInput {
   title: string;
   text: string;
+  parentId: string;
 }
 
-export const validatePostInput = ({ title, text }: PostInput) => {
+export const validatePostInput = ({ title, text, parentId }: PostInput) => {
   const errors: FormikErrors<PostInput> = {};
 
-  validateTitle(title, errors);
+  if (!parentId) {
+    validateTitle(title, errors);
+  }
+
+  validateText(text, errors);
+
+  return errors;
+};
+
+export const validatePostReplyInput = ({ parentId, text }: PostReplyInput) => {
+  const errors: FormikErrors<PostReplyInput> = {};
+
   validateText(text, errors);
 
   return errors;

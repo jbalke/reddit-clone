@@ -1,0 +1,5 @@
+query Thread($id: ID!, $maxLevel: Int) {
+  thread(id: $id, maxLevel: $maxLevel) {
+    ...PostContent
+  }
+}

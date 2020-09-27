@@ -1,0 +1,15 @@
+fragment BasicPost on Post {
+  id
+  title
+  points
+  replies
+  author {
+    id
+    username
+  }
+  parentId
+  level
+  voteStatus
+  createdAt
+  updatedAt
+}
