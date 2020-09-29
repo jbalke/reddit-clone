@@ -78,7 +78,6 @@ export const validatePostInput = ({ title, text, parentId }: PostInput) => {
   if (!parentId) {
     validateTitle(title, errors);
   }
-
   validateText(text, errors);
 
   return errors;

@@ -1,5 +1,6 @@
 import { Box, Button, FormControl } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
+import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -9,6 +10,7 @@ import { useCreatePostMutation } from '../generated/graphql';
 import { getClientConfig } from '../urql/urqlConfig';
 import { useIsAuthenticatedAndVerified } from '../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../utils/validate';
+import { loginRedirectSSR } from '../utils/loginRedirectSSR';
 
 function CreatePost() {
   useIsAuthenticatedAndVerified();
@@ -67,4 +69,10 @@ function CreatePost() {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: false })(CreatePost);
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  await loginRedirectSSR(req, res);
+
+  return { props: {} };
+};
+
+export default withUrqlClient(getClientConfig)(CreatePost);

@@ -34,7 +34,7 @@ function VoteSection({ post }: VoteSectionProps) {
           setLoadingState('not-loading');
         }}
         isLoading={loadingState === 'upvote-loading'}
-        isDisabled={fetching || !data?.me}
+        isDisabled={data?.me?.id === post.author.id || fetching || !data?.me}
         aria-label="Upvote post"
         title="Upvote"
         icon="chevron-up"
@@ -52,7 +52,7 @@ function VoteSection({ post }: VoteSectionProps) {
           setLoadingState('not-loading');
         }}
         isLoading={loadingState === 'downvote-loading'}
-        isDisabled={fetching || !data?.me}
+        isDisabled={data?.me?.id === post.author.id || fetching || !data?.me}
         aria-label="Downvote post"
         title="Downvote"
         icon="chevron-down"

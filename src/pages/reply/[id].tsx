@@ -9,6 +9,7 @@ import {
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
+import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -17,11 +18,12 @@ import Layout from '../../components/Layout';
 import Post from '../../components/Post';
 import { usePostReplyMutation } from '../../generated/graphql';
 import { getClientConfig } from '../../urql/urqlConfig';
+import { loginRedirectSSR } from '../../utils/loginRedirectSSR';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../utils/useIsAuthenticatedAndVerified';
 import { validatePostReplyInput } from '../../utils/validate';
 
-function Thread() {
+function Reply() {
   useIsAuthenticatedAndVerified();
 
   const router = useRouter();
@@ -69,7 +71,7 @@ function Thread() {
                   if (opId) {
                     router.push(`/post/${opId}`);
                   } else {
-                    router.back();
+                    router.push('/');
                   }
                 }
               }
@@ -117,4 +119,10 @@ function Thread() {
   }
 }
 
-export default withUrqlClient(getClientConfig, { ssr: true })(Thread);
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  await loginRedirectSSR(req, res);
+
+  return { props: {} };
+};
+
+export default withUrqlClient(getClientConfig)(Reply);

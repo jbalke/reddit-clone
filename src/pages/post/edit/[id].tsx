@@ -1,5 +1,6 @@
 import { Box, Button, Flex, FormControl } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
+import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -11,6 +12,7 @@ import {
   useUpdatePostMutation,
 } from '../../../generated/graphql';
 import { getClientConfig } from '../../../urql/urqlConfig';
+import { loginRedirectSSR } from '../../../utils/loginRedirectSSR';
 import { useGetParamFromUrl } from '../../../utils/useGetParamFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../../../utils/validate';
@@ -55,10 +57,18 @@ function EditPost(props: EditPostProps) {
             id: id!,
             ...values,
           });
-          router.back();
+
+          const { parentId } = values;
+
+          if (parentId) {
+            //TODO: how to determine whether a user was redirected here from login or navigated here?
+            router.back();
+          } else {
+            router.push('/');
+          }
         }}
       >
-        {({ isSubmitting }) => (
+        {({ isSubmitting, values }) => (
           <Form>
             <FormControl>
               {!data?.post?.parentId && (
@@ -84,7 +94,11 @@ function EditPost(props: EditPostProps) {
                 </Button>
                 <Button
                   onClick={() => {
-                    router.back();
+                    if (values.parentId) {
+                      router.push(`/post/${values.parentId}`);
+                    } else {
+                      router.push('/');
+                    }
                   }}
                 >
                   cancel
@@ -104,5 +118,11 @@ function EditPost(props: EditPostProps) {
     </Layout>
   );
 }
+
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  await loginRedirectSSR(req, res);
+
+  return { props: {} };
+};
 
 export default withUrqlClient(getClientConfig)(EditPost);

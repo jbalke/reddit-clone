@@ -56,9 +56,15 @@ function Post({ post, opId, ...flexProps }: PostProps) {
         <Text mt={4}>{isSummary(post) ? post.textSnippet : post.text}</Text>
         <Flex mt={2} justifyContent="space-between" alignItems="center">
           <Text fontSize="sm">Replies: {post.replies}</Text>
-          <Link href={`/reply/${post.id}?opid=${opId}`}>
-            <IconButton icon="chat" aria-label="Reply to Post" title="Reply" />
-          </Link>
+          {data?.me?.id && data.me.id !== post.author.id && (
+            <Link href={`/reply/${post.id}?opid=${opId}`}>
+              <IconButton
+                icon="chat"
+                aria-label="Reply to Post"
+                title="Reply"
+              />
+            </Link>
+          )}
           {data?.me?.id === post.author.id ? (
             <EditDeletePostButtons postId={post.id} display="flex" />
           ) : null}

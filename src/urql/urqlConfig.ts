@@ -6,6 +6,7 @@ import { authExchange } from './authExchange';
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptionsExchange } from './fetchOptionsExchange';
+import { devtoolsExchange } from '@urql/devtools';
 
 const options = {
   initialDelayMs: 1000,
@@ -13,9 +14,6 @@ const options = {
   randomDelay: true,
   maxNumberAttempts: 2,
   retryIf: (err: CombinedError): boolean => {
-    if (err.graphQLErrors.some((e) => e.message === 'token expired'))
-      return true;
-
     return err && !!err.networkError;
   },
 };
@@ -24,6 +22,7 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
   return {
     url: 'http://localhost:4000/graphql',
     exchanges: [
+      devtoolsExchange,
       dedupExchange,
       cache,
       retryExchange(options), // Use the retryExchange factory to add a new exchange
@@ -59,8 +58,8 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
           console.error(err);
         }
       }),
-      ssrExchange,
       errorExchange,
+      ssrExchange,
       fetchExchange,
     ],
   };
