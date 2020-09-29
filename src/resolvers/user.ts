@@ -193,12 +193,7 @@ If you did not request a password reset, you can safely ignore this email.
   @Query(() => User, { nullable: true })
   @UseMiddleware(authorize)
   me(@Ctx() { user }: MyContext) {
-    if (!user) {
-      return undefined;
-    }
-    console.log('Me Query executing');
-
-    return User.findOne(user.userId);
+    return User.findOne(user!.userId);
   }
 
   @Query(() => [User])

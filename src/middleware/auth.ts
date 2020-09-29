@@ -22,8 +22,6 @@ export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
     throw new Error('email address not verified');
   }
 
-  console.log('verifying user: ', user);
-
   return next();
 };
 
@@ -44,7 +42,7 @@ export const admin: MiddlewareFn<MyContext> = ({ context }, next) => {
 };
 
 export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
-  const authorization = context.req.headers['authorization'];
+  const { authorization } = context.req.headers;
 
   if (authorization) {
     const tokenRegExMatch = authorization.match(__bearerRE__);
@@ -63,7 +61,7 @@ export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
 };
 
 function requireUserPayload(context: MyContext) {
-  const authorization = context.req.headers['authorization'];
+  const { authorization } = context.req.headers;
 
   if (!authorization) {
     throw new AuthenticationError('missing authorization header');

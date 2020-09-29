@@ -56,6 +56,8 @@ export class PostResolver {
 
   @FieldResolver(() => User)
   author(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+    console.log('dataloading');
+
     return userLoader.load(post.authorId);
   }
 
@@ -84,6 +86,12 @@ export class PostResolver {
     @Ctx() { user }: MyContext
   ) {
     const { userId } = user!;
+
+    const post = await Post.findOne({ where: { id: postId } });
+
+    if (!post || post.authorId === user?.userId) {
+      return false;
+    }
 
     const upvote = await Upvote.findOne({
       where: { userId, postId },
