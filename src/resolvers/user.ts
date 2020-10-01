@@ -289,7 +289,8 @@ If you did not request a password reset, you can safely ignore this email.
   @Mutation(() => VerifyResponse)
   async verifyEmail(
     @Arg('userId', () => ID) userId: string,
-    @Arg('token') token: string
+    @Arg('token') token: string,
+    @Ctx() { res }: MyContext
   ): Promise<VerifyResponse> {
     const user = await User.findOne({ id: userId });
     if (!user) {

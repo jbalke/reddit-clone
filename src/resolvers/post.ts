@@ -56,8 +56,6 @@ export class PostResolver {
 
   @FieldResolver(() => User)
   author(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
-    console.log('dataloading');
-
     return userLoader.load(post.authorId);
   }
 
@@ -81,7 +79,7 @@ export class PostResolver {
   @Mutation(() => Boolean)
   @UseMiddleware(authorize)
   async vote(
-    @Arg('postId', () => ID) postId: string,
+    @Arg('postId', () => Int) postId: number,
     @Arg('vote', () => Vote) vote: Vote,
     @Ctx() { user }: MyContext
   ) {
@@ -203,7 +201,7 @@ SELECT
     id, title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level"
 FROM
   replies
-ORDER BY path
+ORDER BY path, "createdAt"
     `,
       [id, maxLevel]
     );
@@ -213,7 +211,7 @@ ORDER BY path
 
   @Query(() => Post, { nullable: true })
   @UseMiddleware(authenticate)
-  async post(@Arg('id', () => ID) id: string): Promise<Post | undefined> {
+  async post(@Arg('id', () => Int) id: number): Promise<Post | undefined> {
     const posts = await getConnection().query(
       `
       SELECT
@@ -241,7 +239,7 @@ ORDER BY path
   @Mutation(() => Post, { nullable: true })
   @UseMiddleware([authorize, verified])
   async updatePost(
-    @Arg('id', () => ID) id: string,
+    @Arg('id', () => Int) id: number,
     @Arg('title', () => String) title: string,
     @Arg('text', () => String) text: string,
     @Ctx() { user }: MyContext
@@ -260,18 +258,24 @@ ORDER BY path
   @Mutation(() => Boolean)
   @UseMiddleware([authorize, verified])
   async deletePost(
-    @Arg('id', () => ID) id: string,
+    @Arg('id', () => Int) id: number,
+    @Arg('opId', () => Int, { nullable: true }) opId: number | undefined,
     @Ctx() { user }: MyContext
   ): Promise<Boolean> {
     const post = await Post.findOne({ id });
 
     if (post && post.parentId) {
-      await getConnection()
-        .createQueryBuilder()
-        .update(Post)
-        .set({ replies: () => `replies - 1` })
-        .where('id = :id', { id: post.parentId })
-        .execute();
+      await getConnection().transaction(async (tm) => {
+        await tm
+          .getRepository(Post)
+          .update({ id: post.parentId! }, { replies: () => `replies - 1` });
+
+        if (opId) {
+          await tm
+            .getRepository(Post)
+            .update({ id: opId }, { replies: () => `replies - 1` });
+        }
+      });
     }
 
     if (user!.isAdmin) {
@@ -308,6 +312,12 @@ ORDER BY path
         await tm
           .getRepository(Post)
           .update({ id: input.parentId }, { replies: parentPost.replies + 1 });
+
+        if (input.opId !== parentPost.id) {
+          await tm
+            .getRepository(Post)
+            .update({ id: input.opId }, { replies: () => 'replies + 1' });
+        }
 
         const result = await tm
           .createQueryBuilder()

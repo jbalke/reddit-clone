@@ -3,7 +3,7 @@ import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
 
 export const createUpvoteLoader = () =>
-  new DataLoader<{ postId: string; userId: string }, Upvote | null>(
+  new DataLoader<{ postId: number; userId: string }, Upvote | null>(
     async (keys) => {
       const upvotes = await Upvote.findByIds(keys as any);
       const upvoteIdsToUpvotes: Record<string, Upvote> = {};

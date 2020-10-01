@@ -23,18 +23,20 @@ export class PostInput {
 
 @InputType()
 export class PostReplyInput {
-  @Field(() => ID)
-  parentId: string;
+  @Field(() => Int)
+  parentId: number;
   @Field()
   text: string;
+  @Field(() => Int)
+  opId: number;
 }
 
 @ObjectType()
 @Entity('posts')
 export class Post extends BaseEntity {
-  @Field(() => ID)
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+  @Field(() => Int)
+  @PrimaryGeneratedColumn()
+  id: number;
 
   @Field(() => String, { nullable: true })
   @Column({ type: 'text', nullable: true })
@@ -55,9 +57,9 @@ export class Post extends BaseEntity {
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
-  @Field(() => ID, { nullable: true })
-  @Column({ type: 'uuid', nullable: true })
-  parentId: string | null;
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
+  parentId: number | null;
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
