@@ -8,10 +8,15 @@ import {
 import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import React, { useEffect } from 'react';
+import { clearAccessToken } from '../../../accessToken';
 import Layout from '../../../components/Layout';
 import { NextChakraLink } from '../../../components/NextChakraLink';
-import { useVerifyEmailMutation } from '../../../generated/graphql';
+import {
+  useLogoutMutation,
+  useVerifyEmailMutation,
+} from '../../../generated/graphql';
 import { getClientConfig } from '../../../urql/urqlConfig';
+import { useRouter } from 'next/router';
 
 type VerifyEmailProps = {
   userId: string;
@@ -20,9 +25,18 @@ type VerifyEmailProps = {
 
 function VerifyEmail({ userId, token }: VerifyEmailProps) {
   const [{ data, fetching }, verifyEmail] = useVerifyEmailMutation();
+  const [, logout] = useLogoutMutation();
+  const router = useRouter();
 
   useEffect(() => {
-    verifyEmail({ userId, token });
+    verifyEmail({ userId, token }).then((result) => {
+      if (result.data?.verifyEmail.verified) {
+        logout().then(() => {
+          clearAccessToken();
+          router.push('/login');
+        });
+      }
+    });
   }, []);
 
   if (fetching) {
@@ -31,14 +45,14 @@ function VerifyEmail({ userId, token }: VerifyEmailProps) {
         <Text>verifying...</Text>
       </Layout>
     );
-  } else if (data && data?.verifyEmail.verified) {
+  } else if (data?.verifyEmail.verified) {
     return (
       <Layout size="small">
         <Alert mt={5} status="success">
           <AlertIcon />
           <AlertTitle mr={4}>Success!</AlertTitle>
           <AlertDescription>
-            Your email address has been verified.
+            Your email address has been verified. You must now log back in.
           </AlertDescription>
         </Alert>
       </Layout>

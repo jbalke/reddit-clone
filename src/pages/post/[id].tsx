@@ -26,7 +26,7 @@ function Thread() {
             <Post
               key={p.id}
               post={p}
-              opId={id as string}
+              opId={parseInt(id as string)}
               shadow={!p.level ? 'md' : undefined}
               borderWidth="1px"
               ml={p.level * 4}

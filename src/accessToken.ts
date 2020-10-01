@@ -40,9 +40,6 @@ export async function refreshAccessToken(): Promise<string> {
     const response = await fetch('http://localhost:4000/refresh_token', {
       credentials: 'include',
       method: 'POST',
-      // headers: {
-      //   Authorization: accessToken ? `Bearer ${accessToken}` : '',
-      // },
     });
 
     const data: myResponse = await response.json();
@@ -53,6 +50,7 @@ export async function refreshAccessToken(): Promise<string> {
     }
   } catch (err) {
     console.error(err);
+    clearAccessToken();
   }
   return accessToken;
 }

@@ -12,6 +12,8 @@ function MyApp({ Component, pageProps }: any) {
 
 export default MyApp;
 
+//TODO: if banned, don't allow deleting of posts/replies (or voting?)
+//TODO: do not allow deleting OP on /post/[id] page (results in an empty page)
 //TODO: Fix excessive user table queries on page load (only occurs when logged in!)
 //TODO: Limit 1 reply from each person to a post/reply.
 //TODO: make replies more compact

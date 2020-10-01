@@ -40,7 +40,7 @@ export type QueryThreadArgs = {
 
 
 export type QueryPostArgs = {
-  id: Scalars['ID'];
+  id: Scalars['Int'];
 };
 
 
@@ -56,12 +56,12 @@ export type PaginatedPosts = {
 
 export type Post = {
   __typename?: 'Post';
-  id: Scalars['ID'];
+  id: Scalars['Int'];
   title?: Maybe<Scalars['String']>;
   text: Scalars['String'];
   points: Scalars['Int'];
   author: User;
-  parentId?: Maybe<Scalars['ID']>;
+  parentId?: Maybe<Scalars['Int']>;
   level: Scalars['Int'];
   replies: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
@@ -79,6 +79,7 @@ export type User = {
   upvotes: Array<Upvote>;
   verified: Scalars['Boolean'];
   isAdmin: Scalars['Boolean'];
+  isBanned: Scalars['Boolean'];
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
 };
@@ -121,7 +122,7 @@ export type Mutation = {
 
 export type MutationVoteArgs = {
   vote: Vote;
-  postId: Scalars['ID'];
+  postId: Scalars['Int'];
 };
 
 
@@ -133,12 +134,13 @@ export type MutationCreatePostArgs = {
 export type MutationUpdatePostArgs = {
   text: Scalars['String'];
   title: Scalars['String'];
-  id: Scalars['ID'];
+  id: Scalars['Int'];
 };
 
 
 export type MutationDeletePostArgs = {
-  id: Scalars['ID'];
+  opId?: Maybe<Scalars['Int']>;
+  id: Scalars['Int'];
 };
 
 
@@ -202,8 +204,9 @@ export type PostReplyResponse = {
 };
 
 export type PostReplyInput = {
-  parentId: Scalars['ID'];
+  parentId: Scalars['Int'];
   text: Scalars['String'];
+  opId: Scalars['Int'];
 };
 
 export type UserResponse = {
@@ -264,7 +267,7 @@ export type RegularErrorFragment = (
 
 export type RegularUserFragment = (
   { __typename?: 'User' }
-  & Pick<User, 'id' | 'username' | 'verified' | 'isAdmin'>
+  & Pick<User, 'id' | 'username' | 'verified' | 'isAdmin' | 'isBanned'>
 );
 
 export type RegularUserResponseFragment = (
@@ -309,7 +312,8 @@ export type CreatePostMutation = (
 );
 
 export type DeletePostMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars['Int'];
+  opId?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -391,7 +395,7 @@ export type SendVerifyEmailMutation = (
 );
 
 export type UpdatePostMutationVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars['Int'];
   title: Scalars['String'];
   text: Scalars['String'];
 }>;
@@ -426,7 +430,7 @@ export type VerifyEmailMutation = (
 
 export type VoteMutationVariables = Exact<{
   vote: Vote;
-  postId: Scalars['ID'];
+  postId: Scalars['Int'];
 }>;
 
 
@@ -447,7 +451,7 @@ export type MeQuery = (
 );
 
 export type PostQueryVariables = Exact<{
-  id: Scalars['ID'];
+  id: Scalars['Int'];
 }>;
 
 
@@ -546,6 +550,7 @@ export const RegularUserFragmentDoc = gql`
   username
   verified
   isAdmin
+  isBanned
 }
     `;
 export const RegularUserResponseFragmentDoc = gql`
@@ -584,8 +589,8 @@ export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
 };
 export const DeletePostDocument = gql`
-    mutation DeletePost($id: ID!) {
-  deletePost(id: $id)
+    mutation DeletePost($id: Int!, $opId: Int) {
+  deletePost(id: $id, opId: $opId)
 }
     `;
 
@@ -657,7 +662,7 @@ export function useSendVerifyEmailMutation() {
   return Urql.useMutation<SendVerifyEmailMutation, SendVerifyEmailMutationVariables>(SendVerifyEmailDocument);
 };
 export const UpdatePostDocument = gql`
-    mutation UpdatePost($id: ID!, $title: String!, $text: String!) {
+    mutation UpdatePost($id: Int!, $title: String!, $text: String!) {
   updatePost(id: $id, title: $title, text: $text) {
     ...BasicPost
     text
@@ -684,7 +689,7 @@ export function useVerifyEmailMutation() {
   return Urql.useMutation<VerifyEmailMutation, VerifyEmailMutationVariables>(VerifyEmailDocument);
 };
 export const VoteDocument = gql`
-    mutation Vote($vote: Vote!, $postId: ID!) {
+    mutation Vote($vote: Vote!, $postId: Int!) {
   vote(vote: $vote, postId: $postId)
 }
     `;
@@ -704,7 +709,7 @@ export function useMeQuery(options: Omit<Urql.UseQueryArgs<MeQueryVariables>, 'q
   return Urql.useQuery<MeQuery>({ query: MeDocument, ...options });
 };
 export const PostDocument = gql`
-    query Post($id: ID!) {
+    query Post($id: Int!) {
   post(id: $id) {
     ...PostContent
   }

@@ -1,18 +1,19 @@
 import { Box, Button, FormControl } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
 import { useCreatePostMutation } from '../generated/graphql';
+import { AuthGuardSSR } from '../urql/authGuardSSR';
 import { getClientConfig } from '../urql/urqlConfig';
 import { useIsAuthenticatedAndVerified } from '../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../utils/validate';
-import { loginRedirectSSR } from '../utils/loginRedirectSSR';
 
-function CreatePost() {
+type PageProps = {};
+
+function CreatePost(props: PageProps) {
   useIsAuthenticatedAndVerified();
 
   const [, createPost] = useCreatePostMutation();
@@ -24,7 +25,6 @@ function CreatePost() {
         initialValues={{
           title: '',
           text: '',
-          parentId: '',
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
@@ -69,10 +69,4 @@ function CreatePost() {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  await loginRedirectSSR(req, res);
-
-  return { props: {} };
-};
-
-export default withUrqlClient(getClientConfig)(CreatePost);
+export default withUrqlClient(getClientConfig)(AuthGuardSSR(CreatePost));

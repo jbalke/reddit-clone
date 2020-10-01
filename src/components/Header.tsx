@@ -17,12 +17,14 @@ const MenuItem = ({ children, ...props }: MenuItemProps) => (
   </Box>
 );
 
-const Header = () => {
+type HeaderProps = {};
+
+const Header = (props: HeaderProps) => {
   const [show, setShow] = useState(false);
   const handleToggle = () => setShow(!show);
   const router = useRouter();
 
-  const [{ data, fetching }] = useMeQuery({ pause: isServer() });
+  const [{ data, fetching }] = useMeQuery();
   const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
 
   const handleLogout = () => async () => {

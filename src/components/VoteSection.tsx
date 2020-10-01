@@ -18,9 +18,7 @@ function VoteSection({ post }: VoteSectionProps) {
   const [loadingState, setLoadingState] = useState<
     'upvote-loading' | 'downvote-loading' | 'not-loading'
   >('not-loading');
-  const [{ data, fetching }] = useMeQuery({
-    pause: isServer(),
-  });
+  const [{ data, fetching }] = useMeQuery();
 
   return (
     <Flex direction="column" justifyContent="center" alignItems="center" mr={2}>
@@ -33,8 +31,8 @@ function VoteSection({ post }: VoteSectionProps) {
           await vote({ vote: Vote.Up, postId: post.id });
           setLoadingState('not-loading');
         }}
-        isLoading={loadingState === 'upvote-loading'}
-        isDisabled={data?.me?.id === post.author.id || fetching || !data?.me}
+        isLoading={loadingState === 'upvote-loading' || fetching}
+        isDisabled={data?.me?.id === post.author.id || !data?.me}
         aria-label="Upvote post"
         title="Upvote"
         icon="chevron-up"

@@ -11,6 +11,7 @@ import {
   Vote,
   DeletePostMutationVariables,
   UpdatePostMutationVariables,
+  VerifyResponse,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
@@ -134,10 +135,18 @@ export const cache = cacheExchange({
         }
       },
       deletePost: (_result, args, cache, info) => {
+        const { id, opId } = args as DeletePostMutationVariables;
         cache.invalidate({
           __typename: 'Post',
-          id: (args as DeletePostMutationVariables).id,
+          id,
         });
+
+        if (opId) {
+          cache.invalidate({
+            __typename: 'Post',
+            id: opId,
+          });
+        }
       },
       updatePost: (_result, args, cache, info) => {
         const { id, text, title } = args as UpdatePostMutationVariables;
@@ -197,8 +206,11 @@ function cursorPagination(): Resolver {
 
 function invalidatePosts(cache: Cache) {
   const allFields = cache.inspectFields('Query');
+  console.dir(allFields);
   const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
+  console.dir(fieldInfos);
   fieldInfos.forEach((fi) => {
+    console.log(`posts(${JSON.stringify(fi.arguments)})`);
     cache.invalidate('Query', 'posts', fi.arguments || undefined);
   });
 }

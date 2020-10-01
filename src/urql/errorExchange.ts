@@ -16,7 +16,7 @@ export const errorExchange: Exchange = ({ forward }) => (ops$) => {
               !e.path?.includes('me')
           )
         ) {
-          Router.replace('/login');
+          Router.replace(`/login?next=${Router.asPath}`);
         } else if (
           error.graphQLErrors.some((e) => /not verified/i.test(e.message))
         ) {

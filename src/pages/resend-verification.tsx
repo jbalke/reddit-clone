@@ -28,9 +28,10 @@ function ResendVerification(props: resendVerificationProps) {
       <Heading mb={4}>Email Verification</Heading>
       <Text>
         If you have yet to verify your email address, your access to this site
-        will be restricted. After registration and when changing the your email
-        address, an email will have been sent with a link to verify the email
-        address you provided (please check your junk/spam folder).
+        will be restricted. After registration, and when changing your email
+        address, an email will be sent to the email address you provided with
+        directions for verifying your address (please check your junk/spam
+        folder).
       </Text>
       <Text mt={2} mb={4}>
         If you would like to send another verification email, enter the email

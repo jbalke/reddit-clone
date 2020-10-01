@@ -1,10 +1,9 @@
-import React from 'react';
-import { useRouter } from 'next/router';
 import { Box, Heading, Text } from '@chakra-ui/core';
-import Wrapper from '../../components/Wrapper';
+import { withUrqlClient } from 'next-urql';
+import { useRouter } from 'next/router';
+import React from 'react';
 import Layout from '../../components/Layout';
 import { getClientConfig } from '../../urql/urqlConfig';
-import { withUrqlClient } from 'next-urql';
 
 type ProfileProps = {};
 

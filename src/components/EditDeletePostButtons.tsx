@@ -4,11 +4,13 @@ import React from 'react';
 import { useDeletePostMutation } from '../generated/graphql';
 
 type EditDeletePostButtonsProps = {
-  postId: string;
+  postId: number;
+  opId?: number;
 } & BoxProps;
 
 function EditDeletePostButtons({
   postId,
+  opId,
   ...props
 }: EditDeletePostButtonsProps) {
   const [, deletePost] = useDeletePostMutation();
@@ -28,7 +30,7 @@ function EditDeletePostButtons({
         aria-label="Delete Post"
         title="Delete Post"
         onClick={async () => {
-          await deletePost({ id: postId });
+          await deletePost({ id: postId, opId });
         }}
       />
     </Box>

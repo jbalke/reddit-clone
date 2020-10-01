@@ -1,6 +1,5 @@
 import { Box, Button, Flex, FormControl } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { GetServerSideProps } from 'next';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -11,8 +10,8 @@ import {
   usePostQuery,
   useUpdatePostMutation,
 } from '../../../generated/graphql';
+import { AuthGuardSSR } from '../../../urql/authGuardSSR';
 import { getClientConfig } from '../../../urql/urqlConfig';
-import { loginRedirectSSR } from '../../../utils/loginRedirectSSR';
 import { useGetParamFromUrl } from '../../../utils/useGetParamFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../../../utils/validate';
@@ -23,7 +22,7 @@ function EditPost(props: EditPostProps) {
   useIsAuthenticatedAndVerified();
 
   const router = useRouter();
-  const id = useGetParamFromUrl('id') as string;
+  const id = parseInt(useGetParamFromUrl('id') as string);
   const [{ data, fetching }] = usePostQuery({ variables: { id } });
   const [, updatePost] = useUpdatePostMutation();
 
@@ -49,7 +48,7 @@ function EditPost(props: EditPostProps) {
         initialValues={{
           title: data.post.title || '',
           text: data.post.text,
-          parentId: data.post.parentId || '',
+          parentId: data.post.parentId,
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
@@ -119,10 +118,4 @@ function EditPost(props: EditPostProps) {
   );
 }
 
-export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
-  await loginRedirectSSR(req, res);
-
-  return { props: {} };
-};
-
-export default withUrqlClient(getClientConfig)(EditPost);
+export default withUrqlClient(getClientConfig)(AuthGuardSSR(EditPost));

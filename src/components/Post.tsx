@@ -13,7 +13,7 @@ import Link from 'next/link';
 
 type PostProps = {
   post: PostContentFragment | PostSummaryFragment;
-  opId: string | null;
+  opId: number | null;
 } & FlexProps;
 
 function Post({ post, opId, ...flexProps }: PostProps) {
@@ -66,7 +66,11 @@ function Post({ post, opId, ...flexProps }: PostProps) {
             </Link>
           )}
           {data?.me?.id === post.author.id ? (
-            <EditDeletePostButtons postId={post.id} display="flex" />
+            <EditDeletePostButtons
+              postId={post.id}
+              opId={opId}
+              display="flex"
+            />
           ) : null}
         </Flex>
       </Flex>

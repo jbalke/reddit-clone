@@ -1,12 +1,20 @@
 import { retryExchange } from '@urql/exchange-retry';
 import { CombinedError, dedupExchange, fetchExchange } from 'urql';
-import { getAccessToken } from '../accessToken';
+import {
+  getAccessToken,
+  isAccessTokenExpired,
+  refreshAccessToken,
+} from '../accessToken';
 import { isServer } from '../utils/isServer';
-import { authExchange } from './authExchange';
+// import { authExchange } from './authExchange';
+import { authExchange } from '@urql/exchange-auth';
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptionsExchange } from './fetchOptionsExchange';
 import { devtoolsExchange } from '@urql/devtools';
+import Router, { SingletonRouter } from 'next/router';
+import { NextPageContext } from 'next';
+import { SSRExchange } from 'next-urql';
 
 const options = {
   initialDelayMs: 1000,
@@ -18,7 +26,10 @@ const options = {
   },
 };
 
-export const getClientConfig = (ssrExchange: any, ctx: any) => {
+export const getClientConfig = (
+  ssrExchange: SSRExchange,
+  ctx?: NextPageContext
+) => {
   return {
     url: 'http://localhost:4000/graphql',
     exchanges: [
@@ -26,7 +37,63 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
       dedupExchange,
       cache,
       retryExchange(options), // Use the retryExchange factory to add a new exchange
-      authExchange(),
+      errorExchange,
+      authExchange<{ token: string }>({
+        getAuth: async ({ authState }) => {
+          if (!authState) {
+            let token = getAccessToken() || (await refreshAccessToken());
+            if (token) {
+              return { token };
+            }
+            console.log('getAuth: token not found');
+            return null;
+          }
+
+          const newAccessToken = await refreshAccessToken();
+
+          if (newAccessToken) {
+            console.log('getAuth: token refreshed');
+            return {
+              token: newAccessToken,
+            };
+          }
+
+          return null;
+        },
+        addAuthToOperation: ({ authState, operation }) => {
+          if (!authState || !authState.token) {
+            return operation;
+          }
+          const fetchOptions =
+            typeof operation.context.fetchOptions === 'function'
+              ? operation.context.fetchOptions()
+              : operation.context.fetchOptions || {};
+          return {
+            ...operation,
+            context: {
+              ...operation.context,
+              fetchOptions: {
+                ...fetchOptions,
+                headers: {
+                  ...fetchOptions.headers,
+                  Authorization: `Bearer ${authState.token}`,
+                },
+              },
+            },
+          };
+        },
+        didAuthError: ({ error }) => {
+          return error.graphQLErrors.some(
+            (e) =>
+              e.extensions?.code === 'UNAUTHENTICATED' &&
+              (e.message === 'token expired' || e.message === 'invalid token')
+          );
+        },
+        willAuthError: ({ authState }) => {
+          if (!authState || isAccessTokenExpired()) return true;
+          return false;
+        },
+      }),
       fetchOptionsExchange(async (fetchOptions: any) => {
         try {
           let token = '';
@@ -58,9 +125,73 @@ export const getClientConfig = (ssrExchange: any, ctx: any) => {
           console.error(err);
         }
       }),
-      errorExchange,
       ssrExchange,
       fetchExchange,
     ],
   };
 };
+
+async function logout(
+  mutate: (query: string) => Promise<any>,
+  Router: SingletonRouter
+) {
+  await mutate(`mutation { logout }`);
+  Router.reload();
+}
+
+// const getAuth = async ({ authState, mutate }: any) => {
+//   if (!authState) {
+//     const token = getAccessToken();
+//     if (token) {
+//       return { token };
+//     }
+//     return null;
+//   }
+
+//   const newAccessToken = await refreshAccessToken();
+
+//   if (newAccessToken) {
+//     return {
+//       token: newAccessToken,
+//     };
+//   }
+
+//   // not able to refresh access token, log user out here.
+//   // logout()
+//   await logout(mutate, Router);
+//   return null;
+// };
+
+// const addAuthToOperation = ({ authState, operation }: any) => {
+//   if (!authState || !authState.token) {
+//     return operation;
+//   }
+//   const fetchOptions =
+//     typeof operation.context.fetchOptions === 'function'
+//       ? operation.context.fetchOptions()
+//       : operation.context.fetchOptions || {};
+//   return {
+//     ...operation,
+//     context: {
+//       ...operation.context,
+//       fetchOptions: {
+//         ...fetchOptions,
+//         headers: {
+//           ...fetchOptions.headers,
+//           Authorization: `Bearer ${authState.token}`,
+//         },
+//       },
+//     },
+//   };
+// };
+
+// const didAuthError = ({ error }: { error: CombinedError }) => {
+//   return error.graphQLErrors.some(
+//     (e) => e.extensions?.code === 'UNAUTHENTICATED'
+//   );
+// };
+
+// const willAuthError = ({ authState }: any) => {
+//   if (!authState || isAccessTokenExpired()) return true;
+//   return false;
+// };

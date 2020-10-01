@@ -3,4 +3,5 @@ fragment RegularUser on User {
   username
   verified
   isAdmin
+  isBanned
 }
