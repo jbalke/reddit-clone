@@ -13,6 +13,7 @@ import {
   UpdatePostMutationVariables,
   VerifyResponse,
   PostReplyMutationVariables,
+  UpdatePostMutation,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
@@ -118,7 +119,7 @@ export const cache = cacheExchange({
 
         const data = cache.readFragment(
           gql`
-            fragment _ on Post {
+            fragment post on Post {
               id
               points
               voteStatus
@@ -137,7 +138,8 @@ export const cache = cacheExchange({
             (!data.voteStatus ? 1 : 2) * newVoteStatus;
           cache.writeFragment(
             gql`
-              fragment __ on Post {
+              fragment updatePost on Post {
+                id
                 points
                 voteStatus
               }
@@ -157,18 +159,8 @@ export const cache = cacheExchange({
           updateReplies(cache, opId, -1);
         }
       },
-      updatePost: (_result, args, cache, _info) => {
-        const { id, text, title } = args as UpdatePostMutationVariables;
-
-        cache.writeFragment(
-          gql`
-            fragment __ on Post {
-              title
-              text
-            }
-          `,
-          { id, title, text } as any
-        );
+      updatePost: (_result, _args, cache, _info) => {
+        invalidate(cache, 'posts');
       },
     },
   },
@@ -226,7 +218,7 @@ function updateReplies(cache: Cache, postId: number, change: 1 | -1) {
     gql`
       fragment replies on Post {
         id
-        repiles
+        replies
       }
     `,
     { id: postId } as any

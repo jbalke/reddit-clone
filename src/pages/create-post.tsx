@@ -1,4 +1,4 @@
-import { Box, Button, FormControl } from '@chakra-ui/core';
+import { Box, Button, Flex, FormControl } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
@@ -46,14 +46,23 @@ function CreatePost(props: PageProps) {
                   placeholder="text"
                 />
               </Box>
-              <Button
-                mt={4}
-                isLoading={isSubmitting}
-                type="submit"
-                variantColor="teal"
-              >
-                create post
-              </Button>
+              <Flex justifyContent="flex-end" mt={4}>
+                <Button
+                  onClick={() => {
+                    router.push('/');
+                  }}
+                >
+                  cancel
+                </Button>
+                <Button
+                  ml={2}
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                >
+                  create post
+                </Button>
+              </Flex>
               {/* {!!submitError && (
                 <Alert mt={5} status="error">
                   <AlertIcon />

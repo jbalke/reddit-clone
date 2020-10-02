@@ -5,6 +5,7 @@ import {
   AlertTitle,
   Box,
   Button,
+  Flex,
   FormControl,
   Stack,
 } from '@chakra-ui/core';
@@ -38,7 +39,6 @@ function Reply() {
     );
   } else if (data && data.thread) {
     let { opId, id } = data.thread[0];
-    opId = opId ?? id;
 
     return (
       <Layout size="regular">
@@ -50,7 +50,7 @@ function Reply() {
             initialValues={{
               text: '',
               parentId: id,
-              opId: opId,
+              opId: opId ?? id,
             }}
             validate={validatePostReplyInput}
             onSubmit={async (values) => {
@@ -81,14 +81,27 @@ function Reply() {
                       placeholder="text"
                     />
                   </Box>
-                  <Button
-                    mt={4}
-                    isLoading={isSubmitting}
-                    type="submit"
-                    variantColor="teal"
-                  >
-                    reply
-                  </Button>
+                  <Flex mt={4} justifyContent="flex-end">
+                    <Button
+                      onClick={() => {
+                        if (opId) {
+                          router.push(`/post/${opId}`);
+                        } else {
+                          router.push('/');
+                        }
+                      }}
+                    >
+                      cancel
+                    </Button>
+                    <Button
+                      ml={2}
+                      isLoading={isSubmitting}
+                      type="submit"
+                      variantColor="teal"
+                    >
+                      reply
+                    </Button>
+                  </Flex>
                   {!!submitError && (
                     <Alert mt={5} status="error">
                       <AlertIcon />

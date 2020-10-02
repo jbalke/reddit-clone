@@ -42,13 +42,13 @@ function EditPost(props: EditPostProps) {
     );
   }
 
+  const { opId } = data.post;
   return (
-    <Layout size="small">
+    <Layout size="regular">
       <Formik
         initialValues={{
           title: data.post.title || '',
           text: data.post.text,
-          parentId: data.post.parentId,
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
@@ -57,17 +57,14 @@ function EditPost(props: EditPostProps) {
             ...values,
           });
 
-          const { parentId } = values;
-
-          if (parentId) {
-            //TODO: how to determine whether a user was redirected here from login or navigated here?
-            router.back();
+          if (opId) {
+            router.push(`/post/${opId}`);
           } else {
             router.push('/');
           }
         }}
       >
-        {({ isSubmitting, values }) => (
+        {({ isSubmitting }) => (
           <Form>
             <FormControl>
               {!data?.post?.parentId && (
@@ -82,25 +79,25 @@ function EditPost(props: EditPostProps) {
                   resize="vertical"
                 />
               </Box>
-              <Flex mt={4}>
-                <Button
-                  isLoading={isSubmitting}
-                  type="submit"
-                  variantColor="teal"
-                  mr={2}
-                >
-                  {!data?.post?.parentId ? 'update post' : 'update reply'}
-                </Button>
+              <Flex mt={4} justifyContent="flex-end">
                 <Button
                   onClick={() => {
-                    if (values.parentId) {
-                      router.push(`/post/${values.parentId}`);
+                    if (opId) {
+                      router.push(`/post/${opId}`);
                     } else {
                       router.push('/');
                     }
                   }}
                 >
                   cancel
+                </Button>
+                <Button
+                  isLoading={isSubmitting}
+                  type="submit"
+                  variantColor="teal"
+                  ml={2}
+                >
+                  {!data?.post?.parentId ? 'update post' : 'update reply'}
                 </Button>
               </Flex>
               {/* {!!submitError && (

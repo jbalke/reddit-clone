@@ -18,6 +18,7 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
 
 export default withUrqlClient(getClientConfig)(MyApp);
 
+//TODO: Load more posts on scroll
 //TODO: if banned, don't allow deleting of posts/replies (or voting?)
 //TODO: do not allow deleting OP on /post/[id] page (results in an empty page)
 //TODO: Fix excessive user table queries on page load (only occurs when logged in!)
