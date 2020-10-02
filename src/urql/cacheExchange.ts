@@ -71,18 +71,18 @@ export const cache = cacheExchange({
           }
         );
       },
-      logout: (_result, _args, cache, _info) => {
-        betterUpdateQuery<LogoutMutation, MeQuery>(
-          cache,
-          { query: MeDocument },
-          _result,
-          () => ({
-            me: null,
-          })
-        );
+      // logout: (_result, _args, cache, _info) => {
+      //   betterUpdateQuery<LogoutMutation, MeQuery>(
+      //     cache,
+      //     { query: MeDocument },
+      //     _result,
+      //     () => ({
+      //       me: null,
+      //     })
+      //   );
 
-        // invalidate(cache, 'posts');
-      },
+      //   // invalidate(cache, 'posts');
+      // },
       changePassword: (_result, _args, cache, _info) => {
         betterUpdateQuery<ChangePasswordMutation, MeQuery>(
           cache,

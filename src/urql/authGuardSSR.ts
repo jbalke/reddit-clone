@@ -24,10 +24,9 @@ export const AuthGuardSSR = (page: NextPage) => {
       `
         )
         .toPromise();
-      console.log(JSON.stringify(result.data?.me?.isBanned));
 
       if (result.data?.me?.verified && !result.data?.me?.isBanned) {
-        return;
+        return {};
       }
       if (result && res && req) {
         if (!result.data?.me?.verified) {
@@ -41,6 +40,7 @@ export const AuthGuardSSR = (page: NextPage) => {
     } catch (error) {
       console.error(error);
     }
+    return {};
   };
 
   function redirectToBanned(res: ServerResponse) {

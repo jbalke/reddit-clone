@@ -24,7 +24,6 @@ export default withUrqlClient(getClientConfig)(MyApp);
 //TODO: Limit 1 reply from each person to a post/reply.
 //TODO: make replies more compact
 //TODO: preserve formatting of post text (enable embedded html?)
-//TODO: implement exchange-auth -> https://formidable.com/open-source/urql/docs/api/auth-exchange/
 //TODO: Admin functions (lock post, ban user)
 //TODO: Look into yup for form validations (https://github.com/jquense/yup, https://www.youtube.com/watch?v=ftLy78R8xrg)
 //TODO: User profile page + change details

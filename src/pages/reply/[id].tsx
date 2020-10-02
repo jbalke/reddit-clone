@@ -9,6 +9,7 @@ import {
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
+import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../../components/InputField';
@@ -16,6 +17,7 @@ import Layout from '../../components/Layout';
 import Post from '../../components/Post';
 import { usePostReplyMutation } from '../../generated/graphql';
 import { AuthGuardSSR } from '../../urql/authGuardSSR';
+import { getClientConfig } from '../../urql/urqlConfig';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../utils/useIsAuthenticatedAndVerified';
 import { validatePostReplyInput } from '../../utils/validate';
@@ -110,4 +112,4 @@ function Reply() {
   }
 }
 
-export default AuthGuardSSR(Reply);
+export default withUrqlClient(getClientConfig)(AuthGuardSSR(Reply));
