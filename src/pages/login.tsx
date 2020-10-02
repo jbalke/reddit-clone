@@ -116,4 +116,4 @@ function login(props: loginProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(login);
+export default login;

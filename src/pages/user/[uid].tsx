@@ -20,4 +20,4 @@ function Profile(props: ProfileProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig, { ssr: false })(Profile);
+export default Profile;

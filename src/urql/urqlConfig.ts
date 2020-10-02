@@ -45,14 +45,11 @@ export const getClientConfig = (
             if (token) {
               return { token };
             }
-            console.log('getAuth: token not found');
             return null;
           }
 
           const newAccessToken = await refreshAccessToken();
-
           if (newAccessToken) {
-            console.log('getAuth: token refreshed');
             return {
               token: newAccessToken,
             };

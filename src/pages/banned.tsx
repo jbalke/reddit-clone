@@ -18,4 +18,4 @@ function Banned(props: BannedProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(Banned);
+export default Banned;

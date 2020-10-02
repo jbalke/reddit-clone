@@ -1,16 +1,22 @@
 import { CSSReset, ThemeProvider } from '@chakra-ui/core';
+import { withUrqlClient } from 'next-urql';
+import React from 'react';
 import theme from '../theme';
+import { getClientConfig } from '../urql/urqlConfig';
+import { MyContext } from '../myContext';
 
-function MyApp({ Component, pageProps }: any) {
+function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   return (
     <ThemeProvider theme={theme}>
       <CSSReset />
-      <Component {...pageProps} />
+      <MyContext.Provider value={{ resetUrqlClient }}>
+        <Component {...pageProps} />
+      </MyContext.Provider>
     </ThemeProvider>
   );
 }
 
-export default MyApp;
+export default withUrqlClient(getClientConfig)(MyApp);
 
 //TODO: if banned, don't allow deleting of posts/replies (or voting?)
 //TODO: do not allow deleting OP on /post/[id] page (results in an empty page)

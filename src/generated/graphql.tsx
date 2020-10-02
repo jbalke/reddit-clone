@@ -61,6 +61,7 @@ export type Post = {
   text: Scalars['String'];
   points: Scalars['Int'];
   author: User;
+  opId?: Maybe<Scalars['Int']>;
   parentId?: Maybe<Scalars['Int']>;
   level: Scalars['Int'];
   replies: Scalars['Int'];
@@ -241,7 +242,7 @@ export type UserLoginInput = {
 
 export type BasicPostFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'parentId' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
+  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'opId' | 'parentId' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
   & { author: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
@@ -519,6 +520,7 @@ export const BasicPostFragmentDoc = gql`
     id
     username
   }
+  opId
   parentId
   level
   voteStatus

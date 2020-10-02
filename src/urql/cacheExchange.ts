@@ -12,6 +12,7 @@ import {
   DeletePostMutationVariables,
   UpdatePostMutationVariables,
   VerifyResponse,
+  PostReplyMutationVariables,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
@@ -32,6 +33,12 @@ export const cache = cacheExchange({
   updates: {
     Mutation: {
       login: (_result, _args, cache, _info) => {
+        const {
+          login: { errors },
+        } = _result as LoginMutation;
+        if (errors) {
+          return;
+        }
         betterUpdateQuery<LoginMutation, MeQuery>(
           cache,
           { query: MeDocument },
@@ -46,7 +53,7 @@ export const cache = cacheExchange({
             }
           }
         );
-        invalidatePosts(cache);
+        invalidate(cache, 'posts');
       },
       register: (_result, _args, cache, _info) => {
         betterUpdateQuery<RegisterMutation, MeQuery>(
@@ -74,7 +81,7 @@ export const cache = cacheExchange({
           })
         );
 
-        invalidatePosts(cache);
+        // invalidate(cache, 'posts');
       },
       changePassword: (_result, _args, cache, _info) => {
         betterUpdateQuery<ChangePasswordMutation, MeQuery>(
@@ -93,13 +100,18 @@ export const cache = cacheExchange({
         );
       },
       createPost: (_result, _args, cache, _info) => {
-        invalidatePosts(cache);
+        invalidate(cache, 'posts');
       },
-      postReply: (_result, _args, cache, _info) => {
-        invalidateThread(cache);
+      postReply: (_result, args, cache, _info) => {
+        invalidate(cache, 'thread');
 
-        //TODO: either write fragment to update OP replies count or invalidate posts
-        invalidatePosts(cache);
+        const {
+          input: { parentId, opId },
+        } = args as PostReplyMutationVariables;
+
+        if (parentId !== opId) {
+          updateReplies(cache, opId, 1);
+        }
       },
       vote: (_result, args, cache, _info) => {
         const { postId, vote } = args as VoteMutationVariables;
@@ -134,7 +146,7 @@ export const cache = cacheExchange({
           );
         }
       },
-      deletePost: (_result, args, cache, info) => {
+      deletePost: (_result, args, cache, _info) => {
         const { id, opId } = args as DeletePostMutationVariables;
         cache.invalidate({
           __typename: 'Post',
@@ -142,13 +154,10 @@ export const cache = cacheExchange({
         });
 
         if (opId) {
-          cache.invalidate({
-            __typename: 'Post',
-            id: opId,
-          });
+          updateReplies(cache, opId, -1);
         }
       },
-      updatePost: (_result, args, cache, info) => {
+      updatePost: (_result, args, cache, _info) => {
         const { id, text, title } = args as UpdatePostMutationVariables;
 
         cache.writeFragment(
@@ -204,21 +213,33 @@ function cursorPagination(): Resolver {
   };
 }
 
-function invalidatePosts(cache: Cache) {
+function invalidate(cache: Cache, fieldName: 'posts' | 'thread') {
   const allFields = cache.inspectFields('Query');
-  console.dir(allFields);
-  const fieldInfos = allFields.filter((info) => info.fieldName === 'posts');
-  console.dir(fieldInfos);
+  const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
   fieldInfos.forEach((fi) => {
-    console.log(`posts(${JSON.stringify(fi.arguments)})`);
-    cache.invalidate('Query', 'posts', fi.arguments || undefined);
+    cache.invalidate('Query', fieldName, fi.arguments || undefined);
   });
 }
 
-function invalidateThread(cache: Cache) {
-  const allFields = cache.inspectFields('Query');
-  const fieldInfos = allFields.filter((info) => info.fieldName === 'thread');
-  fieldInfos.forEach((fi) => {
-    cache.invalidate('Query', 'thread', fi.arguments || undefined);
-  });
+function updateReplies(cache: Cache, postId: number, change: 1 | -1) {
+  const data = cache.readFragment(
+    gql`
+      fragment replies on Post {
+        id
+        repiles
+      }
+    `,
+    { id: postId } as any
+  );
+
+  if (data) {
+    cache.writeFragment(
+      gql`
+        fragment updateReplies on Post {
+          replies
+        }
+      `,
+      { id: postId, replies: (data.replies as number) + change } as any
+    );
+  }
 }

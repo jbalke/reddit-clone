@@ -13,10 +13,9 @@ import Link from 'next/link';
 
 type PostProps = {
   post: PostContentFragment | PostSummaryFragment;
-  opId: number | null;
 } & FlexProps;
 
-function Post({ post, opId, ...flexProps }: PostProps) {
+function Post({ post, ...flexProps }: PostProps) {
   const [{ data, fetching }] = useMeQuery();
 
   return (
@@ -57,7 +56,7 @@ function Post({ post, opId, ...flexProps }: PostProps) {
         <Flex mt={2} justifyContent="space-between" alignItems="center">
           <Text fontSize="sm">Replies: {post.replies}</Text>
           {data?.me?.id && data.me.id !== post.author.id && (
-            <Link href={`/reply/${post.id}?opid=${opId}`}>
+            <Link href={`/reply/${post.id}`}>
               <IconButton
                 icon="chat"
                 aria-label="Reply to Post"
@@ -68,7 +67,7 @@ function Post({ post, opId, ...flexProps }: PostProps) {
           {data?.me?.id === post.author.id ? (
             <EditDeletePostButtons
               postId={post.id}
-              opId={opId}
+              opId={post.opId ?? undefined}
               display="flex"
             />
           ) : null}

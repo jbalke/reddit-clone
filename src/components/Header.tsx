@@ -1,10 +1,10 @@
 import { Box, BoxProps, Button, Flex, Heading } from '@chakra-ui/core';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React, { ReactNode, useState } from 'react';
+import React, { ReactNode, useContext, useState } from 'react';
 import { clearAccessToken } from '../accessToken';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
-import { isServer } from '../utils/isServer';
+import { MyContext } from '../myContext';
 import { NextChakraLink } from './NextChakraLink';
 
 type MenuItemProps = {
@@ -17,24 +17,38 @@ const MenuItem = ({ children, ...props }: MenuItemProps) => (
   </Box>
 );
 
-type HeaderProps = {};
-
-const Header = (props: HeaderProps) => {
+const Header = () => {
+  const { resetUrqlClient } = useContext(MyContext);
   const [show, setShow] = useState(false);
   const handleToggle = () => setShow(!show);
+
+  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
   const router = useRouter();
 
-  const [{ data, fetching }] = useMeQuery();
-  const [{ fetching: logoutFetching }, logout] = useLogoutMutation();
-
-  const handleLogout = () => async () => {
+  const handleLogout = async () => {
     const result = await logout();
 
     if (result.data?.logout) {
       clearAccessToken();
+      if (resetUrqlClient) {
+        resetUrqlClient();
+      }
       router.push('/');
     }
   };
+  const logoutButton = (
+    <Button
+      variant="link"
+      color="white"
+      verticalAlign="baseline"
+      onClick={handleLogout}
+      isLoading={logoutFetching}
+    >
+      Logout
+    </Button>
+  );
+
+  const [{ data, fetching }] = useMeQuery();
 
   let authLinks = null;
   if (fetching) {
@@ -70,17 +84,7 @@ const Header = (props: HeaderProps) => {
         >
           Logged in as {data.me.username}
         </Box>
-        <Box pl={{ sm: '0', md: '4px' }}>
-          <Button
-            variant="link"
-            color="white"
-            verticalAlign="baseline"
-            onClick={handleLogout()}
-            isLoading={logoutFetching}
-          >
-            Logout
-          </Button>
-        </Box>
+        <Box pl={{ sm: '0', md: '4px' }}>{logoutButton}</Box>
       </>
     );
   }

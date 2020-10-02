@@ -74,7 +74,7 @@ function VerifyEmail({ userId, token }: VerifyEmailProps) {
   }
 }
 
-export default withUrqlClient(getClientConfig)(VerifyEmail);
+export default VerifyEmail;
 
 export const getServerSideProps: GetServerSideProps = async ({ params }) => {
   return {

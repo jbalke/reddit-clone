@@ -9,7 +9,6 @@ import {
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../../components/InputField';
@@ -17,7 +16,6 @@ import Layout from '../../components/Layout';
 import Post from '../../components/Post';
 import { usePostReplyMutation } from '../../generated/graphql';
 import { AuthGuardSSR } from '../../urql/authGuardSSR';
-import { getClientConfig } from '../../urql/urqlConfig';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../utils/useIsAuthenticatedAndVerified';
 import { validatePostReplyInput } from '../../utils/validate';
@@ -26,8 +24,6 @@ function Reply() {
   useIsAuthenticatedAndVerified();
 
   const router = useRouter();
-  const parentId = typeof router.query.id === 'string' ? router.query.id : '';
-  const opId = typeof router.query.opid === 'string' ? router.query.opid : '';
   const [, createPostReply] = usePostReplyMutation();
   const [{ data, fetching }] = useGetPostFromUrl();
   const [submitError, setSubmitError] = useState('');
@@ -39,25 +35,20 @@ function Reply() {
       </Layout>
     );
   } else if (data && data.thread) {
+    let { opId, id } = data.thread[0];
+    opId = opId ?? id;
+
     return (
       <Layout size="regular">
         <Stack spacing={0}>
           {data.thread.map((p) => (
-            <Post
-              key={p.id}
-              post={p}
-              opId={opId}
-              shadow={!p.level ? 'md' : undefined}
-              borderWidth="1px"
-              ml={p.level * 4}
-              borderLeft={p.level ? `2px solid teal` : undefined}
-            />
+            <Post key={p.id} post={p} shadow={!p.level ? 'md' : undefined} />
           ))}
           <Formik
             initialValues={{
               text: '',
-              parentId: parseInt(parentId),
-              opId: parseInt(opId),
+              parentId: id,
+              opId: opId,
             }}
             validate={validatePostReplyInput}
             onSubmit={async (values) => {
@@ -94,7 +85,7 @@ function Reply() {
                     type="submit"
                     variantColor="teal"
                   >
-                    create post
+                    reply
                   </Button>
                   {!!submitError && (
                     <Alert mt={5} status="error">
@@ -119,4 +110,4 @@ function Reply() {
   }
 }
 
-export default withUrqlClient(getClientConfig)(AuthGuardSSR(Reply));
+export default AuthGuardSSR(Reply);

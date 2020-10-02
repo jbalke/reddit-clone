@@ -118,4 +118,4 @@ function EditPost(props: EditPostProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(AuthGuardSSR(EditPost));
+export default AuthGuardSSR(EditPost);

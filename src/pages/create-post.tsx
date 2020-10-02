@@ -69,4 +69,4 @@ function CreatePost(props: PageProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(AuthGuardSSR(CreatePost));
+export default AuthGuardSSR(CreatePost);
