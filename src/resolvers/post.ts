@@ -183,22 +183,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level", path) AS (
+WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level", path) AS (
   SELECT
-    "id", title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level", ARRAY["id"]
+    "id", title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."parentId", p."authorId", p.replies, p."level", path || p.id
+    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."opId", p."parentId", p."authorId", p.replies, p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, points, "updatedAt", "createdAt", "parentId", "authorId", replies, "level"
+    id, title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level"
 FROM
   replies
 ORDER BY path, "createdAt"

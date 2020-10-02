@@ -59,6 +59,10 @@ export class Post extends BaseEntity {
 
   @Field(() => Int, { nullable: true })
   @Column({ type: 'int', nullable: true })
+  opId: number | null;
+
+  @Field(() => Int, { nullable: true })
+  @Column({ type: 'int', nullable: true })
   parentId: number | null;
 
   @Field(() => Int)
