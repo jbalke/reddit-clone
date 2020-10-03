@@ -1,20 +1,24 @@
+import { devtoolsExchange } from '@urql/devtools';
+// import { authExchange } from './authExchange';
+import { authExchange } from '@urql/exchange-auth';
 import { retryExchange } from '@urql/exchange-retry';
-import { CombinedError, dedupExchange, fetchExchange } from 'urql';
+import { NextPageContext } from 'next';
+import { SSRExchange } from 'next-urql';
+import {
+  ClientOptions,
+  CombinedError,
+  dedupExchange,
+  fetchExchange,
+} from 'urql';
 import {
   getAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
 } from '../accessToken';
 import { isServer } from '../utils/isServer';
-// import { authExchange } from './authExchange';
-import { authExchange } from '@urql/exchange-auth';
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptionsExchange } from './fetchOptionsExchange';
-import { devtoolsExchange } from '@urql/devtools';
-import Router, { SingletonRouter } from 'next/router';
-import { NextPageContext } from 'next';
-import { SSRExchange } from 'next-urql';
 
 const options = {
   initialDelayMs: 1000,
@@ -29,7 +33,7 @@ const options = {
 export const getClientConfig = (
   ssrExchange: SSRExchange,
   ctx?: NextPageContext
-) => {
+): any => {
   return {
     url: 'http://localhost:4000/graphql',
     exchanges: [
@@ -127,14 +131,6 @@ export const getClientConfig = (
     ],
   };
 };
-
-async function logout(
-  mutate: (query: string) => Promise<any>,
-  Router: SingletonRouter
-) {
-  await mutate(`mutation { logout }`);
-  Router.reload();
-}
 
 // const getAuth = async ({ authState, mutate }: any) => {
 //   if (!authState) {

@@ -2,6 +2,7 @@ import { Box, BoxProps, IconButton } from '@chakra-ui/core';
 import Link from 'next/link';
 import React from 'react';
 import { useDeletePostMutation } from '../generated/graphql';
+import { useRouter } from 'next/router';
 
 type EditDeletePostButtonsProps = {
   postId: number;
@@ -14,6 +15,7 @@ function EditDeletePostButtons({
   ...props
 }: EditDeletePostButtonsProps) {
   const [, deletePost] = useDeletePostMutation();
+  const router = useRouter();
 
   return (
     <Box {...props}>
@@ -31,6 +33,9 @@ function EditDeletePostButtons({
         title="Delete Post"
         onClick={async () => {
           await deletePost({ id: postId, opId });
+          if (!opId) {
+            router.push('/');
+          }
         }}
       />
     </Box>
