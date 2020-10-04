@@ -67,7 +67,7 @@ function Post({ post, ...flexProps }: PostProps) {
           {data?.me?.id === post.author.id ? (
             <EditDeletePostButtons
               postId={post.id}
-              opId={post.opId ?? undefined}
+              originalPostId={post.originalPost?.id ?? undefined}
               display="flex"
             />
           ) : null}

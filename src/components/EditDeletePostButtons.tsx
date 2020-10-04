@@ -6,12 +6,12 @@ import { useRouter } from 'next/router';
 
 type EditDeletePostButtonsProps = {
   postId: number;
-  opId?: number;
+  originalPostId?: number;
 } & BoxProps;
 
 function EditDeletePostButtons({
   postId,
-  opId,
+  originalPostId,
   ...props
 }: EditDeletePostButtonsProps) {
   const [, deletePost] = useDeletePostMutation();
@@ -32,8 +32,8 @@ function EditDeletePostButtons({
         aria-label="Delete Post"
         title="Delete Post"
         onClick={async () => {
-          await deletePost({ id: postId, opId });
-          if (!opId) {
+          await deletePost({ id: postId, originalPostId });
+          if (!originalPostId) {
             router.push('/');
           }
         }}

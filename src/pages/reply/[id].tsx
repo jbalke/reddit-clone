@@ -38,7 +38,7 @@ function Reply() {
       </Layout>
     );
   } else if (data && data.thread) {
-    let { opId, id } = data.thread[0];
+    let { originalPost, id } = data.thread[0];
 
     return (
       <Layout size="regular">
@@ -50,7 +50,7 @@ function Reply() {
             initialValues={{
               text: '',
               parentId: id,
-              opId: opId ?? id,
+              originalPostId: originalPost?.id ?? id,
             }}
             validate={validatePostReplyInput}
             onSubmit={async (values) => {
@@ -61,8 +61,8 @@ function Reply() {
                 if (postReply.error) {
                   setSubmitError(postReply.error);
                 } else {
-                  if (opId) {
-                    router.push(`/post/${opId}`);
+                  if (originalPost?.id) {
+                    router.push(`/post/${originalPost.id}`);
                   } else {
                     router.push('/');
                   }
@@ -84,8 +84,8 @@ function Reply() {
                   <Flex mt={4} justifyContent="flex-end">
                     <Button
                       onClick={() => {
-                        if (opId) {
-                          router.push(`/post/${opId}`);
+                        if (originalPost?.id) {
+                          router.push(`/post/${originalPost.id}`);
                         } else {
                           router.push('/');
                         }

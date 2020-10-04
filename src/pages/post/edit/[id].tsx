@@ -42,7 +42,7 @@ function EditPost(props: EditPostProps) {
     );
   }
 
-  const { opId } = data.post;
+  const opId = data.post.originalPost?.id;
   return (
     <Layout size="regular">
       <Formik
@@ -67,7 +67,7 @@ function EditPost(props: EditPostProps) {
         {({ isSubmitting }) => (
           <Form>
             <FormControl>
-              {!data?.post?.parentId && (
+              {!data?.post?.parent?.id && (
                 <InputField label="Title" name="title" placeholder="title" />
               )}
               <Box mt={4}>
@@ -97,7 +97,7 @@ function EditPost(props: EditPostProps) {
                   variantColor="teal"
                   ml={2}
                 >
-                  {!data?.post?.parentId ? 'update post' : 'update reply'}
+                  {!data?.post?.parent?.id ? 'update post' : 'update reply'}
                 </Button>
               </Flex>
               {/* {!!submitError && (

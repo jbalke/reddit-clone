@@ -7,8 +7,12 @@ fragment BasicPost on Post {
     id
     username
   }
-  opId
-  parentId
+  originalPost {
+    id
+  }
+  parent {
+    id
+  }
   level
   voteStatus
   createdAt

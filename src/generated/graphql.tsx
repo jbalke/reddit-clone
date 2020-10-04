@@ -16,14 +16,14 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
+  hello: Scalars['String'];
+  token: PayloadResponse;
   posts: PaginatedPosts;
   thread?: Maybe<Array<Post>>;
   post?: Maybe<Post>;
   me?: Maybe<User>;
   users: Array<User>;
   user?: Maybe<User>;
-  hello: Scalars['String'];
-  token: PayloadResponse;
 };
 
 
@@ -48,6 +48,17 @@ export type QueryUserArgs = {
   id: Scalars['ID'];
 };
 
+export type PayloadResponse = {
+  __typename?: 'PayloadResponse';
+  jwt?: Maybe<Payload>;
+};
+
+export type Payload = {
+  __typename?: 'Payload';
+  userId: Scalars['ID'];
+  isAdmin: Scalars['Boolean'];
+};
+
 export type PaginatedPosts = {
   __typename?: 'PaginatedPosts';
   posts: Array<Post>;
@@ -61,8 +72,8 @@ export type Post = {
   text: Scalars['String'];
   points: Scalars['Int'];
   author: User;
-  opId?: Maybe<Scalars['Int']>;
-  parentId?: Maybe<Scalars['Int']>;
+  originalPost?: Maybe<Post>;
+  parent?: Maybe<Post>;
   level: Scalars['Int'];
   replies: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
@@ -91,17 +102,6 @@ export type Upvote = {
   post: Post;
 };
 
-
-export type PayloadResponse = {
-  __typename?: 'PayloadResponse';
-  jwt?: Maybe<Payload>;
-};
-
-export type Payload = {
-  __typename?: 'Payload';
-  userId: Scalars['ID'];
-  isAdmin: Scalars['Boolean'];
-};
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -140,7 +140,7 @@ export type MutationUpdatePostArgs = {
 
 
 export type MutationDeletePostArgs = {
-  opId?: Maybe<Scalars['Int']>;
+  originalPostId?: Maybe<Scalars['Int']>;
   id: Scalars['Int'];
 };
 
@@ -207,7 +207,7 @@ export type PostReplyResponse = {
 export type PostReplyInput = {
   parentId: Scalars['Int'];
   text: Scalars['String'];
-  opId: Scalars['Int'];
+  originalPostId: Scalars['Int'];
 };
 
 export type UserResponse = {
@@ -242,11 +242,17 @@ export type UserLoginInput = {
 
 export type BasicPostFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'opId' | 'parentId' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
+  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
   & { author: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
-  ) }
+  ), originalPost?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id'>
+  )>, parent?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id'>
+  )> }
 );
 
 export type PostContentFragment = (
@@ -314,7 +320,7 @@ export type CreatePostMutation = (
 
 export type DeletePostMutationVariables = Exact<{
   id: Scalars['Int'];
-  opId?: Maybe<Scalars['Int']>;
+  originalPostId?: Maybe<Scalars['Int']>;
 }>;
 
 
@@ -520,8 +526,12 @@ export const BasicPostFragmentDoc = gql`
     id
     username
   }
-  opId
-  parentId
+  originalPost {
+    id
+  }
+  parent {
+    id
+  }
   level
   voteStatus
   createdAt
@@ -591,8 +601,8 @@ export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
 };
 export const DeletePostDocument = gql`
-    mutation DeletePost($id: Int!, $opId: Int) {
-  deletePost(id: $id, opId: $opId)
+    mutation DeletePost($id: Int!, $originalPostId: Int) {
+  deletePost(id: $id, originalPostId: $originalPostId)
 }
     `;
 
