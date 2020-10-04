@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { createPostLoader } from './utils/createPostLoader';
 import { createUpvoteLoader } from './utils/createUpvoteLoader';
 import { createUserLoader } from './utils/createUserLoader';
 
@@ -22,4 +23,5 @@ export interface MyContext {
   user?: AccessTokenPayload;
   userLoader: ReturnType<typeof createUserLoader>;
   upVoteLoader: ReturnType<typeof createUpvoteLoader>;
+  postLoader: ReturnType<typeof createPostLoader>;
 }

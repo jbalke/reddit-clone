@@ -1,18 +1,19 @@
-import 'reflect-metadata';
-import { createConnection } from 'typeorm';
-import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import express from 'express';
+import 'reflect-metadata';
 import { buildSchema } from 'type-graphql';
-import { PostResolver } from './resolvers/post';
-import { UserResolver } from './resolvers/user';
-import { __prod__, __port__ } from './constants';
-import { MyContext } from './types';
+import { createConnection } from 'typeorm';
+import { __port__, __prod__ } from './constants';
 import { handleRefreshToken } from './handlers/tokens';
 import { HelloResolver } from './resolvers/hello';
-import cors from 'cors';
-import { createUserLoader } from './utils/createUserLoader';
+import { PostResolver } from './resolvers/post';
+import { UserResolver } from './resolvers/user';
+import { MyContext } from './types';
+import { createPostLoader } from './utils/createPostLoader';
 import { createUpvoteLoader } from './utils/createUpvoteLoader';
+import { createUserLoader } from './utils/createUserLoader';
 
 const main = async () => {
   const conn = await createConnection();
@@ -38,6 +39,7 @@ const main = async () => {
       user,
       userLoader: createUserLoader(),
       upVoteLoader: createUpvoteLoader(),
+      postLoader: createPostLoader(),
     }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.

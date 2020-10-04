@@ -28,7 +28,7 @@ export class PostReplyInput {
   @Field()
   text: string;
   @Field(() => Int)
-  opId: number;
+  originalPostId: number;
 }
 
 @ObjectType()
@@ -53,17 +53,30 @@ export class Post extends BaseEntity {
   @Column()
   authorId: string;
 
-  @Field()
+  @Field(()     => User)
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
-  @Field(() => Int, { nullable: true })
   @Column({ type: 'int', nullable: true })
-  opId: number | null;
+  originalPostId: number | null;
 
-  @Field(() => Int, { nullable: true })
+  @Field(() => Post, { nullable: true })
+  @ManyToOne((type) => Post, (post) => post.replyPosts, { nullable: true })
+  originalPost: Post;
+
+  @OneToMany((type) => Post, (post) => post.originalPost, { nullable: true })
+  replyPosts: Post[];
+
+  // @Field(() => Int, { nullable: true })
   @Column({ type: 'int', nullable: true })
   parentId: number | null;
+
+  @Field(() => Post, { nullable: true })
+  @ManyToOne((type) => Post, (post) => post.children, { nullable: true })
+  parent: Post;
+
+  @OneToMany((type) => Post, (post) => post.parent, { nullable: true })
+  children: Post[];
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })

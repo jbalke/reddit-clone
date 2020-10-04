@@ -54,6 +54,22 @@ export class PostResolver {
     return post.text.length > 150 ? post.text.slice(0, 150) + '...' : post.text;
   }
 
+  @FieldResolver(() => Post)
+  originalPost(@Root() post: Post, @Ctx() { postLoader }: MyContext) {
+    if (!post.originalPostId) {
+      return;
+    }
+    return postLoader.load(post.originalPostId);
+  }
+
+  @FieldResolver(() => Post)
+  parent(@Root() post: Post, @Ctx() { postLoader }: MyContext) {
+    if  (!post.parentId)  {
+      return;
+    }
+    return postLoader.load(post.parentId);
+  }
+
   @FieldResolver(() => User)
   author(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
     return userLoader.load(post.authorId);
@@ -183,22 +199,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level", path) AS (
+WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
   SELECT
-    "id", title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level", ARRAY["id"]
+    "id", title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."opId", p."parentId", p."authorId", p.replies, p."level", path || p.id
+    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, points, "updatedAt", "createdAt", "opId", "parentId", "authorId", replies, "level"
+    id, title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level"
 FROM
   replies
 ORDER BY path, "createdAt"
@@ -259,7 +275,8 @@ ORDER BY path, "createdAt"
   @UseMiddleware([authorize, verified])
   async deletePost(
     @Arg('id', () => Int) id: number,
-    @Arg('opId', () => Int, { nullable: true }) opId: number | undefined,
+    @Arg('originalPostId', () => Int, { nullable: true })
+    originalPostId: number | undefined,
     @Ctx() { user }: MyContext
   ): Promise<Boolean> {
     const post = await Post.findOne({ id });
@@ -270,10 +287,10 @@ ORDER BY path, "createdAt"
           .getRepository(Post)
           .update({ id: post.parentId! }, { replies: () => `replies - 1` });
 
-        if (opId) {
+        if (originalPostId) {
           await tm
             .getRepository(Post)
-            .update({ id: opId }, { replies: () => `replies - 1` });
+            .update({ id: originalPostId }, { replies: () => `replies - 1` });
         }
       });
     }
@@ -313,10 +330,12 @@ ORDER BY path, "createdAt"
           .getRepository(Post)
           .update({ id: input.parentId }, { replies: parentPost.replies + 1 });
 
-        if (input.opId !== parentPost.id) {
-          await tm
-            .getRepository(Post)
-            .update({ id: input.opId }, { replies: () => 'replies + 1' });
+        if (input.originalPostId !== parentPost.id) {
+          await tm.getRepository(Post).update(
+            { id: input.originalPostId },
+
+            { replies: () => 'replies + 1' }
+          );
         }
 
         const result = await tm
