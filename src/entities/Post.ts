@@ -46,14 +46,10 @@ export class Post extends BaseEntity {
   @Column('text')
   text: string;
 
-  @Field(() => Int)
-  @Column({ type: 'int', default: 0 })
-  points: number;
-
   @Column()
   authorId: string;
 
-  @Field(()     => User)
+  @Field(() => User)
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
@@ -64,10 +60,10 @@ export class Post extends BaseEntity {
   @ManyToOne((type) => Post, (post) => post.replyPosts, { nullable: true })
   originalPost: Post;
 
+  // not implemented
   @OneToMany((type) => Post, (post) => post.originalPost, { nullable: true })
-  replyPosts: Post[];
+  private replyPosts: Post[];
 
-  // @Field(() => Int, { nullable: true })
   @Column({ type: 'int', nullable: true })
   parentId: number | null;
 
@@ -75,8 +71,9 @@ export class Post extends BaseEntity {
   @ManyToOne((type) => Post, (post) => post.children, { nullable: true })
   parent: Post;
 
+  // not implemented
   @OneToMany((type) => Post, (post) => post.parent, { nullable: true })
-  children: Post[];
+  private children: Post[];
 
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
@@ -85,6 +82,14 @@ export class Post extends BaseEntity {
   @Field(() => Int)
   @Column({ type: 'int', default: 0 })
   replies: number;
+
+  @Field(() => Int)
+  @Column({ type: 'int', default: 0 })
+  score: number;
+
+  @Field(() => Int)
+  @Column({ type: 'int', default: 0 })
+  voteCount: number;
 
   @OneToMany((type) => Upvote, (upvote) => upvote.post)
   upvotes: Upvote[];

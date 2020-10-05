@@ -47,6 +47,14 @@ class PostReplyResponse {
   error?: string;
 }
 
+@ObjectType()
+class DeletePostResponse {
+  @Field()
+  success: boolean;
+  @Field(() => String, { nullable: true })
+  error?: string;
+}
+
 @Resolver((of) => Post)
 export class PostResolver {
   @FieldResolver(() => String)
@@ -64,7 +72,7 @@ export class PostResolver {
 
   @FieldResolver(() => Post)
   parent(@Root() post: Post, @Ctx() { postLoader }: MyContext) {
-    if  (!post.parentId)  {
+    if (!post.parentId) {
       return;
     }
     return postLoader.load(post.parentId);
@@ -118,7 +126,7 @@ export class PostResolver {
           await tm
             .createQueryBuilder()
             .update(Post)
-            .set({ points: () => `points + ${vote * 2}` })
+            .set({ score: () => `score + ${vote * 2}` })
             .where('id = :id', { id: postId })
             .execute();
 
@@ -147,7 +155,10 @@ export class PostResolver {
           await tm
             .createQueryBuilder()
             .update(Post)
-            .set({ points: () => `points + ${vote}` })
+            .set({
+              score: () => `score + ${vote}`,
+              voteCount: () => `"voteCount" + 1`,
+            })
             .where('id = :postId', { postId })
             .execute();
         });
@@ -199,22 +210,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
+WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
   SELECT
-    "id", title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
+    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.points, p."updatedAt", p."createdAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
+    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, points, "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level"
+    id, title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level"
 FROM
   replies
 ORDER BY path, "createdAt"
@@ -271,37 +282,48 @@ ORDER BY path, "createdAt"
     return result.raw[0];
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => DeletePostResponse)
   @UseMiddleware([authorize, verified])
   async deletePost(
     @Arg('id', () => Int) id: number,
-    @Arg('originalPostId', () => Int, { nullable: true })
-    originalPostId: number | undefined,
     @Ctx() { user }: MyContext
-  ): Promise<Boolean> {
+  ): Promise<DeletePostResponse> {
     const post = await Post.findOne({ id });
 
-    if (post && post.parentId) {
-      await getConnection().transaction(async (tm) => {
-        await tm
-          .getRepository(Post)
-          .update({ id: post.parentId! }, { replies: () => `replies - 1` });
-
-        if (originalPostId) {
+    if (post) {
+      if (post.replies !== 0) {
+        return {
+          success: false,
+          error: 'post has replies',
+        };
+      }
+      if (post.parentId) {
+        await getConnection().transaction(async (tm) => {
           await tm
             .getRepository(Post)
-            .update({ id: originalPostId }, { replies: () => `replies - 1` });
-        }
-      });
+            .update({ id: post.parentId! }, { replies: () => `replies - 1` });
+
+          if (post.originalPostId && post.originalPostId !== post.parentId) {
+            await tm
+              .getRepository(Post)
+              .update(
+                { id: post.originalPostId },
+                { replies: () => `replies - 1` }
+              );
+          }
+        });
+      }
+
+      if (user!.isAdmin) {
+        await Post.delete({ id });
+      } else {
+        await Post.delete({ id, authorId: user?.userId });
+      }
     }
 
-    if (user!.isAdmin) {
-      await Post.delete({ id });
-    } else {
-      await Post.delete({ id, authorId: user?.userId });
-    }
-
-    return true;
+    return {
+      success: true,
+    };
   }
 
   @Mutation(() => PostReplyResponse)
