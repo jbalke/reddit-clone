@@ -1,15 +1,19 @@
 import { CSSReset, ThemeProvider } from '@chakra-ui/core';
 import { withUrqlClient } from 'next-urql';
-import React from 'react';
+import React, { useState } from 'react';
 import theme from '../theme';
 import { getClientConfig } from '../urql/urqlConfig';
-import { MyContext } from '../myContext';
+import { MyContext, Notification } from '../myContext';
 
 function MyApp({ Component, resetUrqlClient, pageProps }: any) {
+  const [notification, setNotification] = useState<Notification>({});
+
   return (
     <ThemeProvider theme={theme}>
       <CSSReset />
-      <MyContext.Provider value={{ resetUrqlClient }}>
+      <MyContext.Provider
+        value={{ resetUrqlClient, notification, setNotification }}
+      >
         <Component {...pageProps} />
       </MyContext.Provider>
     </ThemeProvider>
@@ -18,10 +22,10 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
 
 export default withUrqlClient(getClientConfig)(MyApp);
 
-//TODO: Load more posts on scroll
 //TODO: if banned, don't allow deleting of posts/replies (or voting?)
-//TODO: Fix excessive user table queries on page load (only occurs when logged in!)
 //TODO: Limit 1 reply from each person to a post/reply.
+//TODO: Load more posts on scroll
+//TODO: Fix excessive user table queries on page load (only occurs when logged in!)
 //TODO: make replies more compact
 //TODO: preserve formatting of post text (enable embedded html?)
 //TODO: Admin functions (lock post, ban user)

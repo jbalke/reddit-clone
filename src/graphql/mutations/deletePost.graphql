@@ -1,3 +1,6 @@
-mutation DeletePost($id: Int!, $originalPostId: Int) {
-  deletePost(id: $id, originalPostId: $originalPostId)
+mutation DeletePost($id: Int!) {
+  deletePost(id: $id) {
+    success
+    error
+  }
 }

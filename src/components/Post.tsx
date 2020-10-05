@@ -65,11 +65,7 @@ function Post({ post, ...flexProps }: PostProps) {
             </Link>
           )}
           {data?.me?.id === post.author.id ? (
-            <EditDeletePostButtons
-              postId={post.id}
-              originalPostId={post.originalPost?.id ?? undefined}
-              display="flex"
-            />
+            <EditDeletePostButtons post={post} display="flex" />
           ) : null}
         </Flex>
       </Flex>

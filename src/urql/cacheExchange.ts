@@ -1,23 +1,21 @@
 import { Cache, cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import gql from 'graphql-tag';
 import { stringifyVariables } from 'urql';
 import {
-  LoginMutation,
-  MeQuery,
-  MeDocument,
-  RegisterMutation,
-  LogoutMutation,
   ChangePasswordMutation,
-  VoteMutationVariables,
-  Vote,
   DeletePostMutationVariables,
-  UpdatePostMutationVariables,
-  VerifyResponse,
+  DeletePostResponse,
+  LoginMutation,
+  MeDocument,
+  MeQuery,
+  Post,
   PostReplyMutationVariables,
-  UpdatePostMutation,
+  RegisterMutation,
+  Vote,
+  VoteMutationVariables,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
-import gql from 'graphql-tag';
 
 export const cache = cacheExchange({
   schema: schema as any,
@@ -72,18 +70,6 @@ export const cache = cacheExchange({
           }
         );
       },
-      // logout: (_result, _args, cache, _info) => {
-      //   betterUpdateQuery<LogoutMutation, MeQuery>(
-      //     cache,
-      //     { query: MeDocument },
-      //     _result,
-      //     () => ({
-      //       me: null,
-      //     })
-      //   );
-
-      //   // invalidate(cache, 'posts');
-      // },
       changePassword: (_result, _args, cache, _info) => {
         betterUpdateQuery<ChangePasswordMutation, MeQuery>(
           cache,
@@ -107,11 +93,11 @@ export const cache = cacheExchange({
         invalidate(cache, 'thread');
 
         const {
-          input: { parentId, opId },
+          input: { parentId, originalPostId },
         } = args as PostReplyMutationVariables;
 
-        if (parentId !== opId) {
-          updateReplies(cache, opId, 1);
+        if (parentId !== originalPostId) {
+          updateReplies(cache, originalPostId, 1);
         }
       },
       vote: (_result, args, cache, _info) => {
@@ -121,7 +107,7 @@ export const cache = cacheExchange({
           gql`
             fragment post on Post {
               id
-              points
+              score
               voteStatus
             }
           `,
@@ -134,30 +120,62 @@ export const cache = cacheExchange({
             return;
           }
           const newPoints =
-            (data.points as number) +
-            (!data.voteStatus ? 1 : 2) * newVoteStatus;
+            (data.score as number) + (!data.voteStatus ? 1 : 2) * newVoteStatus;
           cache.writeFragment(
             gql`
               fragment updatePost on Post {
                 id
-                points
+                score
                 voteStatus
               }
             `,
-            { id: postId, points: newPoints, voteStatus: newVoteStatus } as any
+            { id: postId, score: newPoints, voteStatus: newVoteStatus } as any
           );
+
+          if (!data.voteStatus) {
+            incrementVoteCount(cache, postId);
+          }
         }
       },
-      deletePost: (_result, args, cache, _info) => {
-        const { id, opId } = args as DeletePostMutationVariables;
+      deletePost: (result, args, cache, _info) => {
+        // exit if deletePost mutation was not successful
+        const { success } = result.deletePost as DeletePostResponse;
+        if (!success) {
+          return;
+        }
+
+        const { id } = args as DeletePostMutationVariables;
+
+        const data = cache.readFragment(
+          gql`
+            fragment _post on Post {
+              id
+              parent {
+                id
+              }
+              originalPost {
+                id
+              }
+            }
+          `,
+          { id } as any
+        );
+
+        if (data) {
+          const { originalPost, parent } = data as Post;
+          if (parent) {
+            updateReplies(cache, parent.id, -1);
+
+            if (originalPost && originalPost.id != parent.id) {
+              updateReplies(cache, originalPost.id, -1);
+            }
+          }
+        }
+
         cache.invalidate({
           __typename: 'Post',
           id,
         });
-
-        if (opId) {
-          updateReplies(cache, opId, -1);
-        }
       },
       updatePost: (_result, _args, cache, _info) => {
         invalidate(cache, 'posts');
@@ -232,6 +250,29 @@ function updateReplies(cache: Cache, postId: number, change: 1 | -1) {
         }
       `,
       { id: postId, replies: (data.replies as number) + change } as any
+    );
+  }
+}
+
+function incrementVoteCount(cache: Cache, postId: number) {
+  const data = cache.readFragment(
+    gql`
+      fragment voteCount on Post {
+        id
+        voteCount
+      }
+    `,
+    { id: postId } as any
+  );
+
+  if (data) {
+    cache.writeFragment(
+      gql`
+        fragment incVoteCount on Post {
+          voteCount
+        }
+      `,
+      { id: postId, voteCount: (data.voteCount as number) + 1 } as any
     );
   }
 }

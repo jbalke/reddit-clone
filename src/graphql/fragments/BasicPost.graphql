@@ -1,8 +1,6 @@
 fragment BasicPost on Post {
   id
   title
-  points
-  replies
   author {
     id
     username
@@ -14,6 +12,9 @@ fragment BasicPost on Post {
     id
   }
   level
+  replies
+  score
+  voteCount
   voteStatus
   createdAt
   updatedAt

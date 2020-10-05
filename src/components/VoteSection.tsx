@@ -1,4 +1,4 @@
-import { Box, Flex, IconButton } from '@chakra-ui/core';
+import { Box, Flex, IconButton, Text } from '@chakra-ui/core';
 import React, { useState } from 'react';
 import {
   PostContentFragment,
@@ -39,7 +39,23 @@ function VoteSection({ post }: VoteSectionProps) {
         size="md"
         variantColor={post.voteStatus === 1 ? 'green' : undefined}
       />
-      <Box my={2}>{post.points}</Box>
+      <Flex direction="column" my={2}>
+        <Box>
+          <Text
+            fontWeight="bold"
+            color={
+              post.score > 0 ? 'green.500' : post.score < 0 ? 'red.500' : ''
+            }
+            title="Score"
+          >
+            {post.score}
+          </Text>
+        </Box>
+        <hr />
+        <Box>
+          <Text title="Votes">{post.voteCount}</Text>
+        </Box>
+      </Flex>
       <IconButton
         onClick={async () => {
           if (post.voteStatus === -1) {

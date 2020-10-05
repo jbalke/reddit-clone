@@ -70,12 +70,13 @@ export type Post = {
   id: Scalars['Int'];
   title?: Maybe<Scalars['String']>;
   text: Scalars['String'];
-  points: Scalars['Int'];
   author: User;
   originalPost?: Maybe<Post>;
   parent?: Maybe<Post>;
   level: Scalars['Int'];
   replies: Scalars['Int'];
+  score: Scalars['Int'];
+  voteCount: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
@@ -108,7 +109,7 @@ export type Mutation = {
   vote: Scalars['Boolean'];
   createPost: Post;
   updatePost?: Maybe<Post>;
-  deletePost: Scalars['Boolean'];
+  deletePost: DeletePostResponse;
   postReply: PostReplyResponse;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
@@ -140,7 +141,6 @@ export type MutationUpdatePostArgs = {
 
 
 export type MutationDeletePostArgs = {
-  originalPostId?: Maybe<Scalars['Int']>;
   id: Scalars['Int'];
 };
 
@@ -198,6 +198,12 @@ export type PostInput = {
   text: Scalars['String'];
 };
 
+export type DeletePostResponse = {
+  __typename?: 'DeletePostResponse';
+  success: Scalars['Boolean'];
+  error?: Maybe<Scalars['String']>;
+};
+
 export type PostReplyResponse = {
   __typename?: 'PostReplyResponse';
   post?: Maybe<Post>;
@@ -242,7 +248,7 @@ export type UserLoginInput = {
 
 export type BasicPostFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'title' | 'points' | 'replies' | 'level' | 'voteStatus' | 'createdAt' | 'updatedAt'>
+  & Pick<Post, 'id' | 'title' | 'level' | 'replies' | 'score' | 'voteCount' | 'voteStatus' | 'createdAt' | 'updatedAt'>
   & { author: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
@@ -320,13 +326,15 @@ export type CreatePostMutation = (
 
 export type DeletePostMutationVariables = Exact<{
   id: Scalars['Int'];
-  originalPostId?: Maybe<Scalars['Int']>;
 }>;
 
 
 export type DeletePostMutation = (
   { __typename?: 'Mutation' }
-  & Pick<Mutation, 'deletePost'>
+  & { deletePost: (
+    { __typename?: 'DeletePostResponse' }
+    & Pick<DeletePostResponse, 'success' | 'error'>
+  ) }
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -520,8 +528,6 @@ export const BasicPostFragmentDoc = gql`
     fragment BasicPost on Post {
   id
   title
-  points
-  replies
   author {
     id
     username
@@ -533,6 +539,9 @@ export const BasicPostFragmentDoc = gql`
     id
   }
   level
+  replies
+  score
+  voteCount
   voteStatus
   createdAt
   updatedAt
@@ -601,8 +610,11 @@ export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
 };
 export const DeletePostDocument = gql`
-    mutation DeletePost($id: Int!, $originalPostId: Int) {
-  deletePost(id: $id, originalPostId: $originalPostId)
+    mutation DeletePost($id: Int!) {
+  deletePost(id: $id) {
+    success
+    error
+  }
 }
     `;
 
