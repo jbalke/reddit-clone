@@ -15,7 +15,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../../components/InputField';
 import Layout from '../../components/Layout';
-import Post from '../../components/Post';
+import PostPreview from '../../components/PostPreview';
 import { usePostReplyMutation } from '../../generated/graphql';
 import { AuthGuardSSR } from '../../urql/authGuardSSR';
 import { getClientConfig } from '../../urql/urqlConfig';
@@ -44,7 +44,11 @@ function Reply() {
       <Layout size="regular">
         <Stack spacing={0}>
           {data.thread.map((p) => (
-            <Post key={p.id} post={p} shadow={!p.level ? 'md' : undefined} />
+            <PostPreview
+              key={p.id}
+              post={p}
+              shadow={!p.level ? 'md' : undefined}
+            />
           ))}
           <Formik
             initialValues={{
@@ -76,9 +80,9 @@ function Reply() {
                   <Box mt={4}>
                     <InputField
                       textarea
-                      label="Text"
+                      label="Reply"
                       name="text"
-                      placeholder="text"
+                      placeholder="reply"
                     />
                   </Box>
                   <Flex mt={4} justifyContent="flex-end">

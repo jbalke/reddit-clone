@@ -5,9 +5,10 @@ import { useRouter } from 'next/router';
 import React from 'react';
 import InputField from '../../../components/InputField';
 import Layout from '../../../components/Layout';
+import PostPreview from '../../../components/PostPreview';
 import Wrapper from '../../../components/Wrapper';
 import {
-  usePostQuery,
+  useReplyQuery,
   useUpdatePostMutation,
 } from '../../../generated/graphql';
 import { AuthGuardSSR } from '../../../urql/authGuardSSR';
@@ -23,7 +24,8 @@ function EditPost(props: EditPostProps) {
 
   const router = useRouter();
   const id = parseInt(useGetParamFromUrl('id') as string);
-  const [{ data, fetching }] = usePostQuery({ variables: { id } });
+  const [{ data, fetching }] = useReplyQuery({ variables: { id } });
+
   const [, updatePost] = useUpdatePostMutation();
 
   if (fetching) {
@@ -43,8 +45,19 @@ function EditPost(props: EditPostProps) {
   }
 
   const opId = data.post.originalPost?.id;
+  const parentPost = data.post.parent;
+
   return (
     <Layout size="regular">
+      {parentPost && (
+        <PostPreview
+          key={data.post.id}
+          post={parentPost}
+          p={5}
+          shadow="md"
+          borderWidth="1px"
+        />
+      )}
       <Formik
         initialValues={{
           title: data.post.title || '',
@@ -73,9 +86,9 @@ function EditPost(props: EditPostProps) {
               <Box mt={4}>
                 <InputField
                   textarea
-                  label="Text"
+                  label={parentPost ? 'Reply' : 'Text'}
                   name="text"
-                  placeholder="text"
+                  placeholder="reply"
                   resize="vertical"
                 />
               </Box>

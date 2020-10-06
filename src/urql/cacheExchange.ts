@@ -10,6 +10,7 @@ import {
   MeQuery,
   Post,
   PostReplyMutationVariables,
+  PostReplyResponse,
   RegisterMutation,
   Vote,
   VoteMutationVariables,
@@ -89,7 +90,12 @@ export const cache = cacheExchange({
       createPost: (_result, _args, cache, _info) => {
         invalidate(cache, 'posts');
       },
-      postReply: (_result, args, cache, _info) => {
+      postReply: (result, args, cache, _info) => {
+        const { error } = result.postReply as PostReplyResponse;
+        if (error) {
+          return;
+        }
+
         invalidate(cache, 'thread');
 
         const {

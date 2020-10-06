@@ -1,0 +1,6 @@
+fragment PostReply on Post {
+  ...PostContent
+  parent {
+    ...PostContent
+  }
+}

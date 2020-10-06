@@ -8,7 +8,7 @@ fragment BasicPost on Post {
   originalPost {
     id
   }
-  parent {
+  reply {
     id
   }
   level

@@ -18,12 +18,17 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   token: PayloadResponse;
-  posts: PaginatedPosts;
-  thread?: Maybe<Array<Post>>;
-  post?: Maybe<Post>;
   me?: Maybe<User>;
   users: Array<User>;
   user?: Maybe<User>;
+  posts: PaginatedPosts;
+  thread?: Maybe<Array<Post>>;
+  post?: Maybe<Post>;
+};
+
+
+export type QueryUserArgs = {
+  id: Scalars['ID'];
 };
 
 
@@ -43,11 +48,6 @@ export type QueryPostArgs = {
   id: Scalars['Int'];
 };
 
-
-export type QueryUserArgs = {
-  id: Scalars['ID'];
-};
-
 export type PayloadResponse = {
   __typename?: 'PayloadResponse';
   jwt?: Maybe<Payload>;
@@ -57,30 +57,6 @@ export type Payload = {
   __typename?: 'Payload';
   userId: Scalars['ID'];
   isAdmin: Scalars['Boolean'];
-};
-
-export type PaginatedPosts = {
-  __typename?: 'PaginatedPosts';
-  posts: Array<Post>;
-  hasMore: Scalars['Boolean'];
-};
-
-export type Post = {
-  __typename?: 'Post';
-  id: Scalars['Int'];
-  title?: Maybe<Scalars['String']>;
-  text: Scalars['String'];
-  author: User;
-  originalPost?: Maybe<Post>;
-  parent?: Maybe<Post>;
-  level: Scalars['Int'];
-  replies: Scalars['Int'];
-  score: Scalars['Int'];
-  voteCount: Scalars['Int'];
-  voteStatus?: Maybe<Scalars['Int']>;
-  updatedAt: Scalars['DateTime'];
-  createdAt: Scalars['DateTime'];
-  textSnippet: Scalars['String'];
 };
 
 export type User = {
@@ -97,20 +73,40 @@ export type User = {
   createdAt: Scalars['DateTime'];
 };
 
+export type Post = {
+  __typename?: 'Post';
+  id: Scalars['Int'];
+  title?: Maybe<Scalars['String']>;
+  text: Scalars['String'];
+  author: User;
+  originalPost?: Maybe<Post>;
+  parent?: Maybe<Post>;
+  level: Scalars['Int'];
+  replies: Scalars['Int'];
+  score: Scalars['Int'];
+  voteCount: Scalars['Int'];
+  voteStatus?: Maybe<Scalars['Int']>;
+  reply?: Maybe<Post>;
+  updatedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime'];
+  textSnippet: Scalars['String'];
+};
+
+
 export type Upvote = {
   __typename?: 'Upvote';
   user: User;
   post: Post;
 };
 
+export type PaginatedPosts = {
+  __typename?: 'PaginatedPosts';
+  posts: Array<Post>;
+  hasMore: Scalars['Boolean'];
+};
 
 export type Mutation = {
   __typename?: 'Mutation';
-  vote: Scalars['Boolean'];
-  createPost: Post;
-  updatePost?: Maybe<Post>;
-  deletePost: DeletePostResponse;
-  postReply: PostReplyResponse;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
@@ -119,34 +115,11 @@ export type Mutation = {
   login: UserResponse;
   logout: Scalars['Boolean'];
   deleteUser: Scalars['Boolean'];
-};
-
-
-export type MutationVoteArgs = {
-  vote: Vote;
-  postId: Scalars['Int'];
-};
-
-
-export type MutationCreatePostArgs = {
-  input: PostInput;
-};
-
-
-export type MutationUpdatePostArgs = {
-  text: Scalars['String'];
-  title: Scalars['String'];
-  id: Scalars['Int'];
-};
-
-
-export type MutationDeletePostArgs = {
-  id: Scalars['Int'];
-};
-
-
-export type MutationPostReplyArgs = {
-  input: PostReplyInput;
+  vote: Scalars['Boolean'];
+  createPost: PostResponse;
+  updatePost: PostResponse;
+  deletePost: DeletePostResponse;
+  postReply: PostReplyResponse;
 };
 
 
@@ -187,33 +160,32 @@ export type MutationDeleteUserArgs = {
   id: Scalars['ID'];
 };
 
-/** UP or DOWN vote a post */
-export enum Vote {
-  Up = 'UP',
-  Down = 'DOWN'
-}
 
-export type PostInput = {
+export type MutationVoteArgs = {
+  vote: Vote;
+  postId: Scalars['Int'];
+};
+
+
+export type MutationCreatePostArgs = {
+  input: PostInput;
+};
+
+
+export type MutationUpdatePostArgs = {
+  text: Scalars['String'];
   title: Scalars['String'];
-  text: Scalars['String'];
+  id: Scalars['Int'];
 };
 
-export type DeletePostResponse = {
-  __typename?: 'DeletePostResponse';
-  success: Scalars['Boolean'];
-  error?: Maybe<Scalars['String']>;
+
+export type MutationDeletePostArgs = {
+  id: Scalars['Int'];
 };
 
-export type PostReplyResponse = {
-  __typename?: 'PostReplyResponse';
-  post?: Maybe<Post>;
-  error?: Maybe<Scalars['String']>;
-};
 
-export type PostReplyInput = {
-  parentId: Scalars['Int'];
-  text: Scalars['String'];
-  originalPostId: Scalars['Int'];
+export type MutationPostReplyArgs = {
+  input: PostReplyInput;
 };
 
 export type UserResponse = {
@@ -246,6 +218,41 @@ export type UserLoginInput = {
   password: Scalars['String'];
 };
 
+/** UP or DOWN vote a post */
+export enum Vote {
+  Up = 'UP',
+  Down = 'DOWN'
+}
+
+export type PostResponse = {
+  __typename?: 'PostResponse';
+  errors?: Maybe<FieldError>;
+  post?: Maybe<Post>;
+};
+
+export type PostInput = {
+  title: Scalars['String'];
+  text: Scalars['String'];
+};
+
+export type DeletePostResponse = {
+  __typename?: 'DeletePostResponse';
+  success: Scalars['Boolean'];
+  error?: Maybe<Scalars['String']>;
+};
+
+export type PostReplyResponse = {
+  __typename?: 'PostReplyResponse';
+  post?: Maybe<Post>;
+  error?: Maybe<Scalars['String']>;
+};
+
+export type PostReplyInput = {
+  parentId: Scalars['Int'];
+  text: Scalars['String'];
+  originalPostId: Scalars['Int'];
+};
+
 export type BasicPostFragment = (
   { __typename?: 'Post' }
   & Pick<Post, 'id' | 'title' | 'level' | 'replies' | 'score' | 'voteCount' | 'voteStatus' | 'createdAt' | 'updatedAt'>
@@ -255,7 +262,7 @@ export type BasicPostFragment = (
   ), originalPost?: Maybe<(
     { __typename?: 'Post' }
     & Pick<Post, 'id'>
-  )>, parent?: Maybe<(
+  )>, reply?: Maybe<(
     { __typename?: 'Post' }
     & Pick<Post, 'id'>
   )> }
@@ -267,6 +274,15 @@ export type PostContentFragment = (
   & BasicPostFragment
 );
 
+export type PostReplyFragment = (
+  { __typename?: 'Post' }
+  & { parent?: Maybe<(
+    { __typename?: 'Post' }
+    & PostContentFragment
+  )> }
+  & PostContentFragment
+);
+
 export type PostSummaryFragment = (
   { __typename?: 'Post' }
   & Pick<Post, 'textSnippet'>
@@ -276,6 +292,18 @@ export type PostSummaryFragment = (
 export type RegularErrorFragment = (
   { __typename?: 'FieldError' }
   & Pick<FieldError, 'message' | 'field'>
+);
+
+export type RegularPostResponseFragment = (
+  { __typename?: 'PostResponse' }
+  & { errors?: Maybe<(
+    { __typename?: 'FieldError' }
+    & RegularErrorFragment
+  )>, post?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'text'>
+    & BasicPostFragment
+  )> }
 );
 
 export type RegularUserFragment = (
@@ -318,9 +346,8 @@ export type CreatePostMutationVariables = Exact<{
 export type CreatePostMutation = (
   { __typename?: 'Mutation' }
   & { createPost: (
-    { __typename?: 'Post' }
-    & Pick<Post, 'text'>
-    & BasicPostFragment
+    { __typename?: 'PostResponse' }
+    & RegularPostResponseFragment
   ) }
 );
 
@@ -418,11 +445,10 @@ export type UpdatePostMutationVariables = Exact<{
 
 export type UpdatePostMutation = (
   { __typename?: 'Mutation' }
-  & { updatePost?: Maybe<(
-    { __typename?: 'Post' }
-    & Pick<Post, 'text'>
-    & BasicPostFragment
-  )> }
+  & { updatePost: (
+    { __typename?: 'PostResponse' }
+    & RegularPostResponseFragment
+  ) }
 );
 
 export type VerifyEmailMutationVariables = Exact<{
@@ -496,6 +522,19 @@ export type PostsQuery = (
   ) }
 );
 
+export type ReplyQueryVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type ReplyQuery = (
+  { __typename?: 'Query' }
+  & { post?: Maybe<(
+    { __typename?: 'Post' }
+    & PostReplyFragment
+  )> }
+);
+
 export type ThreadQueryVariables = Exact<{
   id: Scalars['ID'];
   maxLevel?: Maybe<Scalars['Int']>;
@@ -535,7 +574,7 @@ export const BasicPostFragmentDoc = gql`
   originalPost {
     id
   }
-  parent {
+  reply {
     id
   }
   level
@@ -553,6 +592,14 @@ export const PostContentFragmentDoc = gql`
   text
 }
     ${BasicPostFragmentDoc}`;
+export const PostReplyFragmentDoc = gql`
+    fragment PostReply on Post {
+  ...PostContent
+  parent {
+    ...PostContent
+  }
+}
+    ${PostContentFragmentDoc}`;
 export const PostSummaryFragmentDoc = gql`
     fragment PostSummary on Post {
   ...BasicPost
@@ -565,6 +612,18 @@ export const RegularErrorFragmentDoc = gql`
   field
 }
     `;
+export const RegularPostResponseFragmentDoc = gql`
+    fragment RegularPostResponse on PostResponse {
+  errors {
+    ...RegularError
+  }
+  post {
+    ...BasicPost
+    text
+  }
+}
+    ${RegularErrorFragmentDoc}
+${BasicPostFragmentDoc}`;
 export const RegularUserFragmentDoc = gql`
     fragment RegularUser on User {
   id
@@ -600,11 +659,10 @@ export function useChangePasswordMutation() {
 export const CreatePostDocument = gql`
     mutation CreatePost($input: PostInput!) {
   createPost(input: $input) {
-    ...BasicPost
-    text
+    ...RegularPostResponse
   }
 }
-    ${BasicPostFragmentDoc}`;
+    ${RegularPostResponseFragmentDoc}`;
 
 export function useCreatePostMutation() {
   return Urql.useMutation<CreatePostMutation, CreatePostMutationVariables>(CreatePostDocument);
@@ -688,11 +746,10 @@ export function useSendVerifyEmailMutation() {
 export const UpdatePostDocument = gql`
     mutation UpdatePost($id: Int!, $title: String!, $text: String!) {
   updatePost(id: $id, title: $title, text: $text) {
-    ...BasicPost
-    text
+    ...RegularPostResponse
   }
 }
-    ${BasicPostFragmentDoc}`;
+    ${RegularPostResponseFragmentDoc}`;
 
 export function useUpdatePostMutation() {
   return Urql.useMutation<UpdatePostMutation, UpdatePostMutationVariables>(UpdatePostDocument);
@@ -756,6 +813,17 @@ export const PostsDocument = gql`
 
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });
+};
+export const ReplyDocument = gql`
+    query Reply($id: Int!) {
+  post(id: $id) {
+    ...PostReply
+  }
+}
+    ${PostReplyFragmentDoc}`;
+
+export function useReplyQuery(options: Omit<Urql.UseQueryArgs<ReplyQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<ReplyQuery>({ query: ReplyDocument, ...options });
 };
 export const ThreadDocument = gql`
     query Thread($id: ID!, $maxLevel: Int) {
