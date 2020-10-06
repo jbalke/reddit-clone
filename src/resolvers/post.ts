@@ -20,6 +20,7 @@ import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
 import { authenticate, authorize, verified } from '../middleware/auth';
 import { MyContext } from '../types';
+import { FieldError } from './user';
 
 enum Vote {
   UP = 1,
@@ -37,6 +38,14 @@ class PaginatedPosts {
   posts: Post[];
   @Field()
   hasMore: boolean;
+}
+
+@ObjectType()
+class PostResponse {
+  @Field(() => FieldError, { nullable: true })
+  errors?: FieldError;
+  @Field(() => Post, { nullable: true })
+  post?: Post;
 }
 
 @ObjectType()
@@ -98,6 +107,15 @@ export class PostResolver {
     });
 
     return upvote ? upvote.value : null;
+  }
+
+  @FieldResolver(() => Post, { nullable: true })
+  async reply(@Root() post: Post, @Ctx() { replyLoader, user }: MyContext) {
+    if (!user?.userId) {
+      return null;
+    }
+
+    return await replyLoader.load({ parentId: post.id, authorId: user.userId });
   }
 
   @Mutation(() => Boolean)
@@ -254,23 +272,27 @@ ORDER BY path, "createdAt"
     return posts[0];
   }
 
-  @Mutation(() => Post)
+  @Mutation(() => PostResponse)
   @UseMiddleware(authorize, verified)
-  createPost(
+  async createPost(
     @Arg('input') input: PostInput,
     @Ctx() { user }: MyContext
-  ): Promise<Post> {
-    return Post.create({ ...input, authorId: user!.userId }).save();
+  ): Promise<PostResponse> {
+    //TODO: validate input
+    return {
+      post: await Post.create({ ...input, authorId: user!.userId }).save(),
+    };
   }
 
-  @Mutation(() => Post, { nullable: true })
+  @Mutation(() => PostResponse)
   @UseMiddleware([authorize, verified])
   async updatePost(
     @Arg('id', () => Int) id: number,
     @Arg('title', () => String) title: string,
     @Arg('text', () => String) text: string,
     @Ctx() { user }: MyContext
-  ): Promise<Post | undefined> {
+  ): Promise<PostResponse> {
+    //TODO: validate input
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
@@ -279,7 +301,7 @@ ORDER BY path, "createdAt"
       .returning('*')
       .execute();
 
-    return result.raw[0];
+    return { post: result.raw[0] };
   }
 
   @Mutation(() => DeletePostResponse)
@@ -343,6 +365,15 @@ ORDER BY path, "createdAt"
     if (parentPost.authorId === user!.userId) {
       return {
         error: 'cannot reply to own post',
+      };
+    }
+
+    const ownReply = await Post.findOne({
+      where: { parentId: input.parentId, authorId: user?.userId },
+    });
+    if (ownReply) {
+      return {
+        error: 'you may only reply once to a post or reply',
       };
     }
 

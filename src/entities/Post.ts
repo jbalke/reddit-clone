@@ -97,6 +97,9 @@ export class Post extends BaseEntity {
   @Field(() => Int, { nullable: true })
   voteStatus: number | null;
 
+  @Field(() => Post, { nullable: true })
+  reply: Post | null;
+
   @Field()
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
