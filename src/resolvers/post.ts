@@ -15,12 +15,17 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { Post, PostInput, PostReplyInput } from '../entities/Post';
+import { Post } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
 import { authenticate, authorize, verified } from '../middleware/auth';
 import { MyContext } from '../types';
-import { FieldError } from './user';
+import {
+  validatePost,
+  validateReply,
+  validateUpdatePost,
+} from '../utils/validatePost';
+import { FieldError } from './types';
 
 enum Vote {
   UP = 1,
@@ -32,6 +37,32 @@ registerEnumType(Vote, {
   description: 'UP or DOWN vote a post',
 });
 
+@InputType()
+export class PostInput {
+  @Field()
+  title: string;
+  @Field()
+  text: string;
+}
+
+@InputType()
+export class PostReplyInput {
+  @Field(() => Int)
+  parentId: number;
+  @Field()
+  text: string;
+  @Field(() => Int)
+  originalPostId: number;
+}
+
+@InputType()
+export class UpdatePostInput {
+  @Field(() => Int)
+  id: number;
+  @Field()
+  text: string;
+}
+
 @ObjectType()
 class PaginatedPosts {
   @Field(() => [Post])
@@ -42,8 +73,8 @@ class PaginatedPosts {
 
 @ObjectType()
 class PostResponse {
-  @Field(() => FieldError, { nullable: true })
-  errors?: FieldError;
+  @Field(() => [FieldError], { nullable: true })
+  errors?: FieldError[];
   @Field(() => Post, { nullable: true })
   post?: Post;
 }
@@ -273,12 +304,17 @@ ORDER BY path, "createdAt"
   }
 
   @Mutation(() => PostResponse)
-  @UseMiddleware(authorize, verified)
+  @UseMiddleware([authorize, verified])
   async createPost(
     @Arg('input') input: PostInput,
     @Ctx() { user }: MyContext
   ): Promise<PostResponse> {
-    //TODO: validate input
+    const errors = validatePost(input);
+    if (errors.length) {
+      return {
+        errors,
+      };
+    }
     return {
       post: await Post.create({ ...input, authorId: user!.userId }).save(),
     };
@@ -287,16 +323,20 @@ ORDER BY path, "createdAt"
   @Mutation(() => PostResponse)
   @UseMiddleware([authorize, verified])
   async updatePost(
-    @Arg('id', () => Int) id: number,
-    @Arg('title', () => String) title: string,
-    @Arg('text', () => String) text: string,
+    @Arg('input') input: UpdatePostInput,
     @Ctx() { user }: MyContext
   ): Promise<PostResponse> {
-    //TODO: validate input
+    const { id, text } = input;
+    const errors = validateUpdatePost(input);
+    if (errors.length) {
+      return {
+        errors,
+      };
+    }
     const result = await getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ title: title ? title : undefined, text })
+      .set({ text })
       .where('id = :id and authorId = :userId', { id, userId: user!.userId })
       .returning('*')
       .execute();
@@ -354,6 +394,12 @@ ORDER BY path, "createdAt"
     @Arg('input') input: PostReplyInput,
     @Ctx() { user }: MyContext
   ): Promise<PostReplyResponse> {
+    const errors = validateReply(input);
+    if (errors) {
+      return {
+        error: errors[0].message,
+      };
+    }
     const parentPost = await Post.findOne({ id: input.parentId });
 
     if (!parentPost) {

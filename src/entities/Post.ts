@@ -1,4 +1,4 @@
-import { Field, ID, InputType, Int, ObjectType } from 'type-graphql';
+import { Field, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -12,24 +12,6 @@ import {
 } from 'typeorm';
 import { Upvote } from './Upvote';
 import { User } from './User';
-
-@InputType()
-export class PostInput {
-  @Field()
-  title: string;
-  @Field()
-  text: string;
-}
-
-@InputType()
-export class PostReplyInput {
-  @Field(() => Int)
-  parentId: number;
-  @Field()
-  text: string;
-  @Field(() => Int)
-  originalPostId: number;
-}
 
 @ObjectType()
 @Entity('posts')

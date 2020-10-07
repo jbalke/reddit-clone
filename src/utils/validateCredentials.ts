@@ -1,5 +1,6 @@
 import { __emailRE__ } from '../constants';
-import { Credentials, FieldError } from '../resolvers/user';
+import { FieldError } from '../resolvers/types';
+import { Credentials } from '../resolvers/user';
 
 export function validateCredentials({
   email,

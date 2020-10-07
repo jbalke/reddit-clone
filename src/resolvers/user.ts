@@ -16,7 +16,7 @@ import { getConnection } from 'typeorm';
 import { __emailRE__ } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
-import { authorize, authenticate, admin } from '../middleware/auth';
+import { admin, authenticate, authorize } from '../middleware/auth';
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -29,6 +29,7 @@ import { MyContext } from '../types';
 import { hashPassword, verifyPasswordHash } from '../utils/passwords';
 import { sendEmail } from '../utils/sendEmail';
 import { validateCredentials } from '../utils/validateCredentials';
+import { FieldError } from './types';
 
 export interface Credentials {
   username: string;
@@ -51,14 +52,6 @@ class UserLoginInput {
   emailOrUsername: string;
   @Field()
   password: string;
-}
-
-@ObjectType()
-export class FieldError {
-  @Field()
-  field: string;
-  @Field()
-  message: string;
 }
 
 @ObjectType()
@@ -157,8 +150,6 @@ export class UserResolver {
   async forgotPassword(@Arg('email') email: string, @Ctx() { res }: MyContext) {
     email = email.trim().toLowerCase();
     const errors = validateCredentials({ email });
-
-    console.log(errors);
 
     if (errors.length !== 0) {
       return false;
