@@ -95,6 +95,8 @@ function validateTitle(title: string, errors: any) {
     errors.title = 'Required';
   } else if (title.trim().length < 6) {
     errors.title = 'Title length must be 6 or greater';
+  } else if (title.trim().length > 200) {
+    errors.title = 'Title length too long';
   }
 }
 
@@ -103,6 +105,8 @@ function validateText(text: string, errors: any) {
     errors.text = 'Required';
   } else if (text.trim().length === 0) {
     errors.text = 'Text cannot be an empty string';
+  } else if (text.trim().length > 2000) {
+    errors.text = 'Text cannot be longer than 2000 characters';
   }
 }
 

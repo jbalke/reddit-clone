@@ -3,6 +3,7 @@ import { useState } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
 import { usePostsQuery } from '../generated/graphql';
+import Link from 'next/link';
 
 type PageProps = {};
 
@@ -27,6 +28,16 @@ const Index = ({}: PageProps) => {
           <div>loading...</div>
         ) : (
           <Stack>
+            <Link href="/create-post">
+              <Button
+                mb={4}
+                ml="auto"
+                variantColor="teal"
+                aria-label="create post"
+              >
+                create post
+              </Button>
+            </Link>
             {data &&
               data.posts.posts.map((p) => (
                 <Post key={p.id} post={p} p={5} shadow="md" borderWidth="1px" />

@@ -12,6 +12,7 @@ import {
   PostReplyMutationVariables,
   PostReplyResponse,
   RegisterMutation,
+  UpdatePostMutation,
   Vote,
   VoteMutationVariables,
 } from '../generated/graphql';
@@ -183,7 +184,13 @@ export const cache = cacheExchange({
           id,
         });
       },
-      updatePost: (_result, _args, cache, _info) => {
+      updatePost: (result, _args, cache, _info) => {
+        const {
+          updatePost: { errors },
+        } = result as UpdatePostMutation;
+        if (errors) {
+          return;
+        }
         invalidate(cache, 'posts');
       },
     },

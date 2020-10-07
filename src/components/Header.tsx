@@ -66,18 +66,9 @@ const Header = () => {
   } else if (data && data.me) {
     authLinks = (
       <>
-        <Link href="/create-post">
-          <Button
-            mx={{ sm: 0, md: 2 }}
-            my={{ sm: 2, md: 0 }}
-            variantColor="whiteAlpha"
-            aria-label="create post"
-          >
-            create post
-          </Button>
-        </Link>
         <Box
           px={{ sm: 0, md: 2 }}
+          mt={{ sm: 2, md: 0 }}
           borderRight={{ sm: 'none', md: '2px white solid' }}
           borderBottom={{ sm: '2px white solid', md: 'none' }}
           paddingBottom={{ sm: '4px', md: '0' }}
@@ -90,27 +81,24 @@ const Header = () => {
   }
 
   return (
-    <Flex
-      as="nav"
-      padding="1.5rem"
-      bg="teal.500"
-      color="white"
-      justifyContent="center"
-    >
+    <Box as="nav" padding="1.5rem" bg="teal.500" color="white">
       <Flex
-        maxW={{ sm: '100%', md: '800px' }}
-        alignItems="center"
-        justifyContent="space-between"
+        maxWidth={{ sm: '100%', md: '800px' }}
         flexGrow={1}
+        mx="auto"
+        justify="space-between"
+        wrap="wrap"
+        align="center"
       >
-        <Flex align="center" mr={5}>
-          <NextChakraLink href="/">
-            <Heading as="h1" size="lg">
-              Reddit Clone
-            </Heading>
-          </NextChakraLink>
+        <Flex alignItems="center" justifyContent="space-between" mr={4}>
+          <Flex align="center">
+            <NextChakraLink href="/">
+              <Heading as="h1" size="lg">
+                Reddit Clone
+              </Heading>
+            </NextChakraLink>
+          </Flex>
         </Flex>
-
         <Box display={{ sm: 'block', md: 'none' }} onClick={handleToggle}>
           <svg
             fill="white"
@@ -122,10 +110,9 @@ const Header = () => {
             <path d="M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z" />
           </svg>
         </Box>
-
         <Box
           display={{ sm: show ? 'block' : 'none', md: 'flex' }}
-          width={{ sm: 'full', md: 'auto' }}
+          width={{ sm: '100%', md: 'auto' }}
           justifyContent="space-between"
           alignItems="center"
           flexGrow={1}
@@ -151,7 +138,7 @@ const Header = () => {
           </Box>
         </Box>
       </Flex>
-    </Flex>
+    </Box>
   );
 };
 
