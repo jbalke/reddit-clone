@@ -15,7 +15,7 @@ import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../../components/InputField';
 import Layout from '../../components/Layout';
-import PostPreview from '../../components/PostPreview';
+import Post from '../../components/Post';
 import { usePostReplyMutation } from '../../generated/graphql';
 import { AuthGuardSSR } from '../../urql/authGuardSSR';
 import { getClientConfig } from '../../urql/urqlConfig';
@@ -44,9 +44,10 @@ function Reply() {
       <Layout size="regular">
         <Stack spacing={0}>
           {data.thread.map((p) => (
-            <PostPreview
+            <Post
               key={p.id}
               post={p}
+              preview={true}
               shadow={!p.level ? 'md' : undefined}
             />
           ))}

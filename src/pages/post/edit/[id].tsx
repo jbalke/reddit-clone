@@ -1,11 +1,21 @@
-import { Box, Button, Flex, FormControl } from '@chakra-ui/core';
+import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
+  Box,
+  Button,
+  Flex,
+  FormControl,
+  Heading,
+} from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
-import React from 'react';
+import React, { useState } from 'react';
 import InputField from '../../../components/InputField';
 import Layout from '../../../components/Layout';
-import PostPreview from '../../../components/PostPreview';
+import Post from '../../../components/Post';
 import Wrapper from '../../../components/Wrapper';
 import {
   useReplyQuery,
@@ -25,6 +35,7 @@ function EditPost(props: EditPostProps) {
   const router = useRouter();
   const id = parseInt(useGetParamFromUrl('id') as string);
   const [{ data, fetching }] = useReplyQuery({ variables: { id } });
+  const [submitError, setSubmitError] = useState('');
 
   const [, updatePost] = useUpdatePostMutation();
 
@@ -49,46 +60,52 @@ function EditPost(props: EditPostProps) {
 
   return (
     <Layout size="regular">
-      {parentPost && (
-        <PostPreview
+      {parentPost ? (
+        <Post
           key={data.post.id}
           post={parentPost}
+          preview={true}
           p={5}
           shadow="md"
           borderWidth="1px"
         />
+      ) : (
+        <Heading fontSize="xl">{data.post.title}</Heading>
       )}
       <Formik
         initialValues={{
-          title: data.post.title || '',
           text: data.post.text,
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
-          await updatePost({
-            id: id!,
-            ...values,
+          const result = await updatePost({
+            input: {
+              id: id!,
+              ...values,
+            },
           });
 
-          if (opId) {
-            router.push(`/post/${opId}`);
+          const errors = result.data?.updatePost.errors;
+          if (errors) {
+            setSubmitError(errors[0].message);
           } else {
-            router.push('/');
+            if (opId) {
+              router.push(`/post/${opId}`);
+            } else {
+              router.push('/');
+            }
           }
         }}
       >
         {({ isSubmitting }) => (
           <Form>
             <FormControl>
-              {!data?.post?.parent?.id && (
-                <InputField label="Title" name="title" placeholder="title" />
-              )}
               <Box mt={4}>
                 <InputField
                   textarea
                   label={parentPost ? 'Reply' : 'Text'}
                   name="text"
-                  placeholder="reply"
+                  placeholder={parentPost ? 'reply' : 'text'}
                   resize="vertical"
                 />
               </Box>
@@ -113,13 +130,13 @@ function EditPost(props: EditPostProps) {
                   {!data?.post?.parent?.id ? 'update post' : 'update reply'}
                 </Button>
               </Flex>
-              {/* {!!submitError && (
+              {!!submitError && (
                 <Alert mt={5} status="error">
                   <AlertIcon />
                   <AlertTitle mr={2}>Failure</AlertTitle>
                   <AlertDescription>{submitError}</AlertDescription>
                 </Alert>
-              )} */}
+              )}
             </FormControl>
           </Form>
         )}

@@ -18,17 +18,12 @@ export type Query = {
   __typename?: 'Query';
   hello: Scalars['String'];
   token: PayloadResponse;
-  me?: Maybe<User>;
-  users: Array<User>;
-  user?: Maybe<User>;
   posts: PaginatedPosts;
   thread?: Maybe<Array<Post>>;
   post?: Maybe<Post>;
-};
-
-
-export type QueryUserArgs = {
-  id: Scalars['ID'];
+  me?: Maybe<User>;
+  users: Array<User>;
+  user?: Maybe<User>;
 };
 
 
@@ -48,6 +43,11 @@ export type QueryPostArgs = {
   id: Scalars['Int'];
 };
 
+
+export type QueryUserArgs = {
+  id: Scalars['ID'];
+};
+
 export type PayloadResponse = {
   __typename?: 'PayloadResponse';
   jwt?: Maybe<Payload>;
@@ -59,18 +59,10 @@ export type Payload = {
   isAdmin: Scalars['Boolean'];
 };
 
-export type User = {
-  __typename?: 'User';
-  id: Scalars['ID'];
-  username: Scalars['String'];
-  email: Scalars['String'];
+export type PaginatedPosts = {
+  __typename?: 'PaginatedPosts';
   posts: Array<Post>;
-  upvotes: Array<Upvote>;
-  verified: Scalars['Boolean'];
-  isAdmin: Scalars['Boolean'];
-  isBanned: Scalars['Boolean'];
-  updatedAt: Scalars['DateTime'];
-  createdAt: Scalars['DateTime'];
+  hasMore: Scalars['Boolean'];
 };
 
 export type Post = {
@@ -92,6 +84,19 @@ export type Post = {
   textSnippet: Scalars['String'];
 };
 
+export type User = {
+  __typename?: 'User';
+  id: Scalars['ID'];
+  username: Scalars['String'];
+  email: Scalars['String'];
+  posts: Array<Post>;
+  upvotes: Array<Upvote>;
+  verified: Scalars['Boolean'];
+  isAdmin: Scalars['Boolean'];
+  isBanned: Scalars['Boolean'];
+  updatedAt: Scalars['DateTime'];
+  createdAt: Scalars['DateTime'];
+};
 
 export type Upvote = {
   __typename?: 'Upvote';
@@ -99,14 +104,14 @@ export type Upvote = {
   post: Post;
 };
 
-export type PaginatedPosts = {
-  __typename?: 'PaginatedPosts';
-  posts: Array<Post>;
-  hasMore: Scalars['Boolean'];
-};
 
 export type Mutation = {
   __typename?: 'Mutation';
+  vote: Scalars['Boolean'];
+  createPost: PostResponse;
+  updatePost: PostResponse;
+  deletePost: DeletePostResponse;
+  postReply: PostReplyResponse;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
@@ -115,11 +120,32 @@ export type Mutation = {
   login: UserResponse;
   logout: Scalars['Boolean'];
   deleteUser: Scalars['Boolean'];
-  vote: Scalars['Boolean'];
-  createPost: PostResponse;
-  updatePost: PostResponse;
-  deletePost: DeletePostResponse;
-  postReply: PostReplyResponse;
+};
+
+
+export type MutationVoteArgs = {
+  vote: Vote;
+  postId: Scalars['Int'];
+};
+
+
+export type MutationCreatePostArgs = {
+  input: PostInput;
+};
+
+
+export type MutationUpdatePostArgs = {
+  input: UpdatePostInput;
+};
+
+
+export type MutationDeletePostArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationPostReplyArgs = {
+  input: PostReplyInput;
 };
 
 
@@ -160,64 +186,6 @@ export type MutationDeleteUserArgs = {
   id: Scalars['ID'];
 };
 
-
-export type MutationVoteArgs = {
-  vote: Vote;
-  postId: Scalars['Int'];
-};
-
-
-export type MutationCreatePostArgs = {
-  input: PostInput;
-};
-
-
-export type MutationUpdatePostArgs = {
-  text: Scalars['String'];
-  title: Scalars['String'];
-  id: Scalars['Int'];
-};
-
-
-export type MutationDeletePostArgs = {
-  id: Scalars['Int'];
-};
-
-
-export type MutationPostReplyArgs = {
-  input: PostReplyInput;
-};
-
-export type UserResponse = {
-  __typename?: 'UserResponse';
-  errors?: Maybe<Array<FieldError>>;
-  user?: Maybe<User>;
-  accessToken?: Maybe<Scalars['String']>;
-};
-
-export type FieldError = {
-  __typename?: 'FieldError';
-  field: Scalars['String'];
-  message: Scalars['String'];
-};
-
-export type UserRegisterInput = {
-  username: Scalars['String'];
-  email: Scalars['String'];
-  password: Scalars['String'];
-};
-
-export type VerifyResponse = {
-  __typename?: 'VerifyResponse';
-  errors?: Maybe<Array<FieldError>>;
-  verified?: Maybe<Scalars['Boolean']>;
-};
-
-export type UserLoginInput = {
-  emailOrUsername: Scalars['String'];
-  password: Scalars['String'];
-};
-
 /** UP or DOWN vote a post */
 export enum Vote {
   Up = 'UP',
@@ -226,12 +194,23 @@ export enum Vote {
 
 export type PostResponse = {
   __typename?: 'PostResponse';
-  errors?: Maybe<FieldError>;
+  errors?: Maybe<Array<FieldError>>;
   post?: Maybe<Post>;
+};
+
+export type FieldError = {
+  __typename?: 'FieldError';
+  field: Scalars['String'];
+  message: Scalars['String'];
 };
 
 export type PostInput = {
   title: Scalars['String'];
+  text: Scalars['String'];
+};
+
+export type UpdatePostInput = {
+  id: Scalars['Int'];
   text: Scalars['String'];
 };
 
@@ -251,6 +230,30 @@ export type PostReplyInput = {
   parentId: Scalars['Int'];
   text: Scalars['String'];
   originalPostId: Scalars['Int'];
+};
+
+export type UserResponse = {
+  __typename?: 'UserResponse';
+  errors?: Maybe<Array<FieldError>>;
+  user?: Maybe<User>;
+  accessToken?: Maybe<Scalars['String']>;
+};
+
+export type UserRegisterInput = {
+  username: Scalars['String'];
+  email: Scalars['String'];
+  password: Scalars['String'];
+};
+
+export type VerifyResponse = {
+  __typename?: 'VerifyResponse';
+  errors?: Maybe<Array<FieldError>>;
+  verified?: Maybe<Scalars['Boolean']>;
+};
+
+export type UserLoginInput = {
+  emailOrUsername: Scalars['String'];
+  password: Scalars['String'];
 };
 
 export type BasicPostFragment = (
@@ -296,10 +299,10 @@ export type RegularErrorFragment = (
 
 export type RegularPostResponseFragment = (
   { __typename?: 'PostResponse' }
-  & { errors?: Maybe<(
+  & { errors?: Maybe<Array<(
     { __typename?: 'FieldError' }
     & RegularErrorFragment
-  )>, post?: Maybe<(
+  )>>, post?: Maybe<(
     { __typename?: 'Post' }
     & Pick<Post, 'text'>
     & BasicPostFragment
@@ -437,9 +440,7 @@ export type SendVerifyEmailMutation = (
 );
 
 export type UpdatePostMutationVariables = Exact<{
-  id: Scalars['Int'];
-  title: Scalars['String'];
-  text: Scalars['String'];
+  input: UpdatePostInput;
 }>;
 
 
@@ -744,8 +745,8 @@ export function useSendVerifyEmailMutation() {
   return Urql.useMutation<SendVerifyEmailMutation, SendVerifyEmailMutationVariables>(SendVerifyEmailDocument);
 };
 export const UpdatePostDocument = gql`
-    mutation UpdatePost($id: Int!, $title: String!, $text: String!) {
-  updatePost(id: $id, title: $title, text: $text) {
+    mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
     ...RegularPostResponse
   }
 }

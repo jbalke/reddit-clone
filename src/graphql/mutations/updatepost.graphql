@@ -1,5 +1,5 @@
-mutation UpdatePost($id: Int!, $title: String!, $text: String!) {
-  updatePost(id: $id, title: $title, text: $text) {
+mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
     ...RegularPostResponse
   }
 }

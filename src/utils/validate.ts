@@ -67,14 +67,16 @@ export const validateEmailInput = ({ email }: ForgotPasswordInput) => {
 };
 
 interface PostInput {
-  title: string;
+  title?: string;
   text: string;
 }
 
 export const validatePostInput = ({ title, text }: PostInput) => {
   const errors: FormikErrors<PostInput> = {};
 
-  validateTitle(title, errors);
+  if (title) {
+    validateTitle(title, errors);
+  }
   validateText(text, errors);
 
   return errors;

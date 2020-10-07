@@ -13,14 +13,15 @@ import Link from 'next/link';
 
 type PostProps = {
   post: PostContentFragment | PostSummaryFragment;
+  preview?: boolean;
 } & FlexProps;
 
-function Post({ post, ...flexProps }: PostProps) {
+function Post({ post, preview = false, ...flexProps }: PostProps) {
   const [{ data, fetching }] = useMeQuery();
 
   return (
     <Flex p={4} {...flexProps}>
-      <VoteSection post={post} />
+      {!preview && <VoteSection post={post} />}
       <Flex direction="column" flexGrow={1} justifyContent="space-between">
         <Flex justifyContent="space-between">
           <Flex direction="column">
@@ -53,27 +54,29 @@ function Post({ post, ...flexProps }: PostProps) {
           </Flex>
         </Flex>
         <Text mt={4}>{isSummary(post) ? post.textSnippet : post.text}</Text>
-        <Flex mt={2} justifyContent="space-between" alignItems="center">
-          <Text fontSize="sm">Replies: {post.replies}</Text>
-          {data?.me?.id && data.me.id !== post.author.id && (
-            <Link
-              href={
-                post.reply?.id
-                  ? `/post/edit/${post.reply?.id}`
-                  : `/reply/${post.id}`
-              }
-            >
-              <IconButton
-                icon="chat"
-                aria-label="Reply to Post"
-                title="Reply"
-              />
-            </Link>
-          )}
-          {data?.me?.id === post.author.id ? (
-            <EditDeletePostButtons post={post} display="flex" />
-          ) : null}
-        </Flex>
+        {!preview && (
+          <Flex mt={2} justifyContent="space-between" alignItems="center">
+            <Text fontSize="sm">Replies: {post.replies}</Text>
+            {data?.me?.id && data.me.id !== post.author.id && (
+              <Link
+                href={
+                  post.reply?.id
+                    ? `/post/edit/${post.reply?.id}`
+                    : `/reply/${post.id}`
+                }
+              >
+                <IconButton
+                  icon="chat"
+                  aria-label="Reply to Post"
+                  title="Reply"
+                />
+              </Link>
+            )}
+            {data?.me?.id === post.author.id ? (
+              <EditDeletePostButtons post={post} display="flex" />
+            ) : null}
+          </Flex>
+        )}
       </Flex>
     </Flex>
   );
