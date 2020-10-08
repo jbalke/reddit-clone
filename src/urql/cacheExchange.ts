@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 import { stringifyVariables } from 'urql';
 import {
   ChangePasswordMutation,
+  CreatePostMutation,
   DeletePostMutationVariables,
   DeletePostResponse,
   LoginMutation,
@@ -88,8 +89,15 @@ export const cache = cacheExchange({
           }
         );
       },
-      createPost: (_result, _args, cache, _info) => {
+      createPost: (result, _args, cache, _info) => {
+        const {
+          createPost: { errors },
+        } = result as CreatePostMutation;
+        if (errors) {
+          return;
+        }
         invalidate(cache, 'posts');
+        invalidate(cache, 'me');
       },
       postReply: (result, args, cache, _info) => {
         const { error } = result.postReply as PostReplyResponse;
@@ -236,7 +244,7 @@ function cursorPagination(): Resolver {
   };
 }
 
-function invalidate(cache: Cache, fieldName: 'posts' | 'thread') {
+function invalidate(cache: Cache, fieldName: 'posts' | 'thread' | 'me') {
   const allFields = cache.inspectFields('Query');
   const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
   fieldInfos.forEach((fi) => {

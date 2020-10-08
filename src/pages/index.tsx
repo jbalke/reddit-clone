@@ -1,13 +1,16 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/core';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
-import { usePostsQuery } from '../generated/graphql';
+import { useMeQuery, usePostsQuery } from '../generated/graphql';
 import Link from 'next/link';
+import { MyContext } from '../myContext';
 
-type PageProps = {};
+type PageProps = {
+  minutesUntilNewPost: number;
+};
 
-const Index = ({}: PageProps) => {
+const Index = ({ minutesUntilNewPost }: PageProps) => {
   const [variables, setVariables] = useState<{
     limit: number;
     cursor: string | undefined;
@@ -16,7 +19,6 @@ const Index = ({}: PageProps) => {
     cursor: undefined,
   });
   const [{ data, fetching, stale }] = usePostsQuery({ variables });
-
   if (!fetching && !data) {
     return <div>Could not retrieve any posts.</div>;
   }
@@ -33,9 +35,15 @@ const Index = ({}: PageProps) => {
                 mb={4}
                 ml="auto"
                 variantColor="teal"
-                aria-label="create post"
+                aria-label="new post"
+                isDisabled={minutesUntilNewPost ? true : false}
+                title={
+                  minutesUntilNewPost
+                    ? `${minutesUntilNewPost} minutes until new post`
+                    : 'new post'
+                }
               >
-                create post
+                new post
               </Button>
             </Link>
             {data &&

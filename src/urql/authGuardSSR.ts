@@ -15,7 +15,7 @@ export const AuthGuardSSR = (page: NextPage) => {
         .query<MeQuery>(
           `
       {
-        me{
+        me {
           id
           verified
           isBanned
