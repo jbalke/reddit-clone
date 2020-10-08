@@ -21,7 +21,7 @@ export class User extends BaseEntity {
 
   @Field()
   @Column()
-  username!: string;
+  username: string;
 
   @Index({ unique: true })
   @Column()
@@ -30,10 +30,10 @@ export class User extends BaseEntity {
   @Index({ unique: true })
   @Field()
   @Column()
-  email!: string;
+  email: string;
 
   @Column()
-  password!: string;
+  password: string;
 
   @Field(() => [Post])
   @OneToMany(() => Post, (post) => post.author)
@@ -49,6 +49,10 @@ export class User extends BaseEntity {
   @Field()
   @Column({ type: 'boolean', default: false })
   verified: boolean;
+
+  @Field(() => Date, { nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
+  lastPostAt?: Date;
 
   @Field()
   @Column({ type: 'boolean', default: false })

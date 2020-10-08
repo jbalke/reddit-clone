@@ -15,6 +15,7 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
+import { __newPostDelay__ } from '../constants';
 import { Post } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
@@ -307,7 +308,7 @@ ORDER BY path, "createdAt"
   @UseMiddleware([authorize, verified])
   async createPost(
     @Arg('input') input: PostInput,
-    @Ctx() { user }: MyContext
+    @Ctx() { user: creds }: MyContext
   ): Promise<PostResponse> {
     const errors = validatePost(input);
     if (errors.length) {
@@ -315,8 +316,20 @@ ORDER BY path, "createdAt"
         errors,
       };
     }
+
+    //throttle user
+    const user = await User.findOne(creds!.userId);
+    if (
+      user?.lastPostAt &&
+      Date.now() - user.lastPostAt.getTime() < 1000 * 60 * __newPostDelay__ //10 minutes
+    ) {
+      throw new Error(`please allow ${__newPostDelay__} minutes between posts`);
+    }
+
+    User.update({ id: creds!.userId }, { lastPostAt: new Date() });
+
     return {
-      post: await Post.create({ ...input, authorId: user!.userId }).save(),
+      post: await Post.create({ ...input, authorId: creds!.userId }).save(),
     };
   }
 
