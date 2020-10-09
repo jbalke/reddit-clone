@@ -519,7 +519,7 @@ export type PostsQuery = (
     & Pick<PaginatedPosts, 'hasMore'>
     & { posts: Array<(
       { __typename?: 'Post' }
-      & PostSummaryFragment
+      & PostContentFragment
     )> }
   ) }
 );
@@ -808,11 +808,11 @@ export const PostsDocument = gql`
   posts(limit: $limit, cursor: $cursor) {
     hasMore
     posts {
-      ...PostSummary
+      ...PostContent
     }
   }
 }
-    ${PostSummaryFragmentDoc}`;
+    ${PostContentFragmentDoc}`;
 
 export function usePostsQuery(options: Omit<Urql.UseQueryArgs<PostsQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<PostsQuery>({ query: PostsDocument, ...options });

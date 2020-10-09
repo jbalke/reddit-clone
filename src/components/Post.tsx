@@ -1,4 +1,5 @@
 import { Flex, FlexProps, Heading, IconButton, Text } from '@chakra-ui/core';
+import Link from 'next/link';
 import { __DateOptions__ } from '../constants';
 import {
   PostContentFragment,
@@ -9,14 +10,19 @@ import { isSummary } from '../utils/isSummary';
 import EditDeletePostButtons from './EditDeletePostButtons';
 import { NextChakraLink } from './NextChakraLink';
 import VoteSection from './VoteSection';
-import Link from 'next/link';
 
 type PostProps = {
   post: PostContentFragment | PostSummaryFragment;
   preview?: boolean;
+  handleDelete?: any;
 } & FlexProps;
 
-function Post({ post, preview = false, ...flexProps }: PostProps) {
+function Post({
+  post,
+  preview = false,
+  handleDelete,
+  ...flexProps
+}: PostProps) {
   const [{ data, fetching }] = useMeQuery();
 
   return (
@@ -72,8 +78,12 @@ function Post({ post, preview = false, ...flexProps }: PostProps) {
                 />
               </Link>
             )}
-            {data?.me?.id === post.author.id ? (
-              <EditDeletePostButtons post={post} display="flex" />
+            {handleDelete && data?.me?.id === post.author.id ? (
+              <EditDeletePostButtons
+                handleDelete={handleDelete}
+                post={post}
+                display="flex"
+              />
             ) : null}
           </Flex>
         )}

@@ -10,6 +10,7 @@ import { __PostThrottleSeconds__ } from '../constants';
 function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   const [notification, setNotification] = useState<Notification>({});
   const [secondsUntilNewPost, setSecondsUntilNewPost] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [{ data }] = useMeQuery();
 
   let timeoutId: any = null;
@@ -27,9 +28,9 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
         }
         timeoutId = setTimeout(
           (secondsRemaining) => {
-            setSecondsUntilNewPost(secondsRemaining - 15);
+            setSecondsUntilNewPost(secondsRemaining - 1);
           },
-          15000,
+          1000,
           secondsUntilNewPost
         );
       } else {
@@ -51,9 +52,12 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
           notification,
           setNotification,
           secondsUntilNewPost,
+          isModalOpen,
+          setIsModalOpen,
         }}
       >
         <Component {...pageProps} />
+        <div id="portal"></div>
       </MyContext.Provider>
     </ThemeProvider>
   );

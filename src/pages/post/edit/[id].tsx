@@ -92,7 +92,7 @@ function EditPost(props: EditPostProps) {
             if (opId) {
               router.push(`/post/${opId}`);
             } else {
-              router.push('/');
+              router.push(`/post/${id}`);
             }
           }
         }}
@@ -115,7 +115,7 @@ function EditPost(props: EditPostProps) {
                     if (opId) {
                       router.push(`/post/${opId}`);
                     } else {
-                      router.push('/');
+                      router.push(`/post/${id}`);
                     }
                   }}
                 >
