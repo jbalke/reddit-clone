@@ -9,6 +9,7 @@ type Context = {
   resetUrqlClient?: () => any;
   notification?: Notification;
   setNotification?: (data: Notification) => any;
+  secondsUntilNewPost?: number;
 };
 
 export const MyContext = createContext<Context>({});

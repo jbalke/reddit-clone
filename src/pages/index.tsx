@@ -1,16 +1,15 @@
 import { Box, Button, Flex, Stack } from '@chakra-ui/core';
+import Link from 'next/link';
 import { useContext, useState } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
-import { useMeQuery, usePostsQuery } from '../generated/graphql';
-import Link from 'next/link';
+import { usePostsQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
 
-type PageProps = {
-  minutesUntilNewPost: number;
-};
+type PageProps = {};
 
-const Index = ({ minutesUntilNewPost }: PageProps) => {
+const Index = ({}: PageProps) => {
+  // const { secondsUntilNewPost } = useContext(MyContext);
   const [variables, setVariables] = useState<{
     limit: number;
     cursor: string | undefined;
@@ -36,12 +35,8 @@ const Index = ({ minutesUntilNewPost }: PageProps) => {
                 ml="auto"
                 variantColor="teal"
                 aria-label="new post"
-                isDisabled={minutesUntilNewPost ? true : false}
-                title={
-                  minutesUntilNewPost
-                    ? `${minutesUntilNewPost} minutes until new post`
-                    : 'new post'
-                }
+                // isDisabled={secondsUntilNewPost ? true : false}
+                title="new post"
               >
                 new post
               </Button>

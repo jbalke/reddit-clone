@@ -80,7 +80,12 @@ function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
       onClose();
     };
     return (
-      <Modal closeOnOverlayClick={false} isOpen={isOpen} onClose={onClose}>
+      <Modal
+        closeOnOverlayClick={false}
+        isOpen={isOpen}
+        onClose={onClose}
+        preserveScrollBarGap
+      >
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Delete Post</ModalHeader>

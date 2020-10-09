@@ -5,33 +5,42 @@ import theme from '../theme';
 import { getClientConfig } from '../urql/urqlConfig';
 import { MyContext, Notification } from '../myContext';
 import { useMeQuery } from '../generated/graphql';
-import { __newPostDelay__ } from '../constants';
+import { __PostThrottleSeconds__ } from '../constants';
 
 function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   const [notification, setNotification] = useState<Notification>({});
-  const [minutesUntilNewPost, setMinutesUntilNewPost] = useState(0);
+  const [secondsUntilNewPost, setSecondsUntilNewPost] = useState(0);
   const [{ data }] = useMeQuery();
 
   let timeoutId: any = null;
   useEffect(() => {
     const lastPostAt = data?.me?.lastPostAt;
     if (lastPostAt) {
-      const minutesSinceLastPost = Math.floor(
-        (Date.now() - new Date(lastPostAt).getTime()) / 60000
+      const secondsSinceLastPost = Math.floor(
+        (Date.now() - new Date(lastPostAt).getTime()) / 1000
       );
 
-      if (minutesSinceLastPost < __newPostDelay__) {
-        setMinutesUntilNewPost(__newPostDelay__ - minutesSinceLastPost);
-        timeoutId = setTimeout(() => {
-          setMinutesUntilNewPost(minutesUntilNewPost! - 1);
-        }, 60000);
+      if (secondsSinceLastPost < __PostThrottleSeconds__) {
+        setSecondsUntilNewPost(__PostThrottleSeconds__ - secondsSinceLastPost);
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
+        timeoutId = setTimeout(
+          (secondsRemaining) => {
+            setSecondsUntilNewPost(secondsRemaining - 15);
+          },
+          15000,
+          secondsUntilNewPost
+        );
+      } else {
+        setSecondsUntilNewPost(0);
       }
     }
 
     return () => {
       if (timeoutId) clearInterval(timeoutId);
     };
-  }, [data, minutesUntilNewPost]);
+  }, [data, secondsUntilNewPost]);
 
   return (
     <ThemeProvider theme={theme}>
@@ -41,9 +50,10 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
           resetUrqlClient,
           notification,
           setNotification,
+          secondsUntilNewPost,
         }}
       >
-        <Component {...pageProps} minutesUntilNewPost={minutesUntilNewPost} />
+        <Component {...pageProps} />
       </MyContext.Provider>
     </ThemeProvider>
   );
