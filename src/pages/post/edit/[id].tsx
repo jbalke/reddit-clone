@@ -107,6 +107,8 @@ function EditPost(props: EditPostProps) {
                   name="text"
                   placeholder={parentPost ? 'reply' : 'text'}
                   resize="vertical"
+                  rows={10}
+                  height={undefined}
                 />
               </Box>
               <Flex mt={4} justifyContent="flex-end">

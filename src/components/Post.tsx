@@ -59,7 +59,9 @@ function Post({
             ) : null}
           </Flex>
         </Flex>
-        <Text mt={4}>{isSummary(post) ? post.textSnippet : post.text}</Text>
+        <Text whiteSpace={isSummary(post) ? undefined : 'pre-wrap'} mt={4}>
+          {isSummary(post) ? post.textSnippet : post.text}
+        </Text>
         {!preview && (
           <Flex mt={2} justifyContent="space-between" alignItems="center">
             <Text fontSize="sm">Replies: {post.replies}</Text>

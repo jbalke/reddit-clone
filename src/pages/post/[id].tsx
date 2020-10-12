@@ -1,25 +1,24 @@
-import { Button, Flex, Stack, useToast } from '@chakra-ui/core';
-import React, { useContext, useState } from 'react';
-import Layout from '../../components/Layout';
-import Post from '../../components/Post';
-import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
-import Modal from '../../components/Modal';
+import { Stack, useDisclosure, useToast } from '@chakra-ui/core';
 import { useRouter } from 'next/router';
-import { MyContext } from '../../myContext';
+import React, { useState } from 'react';
+import Layout from '../../components/Layout';
+import Modal from '../../components/Modal';
+import Post from '../../components/Post';
 import {
   Post as PostType,
   useDeletePostMutation,
 } from '../../generated/graphql';
 import { formatMessage } from '../../utils/formatMessage';
+import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
 
 function Thread() {
   const [{ data, fetching }] = useGetPostFromUrl(10);
-
-  const { setIsModalOpen, isModalOpen } = useContext(MyContext);
   const router = useRouter();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [postToDelete, setPostToDelete] = useState<PostType | null>(null);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
   const toast = useToast();
 
   const [, deletePost] = useDeletePostMutation();
@@ -74,14 +73,6 @@ function Thread() {
     }
   };
 
-  const onOpen = () => {
-    setIsModalOpen!(true);
-  };
-
-  const onClose = () => {
-    setIsModalOpen!(false);
-  };
-
   if (fetching) {
     return (
       <Layout size="regular">
@@ -106,18 +97,16 @@ function Thread() {
             ))}
           </Stack>
         </Layout>
-
-        <Modal title="Delete Post" isOpen={isModalOpen} onClose={onClose}>
-          {`Delete "${
+        <Modal
+          title="Delete Post"
+          message={`Delete: "${
             postToDelete && postToDelete.text.slice(0, 25) + '...'
           }". Are you sure?`}
-          <Flex mt={4} justifyContent="flex-end">
-            <Button onClick={onClose}>Cancel</Button>
-            <Button ml={2} variantColor="teal" onClick={handleConfirmation}>
-              OK
-            </Button>
-          </Flex>
-        </Modal>
+          handleConfirmation={handleConfirmation}
+          confirmButtonText="Yes, Delete"
+          isOpen={isOpen}
+          onClose={onClose}
+        />
       </>
     );
   } else {

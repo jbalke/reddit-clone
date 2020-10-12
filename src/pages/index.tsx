@@ -1,18 +1,10 @@
-import { Box, Button, Flex, Stack, useToast } from '@chakra-ui/core';
+import { Box, Button, Flex, Stack } from '@chakra-ui/core';
 import Link from 'next/link';
 import { useContext, useState } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
-import {
-  Post as PostType,
-  useDeletePostMutation,
-  usePostsQuery,
-} from '../generated/graphql';
+import { usePostsQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
-import { useRouter } from 'next/router';
-import { formatMessage } from '../utils/formatMessage';
-import { isSummary } from '../utils/isSummary';
-import Modal from '../components/Modal';
 
 type PageProps = {};
 

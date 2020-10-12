@@ -32,7 +32,7 @@ function CreatePost({}: PageProps) {
   const [submitError, setSubmitError] = useState('');
 
   return (
-    <Layout size="small">
+    <Layout size="regular">
       <Formik
         initialValues={{
           title: '',
@@ -58,6 +58,8 @@ function CreatePost({}: PageProps) {
                   label="Text"
                   name="text"
                   placeholder="text"
+                  rows={10}
+                  height={null}
                 />
               </Box>
               <Flex justifyContent="flex-end" mt={4}>

@@ -1,6 +1,5 @@
-import { Cache, cacheExchange, Resolver } from '@urql/exchange-graphcache';
+import { Cache, cacheExchange } from '@urql/exchange-graphcache';
 import gql from 'graphql-tag';
-import { stringifyVariables } from 'urql';
 import {
   ChangePasswordMutation,
   CreatePostMutation,
@@ -19,6 +18,8 @@ import {
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
 import { betterUpdateQuery } from '../utils/betterUpdateQuery';
+import { cursorPagination } from './cursorPagination';
+import { invalidate } from './invalidate';
 
 export const cache = cacheExchange({
   schema: schema as any,
@@ -89,15 +90,29 @@ export const cache = cacheExchange({
           }
         );
       },
-      createPost: (result, _args, cache, _info) => {
+      createPost: (_result, _args, cache, _info) => {
         const {
           createPost: { errors },
-        } = result as CreatePostMutation;
+        } = _result as CreatePostMutation;
         if (errors) {
           return;
         }
         invalidate(cache, 'posts');
-        invalidate(cache, 'me');
+        betterUpdateQuery<CreatePostMutation, MeQuery>(
+          cache,
+          { query: MeDocument },
+          _result,
+          (result, query) => {
+            if (result.createPost.errors) {
+              return query;
+            } else {
+              if (query.me) {
+                query.me.lastPostAt = new Date();
+              }
+              return query;
+            }
+          }
+        );
       },
       postReply: (result, args, cache, _info) => {
         const { error } = result.postReply as PostReplyResponse;
@@ -204,53 +219,6 @@ export const cache = cacheExchange({
     },
   },
 });
-
-function cursorPagination(): Resolver {
-  return (_parent, fieldArgs, cache, info) => {
-    const { parentKey: entityKey, fieldName } = info;
-    const allFields = cache.inspectFields(entityKey);
-    const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
-    if (fieldInfos.length === 0) {
-      return undefined;
-    }
-
-    const fieldKey = `${fieldName}(${stringifyVariables(fieldArgs)})`;
-    const isItInTheCache = !!cache.resolve(
-      cache.resolveFieldByKey(entityKey, fieldKey) as string,
-      'posts'
-    );
-    info.partial = !isItInTheCache;
-
-    let hasMore = true;
-    const results: string[] = [];
-
-    fieldInfos.forEach((fi) => {
-      const field = cache.resolveFieldByKey(entityKey, fi.fieldKey) as string;
-      const data = cache.resolve(field, 'posts') as string[];
-
-      const _hasMore = cache.resolve(field, 'hasMore');
-      if (!_hasMore) {
-        hasMore = _hasMore as boolean;
-      }
-
-      results.push(...data);
-    });
-
-    return {
-      __typename: 'PaginatedPosts',
-      hasMore,
-      posts: results,
-    };
-  };
-}
-
-function invalidate(cache: Cache, fieldName: 'posts' | 'thread' | 'me') {
-  const allFields = cache.inspectFields('Query');
-  const fieldInfos = allFields.filter((info) => info.fieldName === fieldName);
-  fieldInfos.forEach((fi) => {
-    cache.invalidate('Query', fieldName, fi.arguments || undefined);
-  });
-}
 
 function updateReplies(cache: Cache, postId: number, change: 1 | -1) {
   const data = cache.readFragment(

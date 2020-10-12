@@ -10,11 +10,8 @@ type Context = {
   notification?: Notification;
   setNotification?: React.Dispatch<SetStateAction<Notification>>;
   secondsUntilNewPost: number;
-  isModalOpen: boolean;
-  setIsModalOpen?: React.Dispatch<SetStateAction<boolean>>;
 };
 
 export const MyContext = createContext<Context>({
-  isModalOpen: false,
   secondsUntilNewPost: 0,
 });

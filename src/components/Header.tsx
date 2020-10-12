@@ -1,8 +1,8 @@
 import { Box, BoxProps, Button, Flex, Heading } from '@chakra-ui/core';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useContext, useState } from 'react';
 import { clearAccessToken } from '../accessToken';
+import { __isProd__ } from '../constants';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
 import { NextChakraLink } from './NextChakraLink';
@@ -122,7 +122,7 @@ const Header = () => {
               <NextChakraLink href="/">Home</NextChakraLink>
             </MenuItem>
 
-            {!!data?.me && (
+            {!!data?.me && !__isProd__ && (
               <MenuItem>
                 <NextChakraLink href="/token-test">Token Test</NextChakraLink>
               </MenuItem>
