@@ -22,12 +22,15 @@ let updatePostSchema = object().shape({
   text: string().required().trim().max(2048).min(1),
 });
 
-export const validateUpdatePost = (input: UpdatePostInput): FieldError[] => {
-  const errors: FieldError[] = [];
+export const validateUpdatePost = (
+  input: UpdatePostInput
+): FieldError[] | null => {
+  let errors: FieldError[] | null = null;
   try {
     updatePostSchema.validateSync(input);
   } catch (error) {
     const { path, message } = error as ValidationError;
+    errors = [];
     errors.push({ field: path, message });
   }
   return errors;
@@ -37,12 +40,13 @@ let replySchema = object().shape({
   text: string().required().trim().max(2048).min(1),
 });
 
-export const validateReply = (input: PostReplyInput): FieldError[] => {
-  const errors: FieldError[] = [];
+export const validateReply = (input: PostReplyInput): FieldError[] | null => {
+  let errors: FieldError[] | null = null;
   try {
     replySchema.validateSync(input);
   } catch (error) {
     const { path, message } = error as ValidationError;
+    errors = [];
     errors.push({ field: path, message });
   }
   return errors;

@@ -15,7 +15,7 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { __PostThrottleSeconds__ } from '../constants';
+import { __dateStyle__, __PostThrottleSeconds__ } from '../constants';
 import { Post } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
@@ -98,6 +98,14 @@ class DeletePostResponse {
 
 @Resolver((of) => Post)
 export class PostResolver {
+  @FieldResolver(() => String)
+  text(@Root() post: Post, @Ctx() { user }: MyContext) {
+    return !!post.flaggedAt && user?.isAdmin
+      ? `${post.text}\nFlagged ${timestamp(post.flaggedAt)}`
+      : !!post.flaggedAt
+      ? 'This post has been flagged for inappropriate content.'
+      : post.text;
+  }
   @FieldResolver(() => String)
   textSnippet(@Root() post: Post) {
     return post.text.length > 150 ? post.text.slice(0, 150) + '...' : post.text;
@@ -238,7 +246,7 @@ export class PostResolver {
       `
     select p.*
     from reddit.posts p
-    where p."parentId" is null
+    where p."parentId" is null and "flaggedAt" is null
     ${cursor ? `and p."createdAt" < $2` : ''}
     order by p."createdAt" DESC
     limit $1
@@ -260,22 +268,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
+WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt",  "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
   SELECT
-    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
+    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
+    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, score, "voteCount", "updatedAt", "createdAt", "originalPostId", "parentId", "authorId", replies, "level"
+    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level"
 FROM
   replies
 ORDER BY path, "createdAt"
@@ -343,18 +351,38 @@ ORDER BY path, "createdAt"
   ): Promise<PostResponse> {
     const { id, text } = input;
     const errors = validateUpdatePost(input);
-    if (errors.length) {
+    if (errors) {
       return {
         errors,
       };
     }
-    const result = await getConnection()
+
+    const post = await Post.findOne({ where: { id, authorId: user!.userId } });
+    if (!post) {
+      throw new Error(`unable to find post with id: ${id}`);
+    }
+
+    if (post.flaggedAt) {
+      throw new Error('flagged posts may not be updated');
+    }
+
+    const update = getConnection()
       .createQueryBuilder()
       .update(Post)
-      .set({ text })
       .where('id = :id and authorId = :userId', { id, userId: user!.userId })
-      .returning('*')
-      .execute();
+      .returning('*');
+
+    const timestamp = new Intl.DateTimeFormat('en', __dateStyle__).format(
+      new Date()
+    );
+
+    let result;
+    if (post.replies > 0 || post.voteCount > 0) {
+      const updatedText = post.text + `\n\nUPDATED ${timestamp}\n` + input.text;
+      result = await update.set({ text: updatedText }).execute();
+    } else {
+      result = await update.set({ text }).execute();
+    }
 
     return { post: result.raw[0] };
   }
@@ -368,6 +396,9 @@ ORDER BY path, "createdAt"
     const post = await Post.findOne({ id });
 
     if (post) {
+      if (post.flaggedAt) {
+        throw new Error('flagged posts may not be deleted');
+      }
       if (post.replies !== 0) {
         return {
           success: false,
@@ -476,3 +507,6 @@ ORDER BY path, "createdAt"
     }
   }
 }
+
+const timestamp = (dt: Date) =>
+  new Intl.DateTimeFormat('en', __dateStyle__).format(dt);

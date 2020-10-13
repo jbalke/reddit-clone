@@ -12,3 +12,14 @@ export const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET!;
 
 export const __emailRE__ = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 export const __bearerRE__ = /^Bearer\s([A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+\/=]*)$/i;
+
+export const __dateStyle__ = {
+  month: 'short',
+  year: 'numeric',
+  day: 'numeric',
+  timeZone: 'UTC',
+  timeZoneName: 'short',
+  hour: 'numeric',
+  minute: 'numeric',
+  second: 'numeric',
+};
