@@ -88,6 +88,7 @@ function Thread() {
               <Post
                 key={p.id}
                 post={p}
+                p={2}
                 shadow={!p.level ? 'md' : undefined}
                 borderWidth="1px"
                 ml={p.level * 4}

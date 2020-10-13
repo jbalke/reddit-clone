@@ -62,12 +62,11 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
 
 export default withUrqlClient(getClientConfig)(MyApp);
 
-//TODO: If post has replies, only allow appending updates to post text.
 //TODO: if banned, don't allow deleting of posts/replies (or voting?)
 //TODO: User profile stats: posts, replies, joined date, score/votes
 //TODO: Allow change email address, password.
-//TODO: make replies more compact
 //TODO: Admin functions (lock post, ban user)
 //TODO: Admin panel (# of users/posts/replies)
+//TODO: make replies more compact
 //TODO: Load more posts on scroll
 //TODO: dark mode

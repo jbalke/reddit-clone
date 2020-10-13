@@ -21,7 +21,12 @@ function VoteSection({ post }: VoteSectionProps) {
   const [{ data, fetching }] = useMeQuery();
 
   return (
-    <Flex direction="column" justifyContent="center" alignItems="center" mr={2}>
+    <Flex
+      direction="column"
+      justifyContent="flex-start"
+      alignItems="center"
+      mr={3}
+    >
       <IconButton
         onClick={async () => {
           if (post.voteStatus === 1) {
@@ -36,10 +41,10 @@ function VoteSection({ post }: VoteSectionProps) {
         aria-label="Upvote post"
         title="Upvote"
         icon="chevron-up"
-        size="md"
+        size="xs"
         variantColor={post.voteStatus === 1 ? 'green' : undefined}
       />
-      <Flex direction="column" my={2}>
+      <Flex direction="column" my={1}>
         <Box>
           <Text
             fontWeight="bold"
@@ -70,7 +75,7 @@ function VoteSection({ post }: VoteSectionProps) {
         aria-label="Downvote post"
         title="Downvote"
         icon="chevron-down"
-        size="md"
+        size="xs"
         variantColor={post.voteStatus === -1 ? 'red' : undefined}
       />
     </Flex>

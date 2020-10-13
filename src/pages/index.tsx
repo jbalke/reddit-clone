@@ -49,7 +49,7 @@ const Index = ({}: PageProps) => {
                   <Post
                     key={p.id}
                     post={p}
-                    p={5}
+                    p={2}
                     shadow="md"
                     borderWidth="1px"
                   />

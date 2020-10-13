@@ -8,6 +8,7 @@ import {
   Flex,
   FormControl,
   Heading,
+  Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
 import { withUrqlClient } from 'next-urql';
@@ -20,6 +21,9 @@ import Wrapper from '../../../components/Wrapper';
 import {
   useReplyQuery,
   useUpdatePostMutation,
+  Post as PostType,
+  PostContentFragment,
+  PostReplyFragment,
 } from '../../../generated/graphql';
 import { AuthGuardSSR } from '../../../urql/authGuardSSR';
 import { getClientConfig } from '../../../urql/urqlConfig';
@@ -34,7 +38,10 @@ function EditPost(props: EditPostProps) {
 
   const router = useRouter();
   const id = parseInt(useGetParamFromUrl('id') as string);
-  const [{ data, fetching }] = useReplyQuery({ variables: { id } });
+  const [{ data, fetching }] = useReplyQuery({
+    variables: { id },
+    requestPolicy: 'network-only',
+  });
   const [submitError, setSubmitError] = useState('');
 
   const [, updatePost] = useUpdatePostMutation();
@@ -60,21 +67,33 @@ function EditPost(props: EditPostProps) {
 
   return (
     <Layout size="regular">
-      {parentPost ? (
-        <Post
-          key={data.post.id}
-          post={parentPost}
-          preview={true}
-          p={5}
-          shadow="md"
-          borderWidth="1px"
-        />
-      ) : (
-        <Heading fontSize="xl">{data.post.title}</Heading>
-      )}
+      <Stack spacing={2}>
+        {parentPost ? (
+          <Post
+            post={parentPost}
+            preview={true}
+            p={5}
+            shadow="md"
+            borderWidth="1px"
+          />
+        ) : (
+          <Heading fontSize="xl">{data.post.title}</Heading>
+        )}
+        {(data.post.replies || data.post.voteCount) && (
+          <Post
+            post={data.post}
+            preview={true}
+            p={5}
+            shadow="md"
+            borderWidth="1px"
+            borderLeft={data.post.level ? `2px solid teal` : undefined}
+          />
+        )}
+      </Stack>
       <Formik
         initialValues={{
-          text: data.post.text,
+          text:
+            !data.post.replies && !data.post.voteCount ? data.post.text : '',
         }}
         validate={validatePostInput}
         onSubmit={async (values) => {
@@ -105,10 +124,11 @@ function EditPost(props: EditPostProps) {
                   textarea
                   label={parentPost ? 'Reply' : 'Text'}
                   name="text"
-                  placeholder={parentPost ? 'reply' : 'text'}
+                  placeholder={placeholder(data.post!)}
                   resize="vertical"
                   rows={10}
                   height={undefined}
+                  isDisabled={!!data.post?.flaggedAt}
                 />
               </Box>
               <Flex mt={4} justifyContent="flex-end">
@@ -125,6 +145,7 @@ function EditPost(props: EditPostProps) {
                 </Button>
                 <Button
                   isLoading={isSubmitting}
+                  isDisabled={!!data.post?.flaggedAt}
                   type="submit"
                   variantColor="teal"
                   ml={2}
@@ -145,6 +166,14 @@ function EditPost(props: EditPostProps) {
       </Formik>
     </Layout>
   );
+}
+
+function placeholder(post: PostReplyFragment) {
+  return !!post.replies || !!post.voteCount
+    ? 'this update will be appended to your original post'
+    : !!post.parent?.id
+    ? 'your reply'
+    : 'text';
 }
 
 export default withUrqlClient(getClientConfig)(AuthGuardSSR(EditPost));

@@ -118,10 +118,6 @@ const Header = () => {
           flexGrow={1}
         >
           <Box display={{ sm: 'block', md: 'flex' }}>
-            <MenuItem>
-              <NextChakraLink href="/">Home</NextChakraLink>
-            </MenuItem>
-
             {!!data?.me && !__isProd__ && (
               <MenuItem>
                 <NextChakraLink href="/token-test">Token Test</NextChakraLink>

@@ -4,7 +4,7 @@ import React from 'react';
 import { PostContentFragment, PostSummaryFragment } from '../generated/graphql';
 
 type EditDeletePostButtonsProps = {
-  post: PostSummaryFragment | PostContentFragment;
+  post: PostContentFragment;
   handleDelete: any;
 } & BoxProps;
 
@@ -22,6 +22,7 @@ function EditDeletePostButtons({
             icon="edit"
             aria-label="Edit Post"
             title="Edit Post"
+            isDisabled={!!post.flaggedAt}
           />
         </Link>
         <IconButton
@@ -29,6 +30,7 @@ function EditDeletePostButtons({
           aria-label="Delete Post"
           title="Delete Post"
           onClick={handleDelete(post)}
+          isDisabled={!!post.flaggedAt}
         />
       </Box>
     </>

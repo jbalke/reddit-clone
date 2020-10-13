@@ -79,6 +79,7 @@ export type Post = {
   voteCount: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
   reply?: Maybe<Post>;
+  flaggedAt: Scalars['DateTime'];
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   textSnippet: Scalars['String'];
@@ -274,7 +275,7 @@ export type BasicPostFragment = (
 
 export type PostContentFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'text'>
+  & Pick<Post, 'text' | 'flaggedAt'>
   & BasicPostFragment
 );
 
@@ -592,6 +593,7 @@ export const PostContentFragmentDoc = gql`
     fragment PostContent on Post {
   ...BasicPost
   text
+  flaggedAt
 }
     ${BasicPostFragmentDoc}`;
 export const PostReplyFragmentDoc = gql`

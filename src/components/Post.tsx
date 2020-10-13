@@ -1,12 +1,12 @@
 import { Flex, FlexProps, Heading, IconButton, Text } from '@chakra-ui/core';
 import Link from 'next/link';
-import { __DateOptions__ } from '../constants';
 import {
   PostContentFragment,
   PostSummaryFragment,
   useMeQuery,
 } from '../generated/graphql';
 import { isSummary } from '../utils/isSummary';
+import { relativeTime } from '../utils/relativeTime';
 import EditDeletePostButtons from './EditDeletePostButtons';
 import { NextChakraLink } from './NextChakraLink';
 import VoteSection from './VoteSection';
@@ -26,40 +26,27 @@ function Post({
   const [{ data, fetching }] = useMeQuery();
 
   return (
-    <Flex p={4} {...flexProps}>
+    <Flex {...flexProps}>
       {!preview && <VoteSection post={post} />}
       <Flex direction="column" flexGrow={1} justifyContent="space-between">
+        <Flex mb={1} justifyContent="space-between">
+          <Text fontSize="xs">
+            {!post.originalPost ? `Posted by ` : ' '}
+            <NextChakraLink fontSize="xs" href={`/user/${post.author.id}`}>
+              {`${post.author.username}`}
+            </NextChakraLink>{' '}
+            {relativeTime(post.createdAt)}
+          </Text>
+        </Flex>
         <Flex justifyContent="space-between">
           <Flex direction="column">
             <NextChakraLink href={`/post/${post.id}`}>
               <Heading fontSize="xl">{post.title}</Heading>
             </NextChakraLink>
-            <NextChakraLink
-              fontSize="xs"
-              fontWeight="bold"
-              href={`/user/${post.author.id}`}
-            >
-              {`${post.author.username}`}
-            </NextChakraLink>
           </Flex>
-          <Flex direction="column" alignItems="flex-end">
-            <Text fontSize="xs">
-              Posted:{' '}
-              {new Intl.DateTimeFormat('default', __DateOptions__).format(
-                new Date(post.createdAt)
-              )}
-            </Text>
-            {post.createdAt !== post.updatedAt ? (
-              <Text fontSize="xs" lineHeight={0.75}>
-                Updated:{' '}
-                {new Intl.DateTimeFormat('default', __DateOptions__).format(
-                  new Date(post.updatedAt)
-                )}
-              </Text>
-            ) : null}
-          </Flex>
+          <Flex direction="column" alignItems="flex-end"></Flex>
         </Flex>
-        <Text whiteSpace={isSummary(post) ? undefined : 'pre-wrap'} mt={4}>
+        <Text whiteSpace={isSummary(post) ? undefined : 'pre-wrap'}>
           {isSummary(post) ? post.textSnippet : post.text}
         </Text>
         {!preview && (
@@ -80,7 +67,7 @@ function Post({
                 />
               </Link>
             )}
-            {handleDelete && data?.me?.id === post.author.id ? (
+            {!isSummary(post) && data?.me?.id === post.author.id ? (
               <EditDeletePostButtons
                 handleDelete={handleDelete}
                 post={post}
