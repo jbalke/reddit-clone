@@ -16,6 +16,7 @@ export type RefreshTokenPayload = {
 export type AccessTokenPayload = {
   userId: string;
   isAdmin: boolean;
+  isBanned: boolean;
 };
 
 export interface MyContext {

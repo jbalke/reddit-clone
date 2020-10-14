@@ -28,6 +28,10 @@ export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
 export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
   requireUserPayload(context);
 
+  if (context.user?.isBanned) {
+    throw new Error('user is banned');
+  }
+
   return next();
 };
 
@@ -54,7 +58,9 @@ export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
         if (typeof payload === 'object') {
           context.user = payload as AccessTokenPayload;
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error(err);
+      }
     }
   }
   return next();

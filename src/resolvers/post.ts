@@ -101,7 +101,7 @@ export class PostResolver {
   @FieldResolver(() => String)
   text(@Root() post: Post, @Ctx() { user }: MyContext) {
     return !!post.flaggedAt && user?.isAdmin
-      ? `${post.text}\nFlagged ${timestamp(post.flaggedAt)}`
+      ? `Flagged ${timestamp(post.flaggedAt)}\n${post.text}`
       : !!post.flaggedAt
       ? 'This post has been flagged for inappropriate content.'
       : post.text;

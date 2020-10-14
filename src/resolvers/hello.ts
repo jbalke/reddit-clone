@@ -16,6 +16,8 @@ class Payload implements AccessTokenPayload {
   userId: string;
   @Field()
   isAdmin: boolean;
+  @Field()
+  isBanned: boolean;
 }
 @ObjectType()
 class PayloadResponse {
@@ -24,11 +26,6 @@ class PayloadResponse {
 }
 @Resolver()
 export class HelloResolver {
-  @Query(() => String)
-  hello() {
-    return 'hello world';
-  }
-
   @Query(() => PayloadResponse)
   @UseMiddleware(authenticate)
   token(@Ctx() { user }: MyContext): PayloadResponse {

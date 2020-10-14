@@ -182,9 +182,12 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   @Query(() => User, { nullable: true })
-  @UseMiddleware(authorize)
+  @UseMiddleware(authenticate)
   me(@Ctx() { user }: MyContext) {
-    return User.findOne(user!.userId);
+    if (user?.userId) {
+      return User.findOne(user!.userId);
+    }
+    return null;
   }
 
   @Query(() => [User])
