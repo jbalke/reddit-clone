@@ -63,7 +63,8 @@ function Post({
                 <IconButton
                   icon="chat"
                   aria-label="Reply to Post"
-                  title="Reply"
+                  title={data.me.isBanned ? 'Banned' : 'Reply'}
+                  isDisabled={data.me.isBanned}
                 />
               </Link>
             )}

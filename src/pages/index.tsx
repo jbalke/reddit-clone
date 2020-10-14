@@ -1,4 +1,4 @@
-import { Box, Button, Flex, Stack } from '@chakra-ui/core';
+import { Box, Button, Flex, Stack, Spinner } from '@chakra-ui/core';
 import Link from 'next/link';
 import { useContext, useState } from 'react';
 import Layout from '../components/Layout';
@@ -26,9 +26,17 @@ const Index = ({}: PageProps) => {
   return (
     <>
       <Layout size="regular">
-        <Box>
+        <Box aria-busy={!data && (fetching || stale)}>
           {!data && (fetching || stale) ? (
-            <div>loading...</div>
+            <Spinner
+              display="block"
+              mx="auto"
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="teal.500"
+              size="xl"
+            />
           ) : (
             <Stack>
               <Link href="/create-post">

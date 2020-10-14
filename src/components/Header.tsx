@@ -1,4 +1,4 @@
-import { Box, BoxProps, Button, Flex, Heading } from '@chakra-ui/core';
+import { Box, BoxProps, Button, Flex, Heading, Text } from '@chakra-ui/core';
 import { useRouter } from 'next/router';
 import React, { ReactNode, useContext, useState } from 'react';
 import { clearAccessToken } from '../accessToken';
@@ -73,7 +73,12 @@ const Header = () => {
           borderBottom={{ sm: '2px white solid', md: 'none' }}
           paddingBottom={{ sm: '4px', md: '0' }}
         >
-          Logged in as {data.me.username}
+          Logged in as {data.me.username}{' '}
+          {data.me.isBanned && (
+            <Text cursor="not-allowed" title="Banned" display="inline">
+              (B)
+            </Text>
+          )}
         </Box>
         <Box pl={{ sm: '0', md: '4px' }}>{logoutButton}</Box>
       </>

@@ -1,4 +1,4 @@
-import { Stack, useDisclosure, useToast } from '@chakra-ui/core';
+import { Spinner, Stack, useDisclosure, useToast } from '@chakra-ui/core';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import Layout from '../../components/Layout';
@@ -75,8 +75,16 @@ function Thread() {
 
   if (fetching) {
     return (
-      <Layout size="regular">
-        <div>Loading...</div>
+      <Layout size="regular" aria-busy={true}>
+        <Spinner
+          display="block"
+          mx="auto"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="teal.500"
+          size="xl"
+        />
       </Layout>
     );
   } else if (data && data.thread) {
