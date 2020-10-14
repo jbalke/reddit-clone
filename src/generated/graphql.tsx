@@ -16,7 +16,6 @@ export type Scalars = {
 
 export type Query = {
   __typename?: 'Query';
-  hello: Scalars['String'];
   token: PayloadResponse;
   posts: PaginatedPosts;
   thread?: Maybe<Array<Post>>;
@@ -57,6 +56,7 @@ export type Payload = {
   __typename?: 'Payload';
   userId: Scalars['ID'];
   isAdmin: Scalars['Boolean'];
+  isBanned: Scalars['Boolean'];
 };
 
 export type PaginatedPosts = {
@@ -79,7 +79,7 @@ export type Post = {
   voteCount: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
   reply?: Maybe<Post>;
-  flaggedAt: Scalars['DateTime'];
+  flaggedAt?: Maybe<Scalars['DateTime']>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   textSnippet: Scalars['String'];
@@ -561,7 +561,7 @@ export type TestTokenQuery = (
     { __typename?: 'PayloadResponse' }
     & { jwt?: Maybe<(
       { __typename?: 'Payload' }
-      & Pick<Payload, 'userId' | 'isAdmin'>
+      & Pick<Payload, 'userId' | 'isAdmin' | 'isBanned'>
     )> }
   ) }
 );
@@ -847,6 +847,7 @@ export const TestTokenDocument = gql`
     jwt {
       userId
       isAdmin
+      isBanned
     }
   }
 }

@@ -3,6 +3,7 @@ query TestToken {
     jwt {
       userId
       isAdmin
+      isBanned
     }
   }
 }

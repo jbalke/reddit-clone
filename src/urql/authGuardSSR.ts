@@ -29,10 +29,10 @@ export const AuthGuardSSR = (page: NextPage) => {
         return {};
       }
       if (result && res && req) {
-        if (!result.data?.me?.verified) {
-          redirectToVerification(res);
-        } else if (result.data?.me?.isBanned) {
+        if (result.data?.me?.isBanned) {
           redirectToBanned(res);
+        } else if (result.data?.me?.verified === false) {
+          redirectToVerification(res);
         } else {
           redirectToLogin(res, req);
         }
