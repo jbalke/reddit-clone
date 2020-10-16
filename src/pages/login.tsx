@@ -9,7 +9,6 @@ import {
   FormControl,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import { setAccessToken } from '../accessToken';
@@ -17,7 +16,6 @@ import InputField from '../components/InputField';
 import Layout from '../components/Layout';
 import { NextChakraLink } from '../components/NextChakraLink';
 import { useLoginMutation } from '../generated/graphql';
-import { getClientConfig } from '../urql/urqlConfig';
 import { toErrorMap } from '../utils/toErrorMap';
 import { validateLoginInput } from '../utils/validate';
 
@@ -46,16 +44,17 @@ function login(props: loginProps) {
               password: values.password,
             },
           });
-          if (response && response.data) {
+          if (response.data) {
             const { login } = response.data;
             if (login.errors) {
               const errorMap = toErrorMap(login.errors);
               if ('login' in errorMap) {
                 setLoginError(errorMap.login);
+              } else {
+                setErrors(toErrorMap(login.errors));
               }
-              setErrors(toErrorMap(login.errors));
             } else if (login.accessToken) {
-              // succesfully registered
+              // succesfully logged in
               setAccessToken(login.accessToken);
               if (typeof next == 'string') {
                 router.push(next);
@@ -63,6 +62,8 @@ function login(props: loginProps) {
                 router.push('/');
               }
             }
+          } else if (response.error) {
+            setLoginError(response.error.message);
           }
         }}
       >

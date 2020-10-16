@@ -1,14 +1,11 @@
 import { Box, Button, FormControl, FormHelperText } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React from 'react';
 import { setAccessToken } from '../accessToken';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
-import Wrapper from '../components/Wrapper';
 import { useRegisterMutation } from '../generated/graphql';
-import { getClientConfig } from '../urql/urqlConfig';
 import { toErrorMap } from '../utils/toErrorMap';
 import { validateRegisterInput } from '../utils/validate';
 
@@ -16,7 +13,7 @@ type registerProps = {};
 
 function register(props: registerProps) {
   const router = useRouter();
-  const [, register] = useRegisterMutation();
+  const [, registerMutation] = useRegisterMutation();
   return (
     <Layout size="small">
       <Formik
@@ -24,11 +21,12 @@ function register(props: registerProps) {
           username: '',
           email: '',
           password: '',
+          confirmPassword: '',
         }}
         validate={validateRegisterInput}
-        onSubmit={async (values, { setErrors }) => {
-          const response = await register({
-            options: values,
+        onSubmit={async ({ username, email, password }, { setErrors }) => {
+          const response = await registerMutation({
+            options: { username, email, password },
           });
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
@@ -68,6 +66,12 @@ function register(props: registerProps) {
                   type="password"
                   placeholder="password"
                 />
+                <InputField
+                  label="Confirm Password"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="confirm password"
+                />
               </Box>
               <Button
                 mt={4}
@@ -85,4 +89,4 @@ function register(props: registerProps) {
     </Layout>
   );
 }
-export default withUrqlClient(getClientConfig)(register);
+export default register;

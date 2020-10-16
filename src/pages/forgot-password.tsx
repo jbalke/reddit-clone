@@ -7,13 +7,10 @@ import {
   FormControl,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import React, { useState } from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
-import Wrapper from '../components/Wrapper';
 import { useForgotPasswordMutation } from '../generated/graphql';
-import { getClientConfig } from '../urql/urqlConfig';
 import { validateEmailInput } from '../utils/validate';
 
 type forgotPasswordProps = {};
@@ -56,7 +53,7 @@ function forgotPassword(props: forgotPasswordProps) {
                   name="email"
                   placeholder="your email address"
                   type="email"
-                  disabled={submitted}
+                  isDisabled={submitted}
                 />
                 <Button
                   mt={4}

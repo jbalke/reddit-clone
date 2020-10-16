@@ -1,11 +1,12 @@
 import { CSSReset, ThemeProvider } from '@chakra-ui/core';
-import { withUrqlClient } from 'next-urql';
+import NextApp, { AppProps } from 'next/app';
+import { withUrqlClient, NextUrqlAppContext } from 'next-urql';
 import React, { useEffect, useState } from 'react';
 import theme from '../theme';
 import { getClientConfig } from '../urql/urqlConfig';
 import { MyContext, Notification } from '../myContext';
 import { useMeQuery } from '../generated/graphql';
-import { __PostThrottleSeconds__ } from '../constants';
+import { __postThrottleSeconds__ } from '../constants';
 
 function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   const [notification, setNotification] = useState<Notification>({});
@@ -20,8 +21,8 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
         (Date.now() - new Date(lastPostAt).getTime()) / 1000
       );
 
-      if (secondsSinceLastPost < __PostThrottleSeconds__) {
-        setSecondsUntilNewPost(__PostThrottleSeconds__ - secondsSinceLastPost);
+      if (secondsSinceLastPost < __postThrottleSeconds__) {
+        setSecondsUntilNewPost(__postThrottleSeconds__ - secondsSinceLastPost);
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
@@ -32,10 +33,10 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
           1000,
           secondsUntilNewPost
         );
-      } else {
-        setSecondsUntilNewPost(0);
+        return;
       }
     }
+    setSecondsUntilNewPost(0);
 
     return () => {
       if (timeoutId) clearInterval(timeoutId);
@@ -60,9 +61,20 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(MyApp);
+MyApp.getInitialProps = async (ctx: NextUrqlAppContext) => {
+  const appProps = await NextApp.getInitialProps(ctx);
 
-//TODO: if banned, don't allow deleting of posts/replies (or voting?)
+  return {
+    ...appProps,
+  };
+};
+
+export default withUrqlClient(getClientConfig)(
+  // @ts-ignore
+  MyApp
+);
+
+//TODO: BUG: urql is duplicating operations
 //TODO: User profile stats: posts, replies, joined date, score/votes
 //TODO: Allow change email address, password.
 //TODO: Admin functions (lock post, ban user)

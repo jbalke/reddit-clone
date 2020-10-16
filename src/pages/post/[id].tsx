@@ -26,7 +26,9 @@ function Thread() {
   if (confirmDelete) {
     setConfirmDelete(false);
 
-    if (!postToDelete) return;
+    if (!postToDelete) {
+      return;
+    }
 
     deletePost({
       id: postToDelete.id,

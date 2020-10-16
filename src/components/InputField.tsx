@@ -1,3 +1,4 @@
+//@ts-nocheck
 import {
   FormControl,
   FormErrorMessage,
@@ -18,6 +19,7 @@ type InputFieldsProps = Omit<
   textarea?: boolean;
   resize?: 'horizontal' | 'vertical' | 'none';
   size?: 'sm' | 'md' | 'lg';
+  rows?: number;
 };
 
 function InputField({
@@ -25,6 +27,7 @@ function InputField({
   textarea,
   resize,
   size,
+  rows,
   ...props
 }: InputFieldsProps) {
   const [field, meta] = useField(props);
@@ -36,6 +39,7 @@ function InputField({
       <InputOrTextarea
         {...field}
         {...props}
+        rows={rows}
         resize={resize}
         id={field.name}
         size={size}

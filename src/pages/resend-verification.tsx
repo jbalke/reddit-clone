@@ -9,12 +9,10 @@ import {
   Text,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import React, { useState } from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
 import { useSendVerifyEmailMutation } from '../generated/graphql';
-import { getClientConfig } from '../urql/urqlConfig';
 import { validateEmailInput } from '../utils/validate';
 
 type resendVerificationProps = {};
@@ -70,7 +68,7 @@ function ResendVerification(props: resendVerificationProps) {
                   name="email"
                   placeholder="your registered email address"
                   type="email"
-                  disabled={submitted}
+                  isDisabled={submitted}
                 />
                 <Button
                   mt={4}
@@ -90,4 +88,4 @@ function ResendVerification(props: resendVerificationProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(ResendVerification);
+export default ResendVerification;

@@ -1,24 +1,18 @@
 import { devtoolsExchange } from '@urql/devtools';
-// import { authExchange } from './authExchange';
 import { authExchange } from '@urql/exchange-auth';
 import { retryExchange } from '@urql/exchange-retry';
 import { NextPageContext } from 'next';
 import { SSRExchange } from 'next-urql';
-import {
-  ClientOptions,
-  CombinedError,
-  dedupExchange,
-  fetchExchange,
-} from 'urql';
+import { CombinedError, dedupExchange, fetchExchange } from 'urql';
 import {
   getAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
 } from '../accessToken';
-import { isServer } from '../utils/isServer';
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
-import { fetchOptionsExchange } from './fetchOptionsExchange';
+import { fetchOptions } from './fetchOptionsExchange';
+import fetch from 'isomorphic-unfetch';
 
 const options = {
   initialDelayMs: 1000,
@@ -36,8 +30,9 @@ export const getClientConfig = (
 ): any => {
   return {
     url: 'http://localhost:4000/graphql',
+    fetch,
     exchanges: [
-      devtoolsExchange,
+      // devtoolsExchange,
       dedupExchange,
       cache,
       retryExchange(options), // Use the retryExchange factory to add a new exchange
@@ -95,96 +90,9 @@ export const getClientConfig = (
           return false;
         },
       }),
-      fetchOptionsExchange(async (fetchOptions: any) => {
-        try {
-          let token = '';
-          if (isServer() && ctx) {
-            const cookie = ctx.req?.headers?.cookie;
-
-            const response = await fetch(
-              'http://localhost:4000/refresh_token',
-              {
-                method: 'POST',
-                credentials: 'include',
-                headers: cookie ? { cookie } : undefined,
-              }
-            );
-
-            const data = await response.json();
-            token = data.accessToken;
-          } else {
-            token = getAccessToken();
-          }
-          return Promise.resolve({
-            ...fetchOptions,
-            credentials: 'include',
-            headers: {
-              Authorization: token ? `Bearer ${token}` : undefined,
-            },
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      }),
+      fetchOptions(ctx),
       ssrExchange,
       fetchExchange,
     ],
   };
 };
-
-// const getAuth = async ({ authState, mutate }: any) => {
-//   if (!authState) {
-//     const token = getAccessToken();
-//     if (token) {
-//       return { token };
-//     }
-//     return null;
-//   }
-
-//   const newAccessToken = await refreshAccessToken();
-
-//   if (newAccessToken) {
-//     return {
-//       token: newAccessToken,
-//     };
-//   }
-
-//   // not able to refresh access token, log user out here.
-//   // logout()
-//   await logout(mutate, Router);
-//   return null;
-// };
-
-// const addAuthToOperation = ({ authState, operation }: any) => {
-//   if (!authState || !authState.token) {
-//     return operation;
-//   }
-//   const fetchOptions =
-//     typeof operation.context.fetchOptions === 'function'
-//       ? operation.context.fetchOptions()
-//       : operation.context.fetchOptions || {};
-//   return {
-//     ...operation,
-//     context: {
-//       ...operation.context,
-//       fetchOptions: {
-//         ...fetchOptions,
-//         headers: {
-//           ...fetchOptions.headers,
-//           Authorization: `Bearer ${authState.token}`,
-//         },
-//       },
-//     },
-//   };
-// };
-
-// const didAuthError = ({ error }: { error: CombinedError }) => {
-//   return error.graphQLErrors.some(
-//     (e) => e.extensions?.code === 'UNAUTHENTICATED'
-//   );
-// };
-
-// const willAuthError = ({ authState }: any) => {
-//   if (!authState || isAccessTokenExpired()) return true;
-//   return false;
-// };

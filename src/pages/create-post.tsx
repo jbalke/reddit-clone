@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import {
   Alert,
   AlertDescription,
@@ -9,15 +11,12 @@ import {
   FormControl,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
 import InputField from '../components/InputField';
 import Layout from '../components/Layout';
 import { useCreatePostMutation } from '../generated/graphql';
-import { MyContext } from '../myContext';
 import { AuthGuardSSR } from '../urql/authGuardSSR';
-import { getClientConfig } from '../urql/urqlConfig';
 import { formatCombinedError } from '../utils/formatCombinedError';
 import { useIsAuthenticatedAndVerified } from '../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../utils/validate';
@@ -94,4 +93,4 @@ function CreatePost({}: PageProps) {
   );
 }
 
-export default withUrqlClient(getClientConfig)(AuthGuardSSR(CreatePost));
+export default AuthGuardSSR(CreatePost);

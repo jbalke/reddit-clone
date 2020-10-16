@@ -11,7 +11,6 @@ import {
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
-import { withUrqlClient } from 'next-urql';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
 import InputField from '../../../components/InputField';
@@ -19,14 +18,11 @@ import Layout from '../../../components/Layout';
 import Post from '../../../components/Post';
 import Wrapper from '../../../components/Wrapper';
 import {
+  PostReplyFragment,
   useReplyQuery,
   useUpdatePostMutation,
-  Post as PostType,
-  PostContentFragment,
-  PostReplyFragment,
 } from '../../../generated/graphql';
 import { AuthGuardSSR } from '../../../urql/authGuardSSR';
-import { getClientConfig } from '../../../urql/urqlConfig';
 import { useGetParamFromUrl } from '../../../utils/useGetParamFromUrl';
 import { useIsAuthenticatedAndVerified } from '../../../utils/useIsAuthenticatedAndVerified';
 import { validatePostInput } from '../../../utils/validate';
@@ -176,4 +172,4 @@ function placeholder(post: PostReplyFragment) {
     : 'text';
 }
 
-export default withUrqlClient(getClientConfig)(AuthGuardSSR(EditPost));
+export default AuthGuardSSR(EditPost);

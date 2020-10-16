@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   Button,
   Modal as ChakraModal,

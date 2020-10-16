@@ -11,19 +11,21 @@ interface RegisterInput {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
 }
 
 export const validateRegisterInput = ({
   username,
   email,
   password,
+  confirmPassword,
 }: RegisterInput) => {
   const errors: FormikErrors<RegisterInput> = {};
 
   validateUsername(username, errors);
   validateEmail(email, errors);
   validatePassword(password, errors);
-
+  validateConfirmPasword(password, confirmPassword, errors);
   return errors;
 };
 
@@ -124,6 +126,18 @@ function validatePassword(password: string, errors: any) {
     errors.password = 'Required';
   } else if (password.length <= 6) {
     errors.password = 'Password length must be greater than 6';
+  }
+}
+
+function validateConfirmPasword(
+  password: string,
+  confirmPassword: string,
+  errors: any
+) {
+  if (!confirmPassword) {
+    errors.confirmPassword = 'Required';
+  } else if (password !== confirmPassword) {
+    errors.confirmPassword = 'Passwords do not match';
   }
 }
 

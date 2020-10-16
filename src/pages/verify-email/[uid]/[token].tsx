@@ -6,7 +6,7 @@ import {
   Text,
 } from '@chakra-ui/core';
 import { GetServerSideProps } from 'next';
-import { withUrqlClient } from 'next-urql';
+import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
 import { clearAccessToken } from '../../../accessToken';
 import Layout from '../../../components/Layout';
@@ -15,8 +15,6 @@ import {
   useLogoutMutation,
   useVerifyEmailMutation,
 } from '../../../generated/graphql';
-import { getClientConfig } from '../../../urql/urqlConfig';
-import { useRouter } from 'next/router';
 
 type VerifyEmailProps = {
   userId: string;
