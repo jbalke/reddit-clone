@@ -18,6 +18,8 @@ class Payload implements AccessTokenPayload {
   isAdmin: boolean;
   @Field()
   isBanned: boolean;
+  @Field()
+  tokenVersion: number;
 }
 @ObjectType()
 class PayloadResponse {

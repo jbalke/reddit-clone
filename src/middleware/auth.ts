@@ -25,8 +25,8 @@ export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
   return next();
 };
 
-export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
-  requireUserPayload(context);
+export const authorize: MiddlewareFn<MyContext> = async ({ context }, next) => {
+  await requireUserPayload(context);
 
   if (context.user?.isBanned) {
     throw new Error('user is banned');
@@ -66,7 +66,9 @@ export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
   return next();
 };
 
-async function requireUserPayload(context: MyContext) {
+async function requireUserPayload(
+  context: MyContext
+): Promise<AccessTokenPayload> {
   const { authorization } = context.req.headers;
 
   if (!authorization) {
@@ -80,23 +82,23 @@ async function requireUserPayload(context: MyContext) {
   }
 
   const token = tokenRegExMatch[1];
-  let verifiedPayload;
   try {
-    const payload = verify(token, ACCESS_TOKEN_SECRET) as AccessTokenPayload;
-    if (typeof payload === 'object') {
-      const user = await User.findOne(payload.userId);
-      if (!user || user.tokenVersion !== payload.tokenVersion) {
-        throw new AuthenticationError('not authenticated');
-      }
-      verifiedPayload = payload;
-      context.user = verifiedPayload;
-      return verifiedPayload;
+    const payload = verify(token, ACCESS_TOKEN_SECRET);
+    if (typeof payload !== 'object') {
+      throw new AuthenticationError('invalid token payload');
     }
+
+    const verifiedPayload = payload as AccessTokenPayload;
+    const user = await User.findOne(verifiedPayload.userId);
+    if (!user || user.tokenVersion !== verifiedPayload.tokenVersion) {
+      throw new AuthenticationError('token version mismatch');
+    }
+    context.user = verifiedPayload;
+    return verifiedPayload;
   } catch (err) {
     if (err.name === 'TokenExpiredError') {
       throw new AuthenticationError('token expired');
     }
     throw new AuthenticationError('not authenticated');
   }
-  return null;
 }
