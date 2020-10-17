@@ -35,8 +35,8 @@ export const authorize: MiddlewareFn<MyContext> = ({ context }, next) => {
   return next();
 };
 
-export const admin: MiddlewareFn<MyContext> = ({ context }, next) => {
-  const token = requireUserPayload(context);
+export const admin: MiddlewareFn<MyContext> = async ({ context }, next) => {
+  const token = await requireUserPayload(context);
 
   if (!token?.isAdmin) {
     throw new AuthenticationError('not authorised');
@@ -66,7 +66,7 @@ export const authenticate: MiddlewareFn<MyContext> = ({ context }, next) => {
   return next();
 };
 
-function requireUserPayload(context: MyContext) {
+async function requireUserPayload(context: MyContext) {
   const { authorization } = context.req.headers;
 
   if (!authorization) {
@@ -82,9 +82,13 @@ function requireUserPayload(context: MyContext) {
   const token = tokenRegExMatch[1];
   let verifiedPayload;
   try {
-    const payload = verify(token, ACCESS_TOKEN_SECRET);
+    const payload = verify(token, ACCESS_TOKEN_SECRET) as AccessTokenPayload;
     if (typeof payload === 'object') {
-      verifiedPayload = payload as AccessTokenPayload;
+      const user = await User.findOne(payload.userId);
+      if (!user || user.tokenVersion !== payload.tokenVersion) {
+        throw new AuthenticationError('not authenticated');
+      }
+      verifiedPayload = payload;
       context.user = verifiedPayload;
       return verifiedPayload;
     }

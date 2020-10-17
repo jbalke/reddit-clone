@@ -8,9 +8,12 @@ import {
 } from '../constants';
 import { createAccessToken, createRefreshToken } from '../tokens';
 import { User } from '../entities/User';
-import { RefreshTokenPayload } from '../types';
+import { RefreshTokenPayload, RefreshTokenResponse } from '../types';
 
-export async function handleRefreshToken(req: Request, res: Response) {
+export async function handleRefreshToken(
+  req: Request,
+  res: Response
+): Promise<Response<RefreshTokenResponse>> {
   const token = req.cookies[COOKIE_NAME];
   if (!token) {
     return res.send({ ok: false, accessToken: '' });
@@ -25,11 +28,9 @@ export async function handleRefreshToken(req: Request, res: Response) {
   }
 
   const user = await User.findOne(payload.userId);
-  if (!user) {
-    return res.send({ ok: false, accessToken: '' });
-  }
 
-  if (user.tokenVersion !== payload.tokenVersion) {
+  if (!user || user.tokenVersion !== payload.tokenVersion) {
+    clearRefreshCookie(res);
     return res.send({ ok: false, accessToken: '' });
   }
 
@@ -37,7 +38,7 @@ export async function handleRefreshToken(req: Request, res: Response) {
   return res.send({ ok: true, accessToken: createAccessToken(user) });
 }
 
-export function sendRefreshToken(res: Response, token: string) {
+export function sendRefreshToken(res: Response, token: string): void {
   res.cookie(COOKIE_NAME, token, {
     httpOnly: true,
     maxAge: __maxAge__,
@@ -46,6 +47,6 @@ export function sendRefreshToken(res: Response, token: string) {
   });
 }
 
-export function clearRefreshCookie(res: Response) {
+export function clearRefreshCookie(res: Response): void {
   res.clearCookie(COOKIE_NAME);
 }

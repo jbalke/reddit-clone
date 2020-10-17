@@ -4,6 +4,11 @@ import { createReplyLoader } from './utils/createReplyLoader';
 import { createUpvoteLoader } from './utils/createUpvoteLoader';
 import { createUserLoader } from './utils/createUserLoader';
 
+export type RefreshTokenResponse = {
+  ok: boolean;
+  accessToken: string;
+};
+
 export type PasswordResetTokenPayload = {
   userId: string;
 };
@@ -17,6 +22,7 @@ export type AccessTokenPayload = {
   userId: string;
   isAdmin: boolean;
   isBanned: boolean;
+  tokenVersion: number;
 };
 
 export interface MyContext {

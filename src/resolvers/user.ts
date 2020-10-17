@@ -13,10 +13,14 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { __emailRE__ } from '../constants';
+import {
+  PASSWORD_RESET_URL,
+  VERIFY_EMAIL_URL,
+  __emailRE__,
+} from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
-import { admin, authenticate, authorize } from '../middleware/auth';
+import { admin, authenticate } from '../middleware/auth';
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -162,7 +166,7 @@ export class UserResolver {
     }
 
     const jwt = createPasswordResetToken(user, '1h');
-    const resetPasswordURL = `http://localhost:3000/password-reset/${user.id}/${jwt}`;
+    const resetPasswordURL = `${PASSWORD_RESET_URL}/${user.id}/${jwt}`;
 
     await sendEmail({
       to: user.email,
@@ -207,15 +211,15 @@ If you did not request a password reset, you can safely ignore this email.
     @Arg('options') options: UserRegisterInput,
     @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
-    options.username = options.username.replace(' ', '').trim();
     const errors = validateCredentials(options);
 
     if (errors.length !== 0) {
       return { errors };
     }
 
+    const usernameLookup = options.username.toLowerCase();
     const existingUsername = await User.findOne({
-      username_lookup: options.username.toLowerCase(),
+      username_lookup: usernameLookup,
     });
     if (existingUsername) {
       errors.push({ field: 'username', message: 'username not available' });
@@ -238,12 +242,11 @@ If you did not request a password reset, you can safely ignore this email.
 
     const user = new User();
     user.username = options.username;
-    user.username_lookup = options.username.toLowerCase();
+    user.username_lookup = usernameLookup;
     user.email = email;
 
     try {
-      const hashedPassword = await hashPassword(options.password);
-      user.password = hashedPassword;
+      user.password = await hashPassword(options.password);
     } catch (err) {
       throw new Error(err.message);
     }
@@ -256,11 +259,11 @@ If you did not request a password reset, you can safely ignore this email.
     }
 
     const jwt = createVerifyEmailToken(user, '3d');
-    const verifyUrl = `http://localhost:3000/verify-email/${user.id}/${jwt}`;
+    const verifyUrl = `${VERIFY_EMAIL_URL}/${user.id}/${jwt}`;
 
     sendEmail(createVerificationEmail(user, verifyUrl));
-
     sendRefreshToken(res, createRefreshToken(user));
+
     return {
       user,
       accessToken: createAccessToken(user),
@@ -273,7 +276,7 @@ If you did not request a password reset, you can safely ignore this email.
 
     if (user && !user.verified) {
       const jwt = createVerifyEmailToken(user, '3d');
-      const verifyUrl = `http://localhost:3000/verify-email/${user.id}/${jwt}`;
+      const verifyUrl = `${VERIFY_EMAIL_URL}/${user.id}/${jwt}`;
       sendEmail(createVerificationEmail(user, verifyUrl));
     }
 
@@ -323,6 +326,8 @@ If you did not request a password reset, you can safely ignore this email.
     @Arg('options') options: UserLoginInput,
     @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
+    console.log('LOGIN MUTATION');
+
     let errors: FieldError[];
     const emailOrUsername = options.emailOrUsername.trim().toLowerCase();
 
@@ -384,21 +389,6 @@ If you did not request a password reset, you can safely ignore this email.
     return true;
   }
 
-  //! Don't do this in production, revoke tokens when user changes password or triggers 'forget password' flow.
-  // @Mutation(() => Boolean)
-  // async revokeRefreshTokenForUser(@Arg('userId', () => ID) userId: string) {
-  //   try {
-  //     await getConnection()
-  //       .getRepository(User)
-  //       .increment({ id: userId }, 'tokenVersion', 1);
-  //   } catch (err) {
-  //     console.error(err);
-  //     return false;
-  //   }
-
-  //   return true;
-  // }
-
   // @Mutation(() => User, { nullable: true })
   // async updateUser(
   //   @Arg("id") id: number,
@@ -420,7 +410,7 @@ If you did not request a password reset, you can safely ignore this email.
 
   @Mutation(() => Boolean)
   @UseMiddleware(admin)
-  async deleteUser(@Arg('id', () => ID) id: string): Promise<Boolean> {
+  async deleteUser(@Arg('id', () => ID) id: string): Promise<boolean> {
     try {
       const result = await getConnection()
         .createQueryBuilder()
@@ -430,7 +420,7 @@ If you did not request a password reset, you can safely ignore this email.
         .returning('*')
         .execute();
 
-      return result.affected! > 0;
+      return !!result.affected && result.affected > 0;
     } catch (err) {
       console.error(err);
       throw new Error(err.message);

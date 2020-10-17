@@ -15,7 +15,7 @@ import {
   UseMiddleware,
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
-import { __dateStyle__, __PostThrottleSeconds__ } from '../constants';
+import { __dateStyle__, __postThrottleSeconds__ } from '../constants';
 import { Post } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
@@ -102,7 +102,7 @@ export class PostResolver {
   text(@Root() post: Post, @Ctx() { user }: MyContext) {
     return !!post.flaggedAt && user?.isAdmin
       ? `Flagged ${timestamp(post.flaggedAt)}\n${post.text}`
-      : !!post.flaggedAt
+      : post.flaggedAt
       ? 'This post has been flagged for inappropriate content.'
       : post.text;
   }
@@ -329,10 +329,10 @@ ORDER BY path, "createdAt"
     const user = await User.findOne(creds!.userId);
     if (
       user?.lastPostAt &&
-      Date.now() - user.lastPostAt.getTime() < 1000 * __PostThrottleSeconds__
+      Date.now() - user.lastPostAt.getTime() < 1000 * __postThrottleSeconds__
     ) {
       throw new Error(
-        `please allow ${__PostThrottleSeconds__} seconds between posts`
+        `please allow ${__postThrottleSeconds__} seconds between posts`
       );
     }
 
