@@ -5,6 +5,7 @@ import { NextPageContext } from 'next';
 import { SSRExchange } from 'next-urql';
 import { CombinedError, dedupExchange, fetchExchange } from 'urql';
 import {
+  clearAccessToken,
   getAccessToken,
   isAccessTokenExpired,
   refreshAccessToken,
@@ -12,7 +13,8 @@ import {
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptions } from './fetchOptionsExchange';
-import fetch from 'isomorphic-unfetch';
+import { authExchange as oldAuthExchange } from './authExchange';
+import Router from 'next/router';
 
 const options = {
   initialDelayMs: 1000,
@@ -30,69 +32,131 @@ export const getClientConfig = (
 ): any => {
   return {
     url: 'http://localhost:4000/graphql',
-    fetch,
-    exchanges: [
-      // devtoolsExchange,
-      dedupExchange,
-      cache,
-      retryExchange(options), // Use the retryExchange factory to add a new exchange
-      errorExchange,
-      authExchange<{ token: string }>({
-        getAuth: async ({ authState }) => {
-          if (!authState) {
-            let token = getAccessToken() || (await refreshAccessToken());
-            if (token) {
-              return { token };
-            }
-            return null;
-          }
+    exchanges: process.browser
+      ? [
+          devtoolsExchange,
+          dedupExchange,
+          cache,
+          retryExchange(options), // Use the retryExchange factory to add a new exchange
+          errorExchange,
+          oldAuthExchange(),
+          // authExchange<{ token: string }>({
+          //   getAuth: async ({ authState }) => {
+          //     if (!authState) {
+          //       let token = getAccessToken();
+          //       if (token) {
+          //         return { token };
+          //       }
+          //       return null;
+          //     }
 
-          const newAccessToken = await refreshAccessToken();
-          if (newAccessToken) {
-            return {
-              token: newAccessToken,
-            };
-          }
+          //     const newAccessToken = await refreshAccessToken();
+          //     if (newAccessToken) {
+          //       return {
+          //         token: newAccessToken,
+          //       };
+          //     }
+          //     return null;
+          //   },
+          //   addAuthToOperation: ({ authState, operation }) => {
+          //     if (!authState || !authState.token) {
+          //       return operation;
+          //     }
+          //     const fetchOptions =
+          //       typeof operation.context.fetchOptions === 'function'
+          //         ? operation.context.fetchOptions()
+          //         : operation.context.fetchOptions || {};
+          //     return {
+          //       ...operation,
+          //       context: {
+          //         ...operation.context,
+          //         fetchOptions: {
+          //           ...fetchOptions,
+          //           headers: {
+          //             ...fetchOptions.headers,
+          //             Authorization: `Bearer ${authState.token}`,
+          //           },
+          //         },
+          //       },
+          //     };
+          //   },
+          //   didAuthError: ({ error }) => {
+          //     return error.graphQLErrors.some(
+          //       (e) =>
+          //         e.extensions?.code === 'UNAUTHENTICATED' &&
+          //         (e.message === 'token expired' ||
+          //           e.message === 'invalid token')
+          //     );
+          //   },
+          //   willAuthError: ({ authState }) => {
+          //     if (!authState || isAccessTokenExpired()) return true;
+          //     return false;
+          //   },
+          // }),
+          fetchOptions(ctx),
+          ssrExchange,
+          fetchExchange,
+        ]
+      : [
+          dedupExchange,
+          cache,
+          oldAuthExchange(),
+          // authExchange<{ token: string }>({
+          //   getAuth: async ({ authState }) => {
+          //     if (!authState) {
+          //       let token = getAccessToken();
+          //       if (token) {
+          //         return { token };
+          //       }
+          //       return null;
+          //     }
 
-          return null;
-        },
-        addAuthToOperation: ({ authState, operation }) => {
-          if (!authState || !authState.token) {
-            return operation;
-          }
-          const fetchOptions =
-            typeof operation.context.fetchOptions === 'function'
-              ? operation.context.fetchOptions()
-              : operation.context.fetchOptions || {};
-          return {
-            ...operation,
-            context: {
-              ...operation.context,
-              fetchOptions: {
-                ...fetchOptions,
-                headers: {
-                  ...fetchOptions.headers,
-                  Authorization: `Bearer ${authState.token}`,
-                },
-              },
-            },
-          };
-        },
-        didAuthError: ({ error }) => {
-          return error.graphQLErrors.some(
-            (e) =>
-              e.extensions?.code === 'UNAUTHENTICATED' &&
-              (e.message === 'token expired' || e.message === 'invalid token')
-          );
-        },
-        willAuthError: ({ authState }) => {
-          if (!authState || isAccessTokenExpired()) return true;
-          return false;
-        },
-      }),
-      fetchOptions(ctx),
-      ssrExchange,
-      fetchExchange,
-    ],
+          //     const newAccessToken = await refreshAccessToken();
+          //     if (newAccessToken) {
+          //       return {
+          //         token: newAccessToken,
+          //       };
+          //     }
+          //     return null;
+          //   },
+          //   addAuthToOperation: ({ authState, operation }) => {
+          //     if (!authState || !authState.token) {
+          //       return operation;
+          //     }
+          //     const fetchOptions =
+          //       typeof operation.context.fetchOptions === 'function'
+          //         ? operation.context.fetchOptions()
+          //         : operation.context.fetchOptions || {};
+          //     return {
+          //       ...operation,
+          //       context: {
+          //         ...operation.context,
+          //         fetchOptions: {
+          //           ...fetchOptions,
+          //           headers: {
+          //             ...fetchOptions.headers,
+          //             Authorization: `Bearer ${authState.token}`,
+          //           },
+          //         },
+          //       },
+          //     };
+          //   },
+          //   didAuthError: ({ error }) => {
+          //     return error.graphQLErrors.some(
+          //       (e) =>
+          //         e.extensions?.code === 'UNAUTHENTICATED' &&
+          //         (e.message === 'token expired' ||
+          //           e.message === 'invalid token')
+          //     );
+          //   },
+          //   willAuthError: ({ authState }) => {
+          //     if (!authState || isAccessTokenExpired()) return true;
+          //     return false;
+          //   },
+          // }),
+          fetchOptions(ctx),
+          ssrExchange,
+          fetchExchange,
+        ],
   };
 };

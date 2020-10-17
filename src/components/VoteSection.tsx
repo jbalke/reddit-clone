@@ -7,7 +7,6 @@ import {
   useVoteMutation,
   Vote,
 } from '../generated/graphql';
-import { isServer } from '../utils/isServer';
 
 type VoteSectionProps = {
   post: PostSummaryFragment | PostContentFragment;

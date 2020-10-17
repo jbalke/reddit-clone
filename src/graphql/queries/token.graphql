@@ -4,6 +4,7 @@ query TestToken {
       userId
       isAdmin
       isBanned
+      tokenVersion
     }
   }
 }

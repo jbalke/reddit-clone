@@ -3,6 +3,11 @@ import { Exchange, Operation } from 'urql';
 import { fromPromise, fromValue, map, mergeMap, pipe } from 'wonka';
 import { getAccessToken } from '../accessToken';
 
+type RefreshTokenResponse = {
+  ok: boolean;
+  accessToken: string;
+};
+
 const fetchOptionsExchange = (fn: any): Exchange => ({ forward }) => (ops$) => {
   return pipe(
     ops$,
@@ -29,14 +34,18 @@ export function fetchOptions(ctx: NextPageContext | undefined) {
       if (!process.browser && ctx) {
         const cookie = ctx.req?.headers?.cookie;
 
-        const response = await fetch('http://localhost:4000/refresh_token', {
-          method: 'POST',
-          credentials: 'include',
-          headers: cookie ? { cookie } : undefined,
-        });
+        try {
+          const response = await fetch('http://localhost:4000/refresh_token', {
+            method: 'POST',
+            credentials: 'include',
+            headers: cookie ? { cookie } : undefined,
+          });
 
-        const data = await response.json();
-        token = data.accessToken;
+          const data = (await response.json()) as RefreshTokenResponse;
+          token = data.accessToken;
+        } catch (error) {
+          console.error(error);
+        }
       } else {
         token = getAccessToken();
       }

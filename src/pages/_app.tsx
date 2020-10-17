@@ -1,12 +1,12 @@
 import { CSSReset, ThemeProvider } from '@chakra-ui/core';
-import NextApp, { AppProps } from 'next/app';
-import { withUrqlClient, NextUrqlAppContext } from 'next-urql';
+import { NextUrqlAppContext, withUrqlClient } from 'next-urql';
+import NextApp from 'next/app';
 import React, { useEffect, useState } from 'react';
+import { __postThrottleSeconds__ } from '../constants';
+import { useMeQuery } from '../generated/graphql';
+import { MyContext, Notification } from '../myContext';
 import theme from '../theme';
 import { getClientConfig } from '../urql/urqlConfig';
-import { MyContext, Notification } from '../myContext';
-import { useMeQuery } from '../generated/graphql';
-import { __postThrottleSeconds__ } from '../constants';
 
 function MyApp({ Component, resetUrqlClient, pageProps }: any) {
   const [notification, setNotification] = useState<Notification>({});
@@ -69,7 +69,9 @@ MyApp.getInitialProps = async (ctx: NextUrqlAppContext) => {
   };
 };
 
-export default withUrqlClient(getClientConfig)(
+export default withUrqlClient(getClientConfig, {
+  neverSuspend: true,
+})(
   // @ts-ignore
   MyApp
 );

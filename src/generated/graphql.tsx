@@ -57,6 +57,7 @@ export type Payload = {
   userId: Scalars['ID'];
   isAdmin: Scalars['Boolean'];
   isBanned: Scalars['Boolean'];
+  tokenVersion: Scalars['Float'];
 };
 
 export type PaginatedPosts = {
@@ -561,7 +562,7 @@ export type TestTokenQuery = (
     { __typename?: 'PayloadResponse' }
     & { jwt?: Maybe<(
       { __typename?: 'Payload' }
-      & Pick<Payload, 'userId' | 'isAdmin' | 'isBanned'>
+      & Pick<Payload, 'userId' | 'isAdmin' | 'isBanned' | 'tokenVersion'>
     )> }
   ) }
 );
@@ -848,6 +849,7 @@ export const TestTokenDocument = gql`
       userId
       isAdmin
       isBanned
+      tokenVersion
     }
   }
 }

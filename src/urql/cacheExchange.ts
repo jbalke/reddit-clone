@@ -149,8 +149,10 @@ export const cache = cacheExchange({
           if (data.voteStatus === newVoteStatus) {
             return;
           }
-          const newPoints =
-            (data.score as number) + (!data.voteStatus ? 1 : 2) * newVoteStatus;
+
+          const newScore =
+            (data.score as number) + (data.voteStatus ? 2 : 1) * newVoteStatus;
+
           cache.writeFragment(
             gql`
               fragment updatePost on Post {
@@ -159,7 +161,7 @@ export const cache = cacheExchange({
                 voteStatus
               }
             `,
-            { id: postId, score: newPoints, voteStatus: newVoteStatus } as any
+            { id: postId, score: newScore, voteStatus: newVoteStatus } as any
           );
 
           if (!data.voteStatus) {

@@ -23,7 +23,7 @@ type loginProps = {};
 
 function login(props: loginProps) {
   const router = useRouter();
-  const [, login] = useLoginMutation();
+  const [, loginMutation] = useLoginMutation();
   const [loginError, setLoginError] = useState('');
 
   const { next } = router.query;
@@ -38,7 +38,7 @@ function login(props: loginProps) {
         validate={validateLoginInput}
         onSubmit={async (values, { setErrors }) => {
           setLoginError('');
-          const response = await login({
+          const response = await loginMutation({
             options: {
               emailOrUsername: values.emailOrUsername,
               password: values.password,
