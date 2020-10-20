@@ -1,11 +1,12 @@
-import { Box, BoxProps, IconButton } from '@chakra-ui/core';
+import { Box, BoxProps, IconButton, Tooltip } from '@chakra-ui/core';
 import Link from 'next/link';
 import React from 'react';
 import { PostContentFragment, useMeQuery } from '../generated/graphql';
+import { postAction } from '../types';
 
 type EditDeletePostButtonsProps = {
   post: PostContentFragment;
-  handleDelete: any;
+  handleDelete: postAction;
 } & BoxProps;
 
 function EditDeletePostButtons({
@@ -19,21 +20,31 @@ function EditDeletePostButtons({
     <>
       <Box {...props}>
         <Link href={`/post/edit/${post.id}`}>
-          <IconButton
-            mr={2}
-            icon="edit"
-            aria-label="Edit Post"
-            title={data!.me?.isBanned ? 'Banned' : 'Edit Post'}
-            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-          />
+          <Tooltip label="Edit Post" aria-label="Edit Post" placement="bottom">
+            <IconButton
+              size="sm"
+              mr={1}
+              icon="edit"
+              aria-label="Edit Post"
+              isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+              variantColor="teal"
+            />
+          </Tooltip>
         </Link>
-        <IconButton
-          icon="delete"
+        <Tooltip
+          label="Delete Post"
           aria-label="Delete Post"
-          title={data!.me?.isBanned ? 'Banned' : 'Delete Post'}
-          onClick={handleDelete(post)}
-          isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-        />
+          placement="bottom"
+        >
+          <IconButton
+            size="sm"
+            icon="delete"
+            aria-label="Delete Post"
+            onClick={handleDelete(post)}
+            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+            variantColor="teal"
+          />
+        </Tooltip>
       </Box>
     </>
   );

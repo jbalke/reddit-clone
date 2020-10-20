@@ -5,6 +5,8 @@ import {
   CreatePostMutation,
   DeletePostMutationVariables,
   DeletePostResponse,
+  FlagPostMutation,
+  FlagPostMutationVariables,
   LoginMutation,
   MeDocument,
   MeQuery,
@@ -204,6 +206,18 @@ export const cache = cacheExchange({
           }
         }
 
+        cache.invalidate({
+          __typename: 'Post',
+          id,
+        });
+      },
+      flagPost: (result, args, cache, _info) => {
+        const { flagPost } = result as FlagPostMutation;
+        if (!flagPost) {
+          return;
+        }
+
+        const { id } = args as FlagPostMutationVariables;
         cache.invalidate({
           __typename: 'Post',
           id,

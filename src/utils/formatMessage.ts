@@ -1,5 +1,3 @@
-import { strict } from 'assert';
-
 export const formatMessage = (message: string) => {
   const { length, [length - 1]: last } = message;
 

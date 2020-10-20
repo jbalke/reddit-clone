@@ -1,0 +1,14 @@
+query UserProfile($userId: ID!) {
+  userProfile(userId: $userId) {
+    id
+    username
+    email
+    score
+    lastPostAt
+    verified
+    isBanned
+    isAdmin
+    createdAt
+    updatedAt
+  }
+}

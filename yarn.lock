@@ -1929,9 +1929,9 @@
   integrity sha512-jiE3QIxJ8JLNcb1Ps6rDbysDhN4xa8DJJvuC9prr6w+1tIh+QAbYyNF3tyiZNLDBIuBCf4KEcV2UvQm/V60xfA==
 
 "@types/node@^14.6.3":
-  version "14.11.8"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.11.8.tgz#fe2012f2355e4ce08bca44aeb3abbb21cf88d33f"
-  integrity sha512-KPcKqKm5UKDkaYPTuXSx8wEP7vE9GnuaXIZKijwRYcePpZFDVuy2a57LarFKiORbHOuTOOwYzxVxcUzsh2P2Pw==
+  version "14.14.0"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-14.14.0.tgz#f1091b6ad5de18e8e91bdbd43ec63f13de372538"
+  integrity sha512-BfbIHP9IapdupGhq/hc+jT5dyiBVZ2DdeC5WwJWQWDb0GijQlzUFAeIQn/2GtvZcd2HVUU7An8felIICFTC2qg==
 
 "@types/parse-json@^4.0.0":
   version "4.0.0"
@@ -1974,8 +1974,7 @@
 
 "@urql/core@>=1.12.0", "@urql/core@>=1.13.1", "@urql/core@^1.12.3":
   version "1.13.1"
-  resolved "https://registry.yarnpkg.com/@urql/core/-/core-1.13.1.tgz#7247c27dccd7570010de91730d1f16fd15892829"
-  integrity sha512-Zl4UwvcE9JbWKzrtxnlmfF+rkX50GzK5dpMlB6FnUYF0sLmuGMxp67lnhTQsfTNJ+41bkj4lk0PMWEnG7KUsTw==
+  resolved "https://pkg.csb.dev/FormidableLabs/urql/commit/791f05aa/@urql/core#64011b50447c3437579b6f98c4e0994b8a0973b4"
   dependencies:
     wonka "^4.0.14"
 
@@ -1986,18 +1985,18 @@
   dependencies:
     wonka ">= 4.0.9"
 
-"@urql/exchange-auth@^0.1.0":
-  version "0.1.0"
-  resolved "https://registry.yarnpkg.com/@urql/exchange-auth/-/exchange-auth-0.1.0.tgz#9f6a6a8150f5c4cc6b39274ce216e540f2ed150c"
-  integrity sha512-5nC+XoF6C4LmVrfgvAO3ykD5JtSSkvkWFqr/zxKBBSYu1niUIgDBGXzjiKN24tBWKpFZ1bI9R5OkQ+eYqobXPA==
+"@urql/exchange-auth@^0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@urql/exchange-auth/-/exchange-auth-0.1.1.tgz#8f1a1cec9bea0313e52f94138229ba7eee4ed252"
+  integrity sha512-O45iPJ7hkpu5hcaz3+GhyH0ebDqa8cCefPLdQEFta0f54nShfOfBhF5Ysi+D1D+Kcf8ej2xbPovrP3yviMyTFw==
   dependencies:
     "@urql/core" ">=1.12.0"
     wonka "^4.0.14"
 
 "@urql/exchange-graphcache@^3.0.2":
-  version "3.1.5"
-  resolved "https://registry.yarnpkg.com/@urql/exchange-graphcache/-/exchange-graphcache-3.1.5.tgz#7fc8469c954730db732f669a14c08cb37c51c691"
-  integrity sha512-B6MFWzlhZNa31CUPPP2VbOgTbtFagRIbvqGQkewaxr6kTUK7FbidYhRzlwPJcXS39rFvIzE2fJD0W3artVEaTg==
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/@urql/exchange-graphcache/-/exchange-graphcache-3.1.6.tgz#6ac4836edad986fbfbb85d996cf17eca3bc9a1ac"
+  integrity sha512-2xdPPjbWVX/wjmbWk6jt1sKkKHAAQX1FAY603rPkFfAQoc58X584gBHjT6t9s9sTOKoG0uSmGFdeAv8Q8L3y8g==
   dependencies:
     "@urql/core" ">=1.13.1"
     wonka "^4.0.14"

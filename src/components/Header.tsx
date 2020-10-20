@@ -73,12 +73,14 @@ const Header = () => {
           borderBottom={{ sm: '2px white solid', md: 'none' }}
           paddingBottom={{ sm: '4px', md: '0' }}
         >
-          Logged in as {data.me.username}{' '}
-          {data.me.isBanned && (
-            <Text cursor="not-allowed" title="Banned" display="inline">
-              (B)
-            </Text>
-          )}
+          <NextChakraLink href={`/user-profile/${data.me.id}`}>
+            Logged in as {data.me.username}{' '}
+            {data.me.isBanned && (
+              <Text cursor="not-allowed" title="Banned" display="inline">
+                (B)
+              </Text>
+            )}
+          </NextChakraLink>
         </Box>
         <Box pl={{ sm: '0', md: '4px' }}>{logoutButton}</Box>
       </>

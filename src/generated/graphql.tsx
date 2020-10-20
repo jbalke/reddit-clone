@@ -20,9 +20,9 @@ export type Query = {
   posts: PaginatedPosts;
   thread?: Maybe<Array<Post>>;
   post?: Maybe<Post>;
+  userProfile?: Maybe<User>;
   me?: Maybe<User>;
   users: Array<User>;
-  user?: Maybe<User>;
 };
 
 
@@ -43,8 +43,8 @@ export type QueryPostArgs = {
 };
 
 
-export type QueryUserArgs = {
-  id: Scalars['ID'];
+export type QueryUserProfileArgs = {
+  userId: Scalars['ID'];
 };
 
 export type PayloadResponse = {
@@ -91,20 +91,13 @@ export type User = {
   id: Scalars['ID'];
   username: Scalars['String'];
   email: Scalars['String'];
-  posts: Array<Post>;
-  upvotes: Array<Upvote>;
-  verified: Scalars['Boolean'];
+  verified?: Maybe<Scalars['Boolean']>;
+  score: Scalars['Int'];
   lastPostAt?: Maybe<Scalars['DateTime']>;
-  isAdmin: Scalars['Boolean'];
+  isAdmin?: Maybe<Scalars['Boolean']>;
   isBanned: Scalars['Boolean'];
-  updatedAt: Scalars['DateTime'];
+  updatedAt?: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
-};
-
-export type Upvote = {
-  __typename?: 'Upvote';
-  user: User;
-  post: Post;
 };
 
 
@@ -114,6 +107,7 @@ export type Mutation = {
   createPost: PostResponse;
   updatePost: PostResponse;
   deletePost: DeletePostResponse;
+  flagPost: Scalars['Boolean'];
   postReply: PostReplyResponse;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
@@ -143,6 +137,11 @@ export type MutationUpdatePostArgs = {
 
 
 export type MutationDeletePostArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationFlagPostArgs = {
   id: Scalars['Int'];
 };
 
@@ -370,6 +369,16 @@ export type DeletePostMutation = (
   ) }
 );
 
+export type FlagPostMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type FlagPostMutation = (
+  { __typename?: 'Mutation' }
+  & Pick<Mutation, 'flagPost'>
+);
+
 export type ForgotPasswordMutationVariables = Exact<{
   email: Scalars['String'];
 }>;
@@ -567,6 +576,19 @@ export type TestTokenQuery = (
   ) }
 );
 
+export type UserProfileQueryVariables = Exact<{
+  userId: Scalars['ID'];
+}>;
+
+
+export type UserProfileQuery = (
+  { __typename?: 'Query' }
+  & { userProfile?: Maybe<(
+    { __typename?: 'User' }
+    & Pick<User, 'id' | 'username' | 'email' | 'score' | 'lastPostAt' | 'verified' | 'isBanned' | 'isAdmin' | 'createdAt' | 'updatedAt'>
+  )> }
+);
+
 export const BasicPostFragmentDoc = gql`
     fragment BasicPost on Post {
   id
@@ -684,6 +706,15 @@ export const DeletePostDocument = gql`
 
 export function useDeletePostMutation() {
   return Urql.useMutation<DeletePostMutation, DeletePostMutationVariables>(DeletePostDocument);
+};
+export const FlagPostDocument = gql`
+    mutation FlagPost($id: Int!) {
+  flagPost(id: $id)
+}
+    `;
+
+export function useFlagPostMutation() {
+  return Urql.useMutation<FlagPostMutation, FlagPostMutationVariables>(FlagPostDocument);
 };
 export const ForgotPasswordDocument = gql`
     mutation ForgotPassword($email: String!) {
@@ -857,4 +888,24 @@ export const TestTokenDocument = gql`
 
 export function useTestTokenQuery(options: Omit<Urql.UseQueryArgs<TestTokenQueryVariables>, 'query'> = {}) {
   return Urql.useQuery<TestTokenQuery>({ query: TestTokenDocument, ...options });
+};
+export const UserProfileDocument = gql`
+    query UserProfile($userId: ID!) {
+  userProfile(userId: $userId) {
+    id
+    username
+    email
+    score
+    lastPostAt
+    verified
+    isBanned
+    isAdmin
+    createdAt
+    updatedAt
+  }
+}
+    `;
+
+export function useUserProfileQuery(options: Omit<Urql.UseQueryArgs<UserProfileQueryVariables>, 'query'> = {}) {
+  return Urql.useQuery<UserProfileQuery>({ query: UserProfileDocument, ...options });
 };

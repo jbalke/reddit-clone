@@ -2,7 +2,7 @@ import Router from 'next/router';
 import { Exchange } from 'urql';
 import { pipe, tap } from 'wonka';
 
-export const errorExchange: Exchange = ({ forward }) => (ops$) => {
+export const errorExchange: Exchange = ({ client, forward }) => (ops$) => {
   return pipe(
     forward(ops$),
     tap(({ error }) => {
@@ -14,7 +14,17 @@ export const errorExchange: Exchange = ({ forward }) => (ops$) => {
             e.extensions?.code === 'UNAUTHENTICATED' && !e.path?.includes('me')
         );
         if (authError) {
-          Router.replace(`/login?next=${Router.asPath}`);
+          client
+            .mutation(
+              `
+          mutate Logout {
+            logout
+          }`
+            )
+            .toPromise()
+            .then(() => {
+              Router.replace(`/login?next=${Router.asPath}`);
+            });
         } else if (
           error.graphQLErrors.some((e) => /not verified/i.test(e.message))
         ) {

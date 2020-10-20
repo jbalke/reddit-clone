@@ -5,6 +5,8 @@ interface myToken {
   alg?: string;
   userId: string;
   isAdmin: boolean;
+  isBanned: boolean;
+  tokenVersion: number;
   exp: number;
   iat: number;
 }
@@ -24,11 +26,15 @@ export function getAccessToken(): string {
   return accessToken;
 }
 
-export function isAccessTokenExpired(): boolean {
-  if (!accessToken) return true;
+export function isAccessTokenExpired(token: string): boolean {
+  if (!token) {
+    return true;
+  }
 
-  const decoded: myToken = decode(accessToken);
-  return decoded.exp * 1000 <= Date.now();
+  const decoded: myToken = decode(token);
+  const hasExpired = decoded.exp * 1000 <= Date.now();
+
+  return hasExpired;
 }
 
 export function clearAccessToken() {
@@ -45,6 +51,7 @@ export async function refreshAccessToken(): Promise<string> {
     const data: myResponse = await response.json();
     if (data.ok) {
       setAccessToken(data.accessToken);
+      return data.accessToken;
     } else {
       clearAccessToken();
     }
@@ -52,5 +59,5 @@ export async function refreshAccessToken(): Promise<string> {
     console.error(err);
     clearAccessToken();
   }
-  return accessToken;
+  return '';
 }

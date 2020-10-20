@@ -5,8 +5,9 @@ import Layout from '../../components/Layout';
 import Modal from '../../components/Modal';
 import Post from '../../components/Post';
 import {
-  Post as PostType,
+  PostContentFragment as PostType,
   useDeletePostMutation,
+  useFlagPostMutation,
 } from '../../generated/graphql';
 import { formatMessage } from '../../utils/formatMessage';
 import { useGetPostFromUrl } from '../../utils/useGetPostFromUrl';
@@ -16,22 +17,62 @@ function Thread() {
   const router = useRouter();
 
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [postToDelete, setPostToDelete] = useState<PostType | null>(null);
+  const [confirmFlag, setConfirmFlag] = useState(false);
+  const [postToAction, setPostToAction] = useState<PostType | null>(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const {
+    isOpen: flagIsOpen,
+    onOpen: flagOnOpen,
+    onClose: flagOnClose,
+  } = useDisclosure();
 
   const toast = useToast();
 
   const [, deletePost] = useDeletePostMutation();
+  const [, flagPost] = useFlagPostMutation();
 
-  if (confirmDelete) {
+  const handleFlagConfirmation = () => {
+    setConfirmFlag(true);
+    flagOnClose();
+  };
+
+  const handleFlag = (post: PostType) => () => {
+    if (!confirmFlag) {
+      setPostToAction(post);
+      flagOnOpen();
+    }
+  };
+
+  if (confirmFlag) {
+    actionConfirmedPost(setConfirmFlag, postToAction, setPostToAction, () => {
+      flagPost({
+        id: postToAction!.id,
+      }).then((result) => {
+        if (result.data?.flagPost) {
+          toast({
+            position: 'top-right',
+            title: 'Success',
+            description: 'Post has been flagged!',
+            status: 'success',
+            duration: 6000,
+            isClosable: true,
+          });
+
+          if (!postToAction!.originalPost) {
+            router.push('/');
+          }
+        }
+      });
+    });
+  } else if (confirmDelete) {
     setConfirmDelete(false);
 
-    if (!postToDelete) {
+    if (!postToAction) {
       return;
     }
 
     deletePost({
-      id: postToDelete.id,
+      id: postToAction.id,
     }).then((result) => {
       if (result.data?.deletePost.success) {
         toast({
@@ -43,7 +84,7 @@ function Thread() {
           isClosable: true,
         });
 
-        if (!postToDelete.originalPost) {
+        if (!postToAction.originalPost) {
           router.push('/');
         }
       } else {
@@ -60,7 +101,7 @@ function Thread() {
       }
     });
 
-    setPostToDelete(null);
+    setPostToAction(null);
   }
 
   const handleConfirmation = () => {
@@ -70,7 +111,7 @@ function Thread() {
 
   const handleDelete = (post: PostType) => () => {
     if (!confirmDelete) {
-      setPostToDelete(post);
+      setPostToAction(post);
       onOpen();
     }
   };
@@ -104,6 +145,7 @@ function Thread() {
                 ml={p.level * 4}
                 borderLeft={p.level ? `2px solid teal` : undefined}
                 handleDelete={handleDelete}
+                handleFlag={handleFlag}
               />
             ))}
           </Stack>
@@ -111,12 +153,22 @@ function Thread() {
         <Modal
           title="Delete Post"
           message={`Delete: "${
-            postToDelete && postToDelete.text.slice(0, 25) + '...'
+            postToAction && postToAction.text.slice(0, 25) + '...'
           }". Are you sure?`}
           handleConfirmation={handleConfirmation}
           confirmButtonText="Yes, Delete"
           isOpen={isOpen}
           onClose={onClose}
+        />
+        <Modal
+          title="Flag Post"
+          message={`Flag: "${
+            postToAction && postToAction.text.slice(0, 25) + '...'
+          }". Are you sure?`}
+          handleConfirmation={handleFlagConfirmation}
+          confirmButtonText="Yes, Flag"
+          isOpen={flagIsOpen}
+          onClose={flagOnClose}
         />
       </>
     );
@@ -130,3 +182,20 @@ function Thread() {
 }
 
 export default Thread;
+
+function actionConfirmedPost(
+  setConfirm: React.Dispatch<React.SetStateAction<boolean>>,
+  postToAction: PostType | null,
+  setPostToAction: React.Dispatch<React.SetStateAction<PostType | null>>,
+  postMutation: () => void
+) {
+  setConfirm(false);
+
+  if (!postToAction) {
+    return;
+  }
+
+  postMutation();
+
+  setPostToAction(null);
+}

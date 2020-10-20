@@ -77,9 +77,9 @@ export default withUrqlClient(getClientConfig, {
 );
 
 //TODO: BUG: urql is duplicating operations
-//TODO: User profile stats: posts, replies, joined date, score/votes
+//TODO: ban / unban user
 //TODO: Allow change email address, password.
-//TODO: Admin functions (lock post, ban user)
+//TODO: Admin functions (lock thread, ban user)
 //TODO: Admin panel (# of users/posts/replies)
 //TODO: Load more posts on scroll
 //TODO: dark mode
