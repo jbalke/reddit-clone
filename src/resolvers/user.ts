@@ -5,6 +5,7 @@ import {
   FieldResolver,
   ID,
   InputType,
+  Int,
   Mutation,
   ObjectType,
   Query,
@@ -81,7 +82,60 @@ class UserResponse {
 
 @Resolver((of) => User)
 export class UserResolver {
-  @FieldResolver(() => String)
+  @FieldResolver(() => Date, { nullable: true })
+  @UseMiddleware(authenticate)
+  updatedAt(
+    @Root() user: User,
+    @Ctx() { user: creds }: MyContext
+  ): Date | null {
+    if (creds && (creds.userId === user.id || creds.isAdmin)) {
+      return user.updatedAt;
+    }
+
+    return null;
+  }
+
+  @FieldResolver(() => Boolean)
+  @UseMiddleware(authenticate)
+  isAdmin(
+    @Root() user: User,
+    @Ctx() { user: creds }: MyContext
+  ): boolean | null {
+    if (creds && (creds.userId === user.id || creds.isAdmin)) {
+      return user.isAdmin;
+    }
+
+    return null;
+  }
+
+  @FieldResolver()
+  @UseMiddleware(authenticate)
+  verified(
+    @Root() user: User,
+    @Ctx() { user: creds }: MyContext
+  ): boolean | null {
+    if (creds && (creds.userId === user.id || creds.isAdmin)) {
+      return user.verified;
+    }
+
+    return null;
+  }
+
+  @FieldResolver()
+  async score(@Root() user: User): Promise<number> {
+    const result = await getConnection().query(
+      `
+    select SUM(p.score) 
+    from reddit.posts p
+    where p."authorId" = $1
+    `,
+      [user.id]
+    );
+
+    return parseInt(result[0].sum);
+  }
+
+  @FieldResolver()
   @UseMiddleware(authenticate)
   email(@Root() user: User, @Ctx() { user: creds }: MyContext) {
     // a user can see their own email
@@ -90,6 +144,15 @@ export class UserResolver {
     }
 
     return '';
+  }
+
+  @Query(() => User, { nullable: true })
+  @UseMiddleware(authenticate)
+  async userProfile(
+    @Arg('userId', () => ID) userId: string,
+    @Ctx() { user }: MyContext
+  ): Promise<User | undefined> {
+    return User.findOne(userId);
   }
 
   @Mutation(() => UserResponse)
@@ -198,12 +261,6 @@ If you did not request a password reset, you can safely ignore this email.
   @UseMiddleware(admin)
   users(): Promise<User[]> {
     return User.find();
-  }
-
-  @Query(() => User, { nullable: true })
-  @UseMiddleware(admin)
-  user(@Arg('id', () => ID) id: string) {
-    return User.findOne(id);
   }
 
   @Mutation(() => UserResponse)
@@ -326,8 +383,6 @@ If you did not request a password reset, you can safely ignore this email.
     @Arg('options') options: UserLoginInput,
     @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
-    console.log('LOGIN MUTATION');
-
     let errors: FieldError[];
     const emailOrUsername = options.emailOrUsername.trim().toLowerCase();
 

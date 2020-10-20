@@ -19,7 +19,7 @@ import { __dateStyle__, __postThrottleSeconds__ } from '../constants';
 import { Post } from '../entities/Post';
 import { Upvote } from '../entities/Upvote';
 import { User } from '../entities/User';
-import { authenticate, authorize, verified } from '../middleware/auth';
+import { admin, authenticate, authorize, verified } from '../middleware/auth';
 import { MyContext } from '../types';
 import {
   validatePost,
@@ -336,7 +336,7 @@ ORDER BY path, "createdAt"
       );
     }
 
-    User.update({ id: creds!.userId }, { lastPostAt: new Date() });
+    await User.update({ id: creds!.userId }, { lastPostAt: new Date() });
 
     return {
       post: await Post.create({ ...input, authorId: creds!.userId }).save(),
@@ -396,13 +396,16 @@ ORDER BY path, "createdAt"
     const post = await Post.findOne({ id });
 
     if (post) {
-      if (post.flaggedAt) {
-        throw new Error('flagged posts may not be deleted');
-      }
       if (post.replies !== 0) {
         return {
           success: false,
           error: 'post has replies',
+        };
+      }
+      if (post.flaggedAt) {
+        return {
+          success: false,
+          error: 'flagged posts may not be deleted',
         };
       }
       if (post.parentId) {
@@ -432,6 +435,13 @@ ORDER BY path, "createdAt"
     return {
       success: true,
     };
+  }
+
+  @Mutation(() => Boolean)
+  @UseMiddleware([authorize, admin])
+  async flagPost(@Arg('id', () => Int) id: number): Promise<boolean> {
+    await Post.update({ id }, { flaggedAt: new Date() });
+    return true;
   }
 
   @Mutation(() => PostReplyResponse)

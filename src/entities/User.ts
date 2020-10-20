@@ -1,4 +1,4 @@
-import { Field, ID, ObjectType } from 'type-graphql';
+import { Field, ID, Int, ObjectType } from 'type-graphql';
 import {
   BaseEntity,
   Column,
@@ -35,26 +35,27 @@ export class User extends BaseEntity {
   @Column()
   password: string;
 
-  @Field(() => [Post])
   @OneToMany(() => Post, (post) => post.author)
   posts: Post[];
 
-  @Field(() => [Upvote])
   @OneToMany(() => Upvote, (upvote) => upvote.user)
   upvotes: Upvote[];
 
   @Column({ type: 'int', default: 0 })
   tokenVersion: number;
 
-  @Field()
+  @Field(() => Boolean, { nullable: true })
   @Column({ type: 'boolean', default: false })
   verified: boolean;
+
+  @Field(() => Int)
+  score: number;
 
   @Field(() => Date, { nullable: true })
   @Column({ type: 'timestamptz', nullable: true })
   lastPostAt?: Date;
 
-  @Field()
+  @Field(() => Boolean, { nullable: true })
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
@@ -62,7 +63,7 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isBanned: boolean;
 
-  @Field()
+  @Field(() => Date, { nullable: true })
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 

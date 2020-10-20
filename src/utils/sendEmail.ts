@@ -30,7 +30,7 @@ export async function sendEmail(content: EmailContent) {
 
   try {
     // send mail with defined transport object
-    let info = await transporter.sendMail({
+    const info = await transporter.sendMail({
       from: '"Velva Gulgowski" <velva.gulgowski@ethereal.email>', // sender address
       to: recipients, // list of receivers
       subject: content.subject, // Subject line
