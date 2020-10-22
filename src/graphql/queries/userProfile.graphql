@@ -4,11 +4,10 @@ query UserProfile($userId: ID!) {
     username
     email
     score
-    lastPostAt
+    lastActiveAt
     verified
     isBanned
     isAdmin
     createdAt
-    updatedAt
   }
 }

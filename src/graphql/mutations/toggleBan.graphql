@@ -1,0 +1,5 @@
+mutation ToggleBan($userId: ID!) {
+  toggleBan(userId: $userId) {
+    ...RegularUser
+  }
+}

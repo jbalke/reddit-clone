@@ -76,8 +76,6 @@ export default withUrqlClient(getClientConfig, {
   MyApp
 );
 
-//TODO: BUG: urql is duplicating operations
-//TODO: ban / unban user
 //TODO: Allow change email address, password.
 //TODO: Admin functions (lock thread, ban user)
 //TODO: Admin panel (# of users/posts/replies)

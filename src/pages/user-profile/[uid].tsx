@@ -1,8 +1,18 @@
-import { Box, Heading, Spinner, Text } from '@chakra-ui/core';
+import {
+  Badge,
+  Box,
+  Flex,
+  Heading,
+  Spinner,
+  Stack,
+  Text,
+} from '@chakra-ui/core';
 import { useRouter } from 'next/router';
 import React from 'react';
+import AdminUserControls from '../../components/AdminUserControls';
 import Layout from '../../components/Layout';
-import { useUserProfileQuery } from '../../generated/graphql';
+import { useMeQuery, useUserProfileQuery } from '../../generated/graphql';
+import { formatTimeStamp } from '../../utils/formatTimeStamp';
 import { relativeTime } from '../../utils/relativeTime';
 
 type ProfileProps = {};
@@ -10,6 +20,7 @@ type ProfileProps = {};
 function Profile(props: ProfileProps) {
   const router = useRouter();
 
+  const [{ data: meData, fetching: meFetching }] = useMeQuery();
   const [{ data, fetching, stale }] = useUserProfileQuery({
     variables: { userId: router.query.uid as string },
   });
@@ -34,35 +45,59 @@ function Profile(props: ProfileProps) {
     return (
       <Layout size="regular">
         <Box aria-busy="false">
-          <Heading>Profile for {data.userProfile.username}</Heading>
+          <Flex flexDirection="column" mb={4}>
+            <Heading>Profile for {data.userProfile.username}</Heading>
+            <Stack isInline spacing={1}>
+              {data.userProfile.isAdmin && (
+                <Badge
+                  variant="outline"
+                  alignSelf="flex-start"
+                  variantColor="teal"
+                >
+                  administrator
+                </Badge>
+              )}
+              {data.userProfile.verified && (
+                <Badge
+                  variant="outline"
+                  alignSelf="flex-start"
+                  variantColor="green"
+                >
+                  verified
+                </Badge>
+              )}
+              {data.userProfile.isBanned && (
+                <Badge
+                  variant="outline"
+                  alignSelf="flex-start"
+                  variantColor="red"
+                >
+                  banned
+                </Badge>
+              )}
+            </Stack>
+          </Flex>
           <Text>Score: {data.userProfile.score}</Text>
           {data.userProfile.email && (
             <Text>email: {data.userProfile.email}</Text>
           )}
-          {data.userProfile.verified !== null && (
-            <Text>
-              email verified: {data.userProfile.verified ? 'yes' : 'no'}
-            </Text>
-          )}
           <Text>
-            last post:{' '}
-            {data.userProfile.lastPostAt
-              ? relativeTime(data.userProfile.lastPostAt)
+            last active:{' '}
+            {data.userProfile.lastActiveAt
+              ? relativeTime(data.userProfile.lastActiveAt)
               : 'never posted'}
           </Text>
-          {data.userProfile.isAdmin && <Text>administrator</Text>}
-          {data.userProfile.isBanned && (
-            <Text color="red.500" fontWeight="bold" mt={2}>
-              user currently banned for misconduct
-            </Text>
-          )}
+          <Text>
+            member since: {formatTimeStamp(data.userProfile.createdAt)}
+          </Text>
+          {meData?.me?.isAdmin && <AdminUserControls user={data.userProfile} />}
         </Box>
       </Layout>
     );
   } else {
     <Layout size="regular">
       <Box aria-busy="false">
-        <Text>Could not find user profile</Text>
+        <Text>Could not find user</Text>
       </Box>
     </Layout>;
   }

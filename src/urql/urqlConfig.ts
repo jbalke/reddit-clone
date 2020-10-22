@@ -72,11 +72,7 @@ export const getClientConfig = (
             },
             didAuthError: ({ error }) => {
               return error.graphQLErrors.some(
-                (e) =>
-                  e.extensions?.code === 'UNAUTHENTICATED' &&
-                  (e.message === 'token expired' ||
-                    e.message === 'invalid token' ||
-                    e.message === 'not authenticated')
+                (e) => e.extensions?.code === 'UNAUTHENTICATED'
               );
             },
             getAuth: async ({ authState, mutate }) => {
@@ -145,11 +141,7 @@ export const getClientConfig = (
             },
             didAuthError: ({ error }) => {
               return error.graphQLErrors.some(
-                (e) =>
-                  e.extensions?.code === 'UNAUTHENTICATED' &&
-                  (e.message === 'token expired' ||
-                    e.message === 'invalid token' ||
-                    e.message === 'not authenticated')
+                (e) => e.extensions?.code === 'UNAUTHENTICATED'
               );
             },
             getAuth: async ({ authState, mutate }) => {
@@ -176,7 +168,7 @@ export const getClientConfig = (
               mutate Logout {
                 logout
               }`);
-              Router.replace(`/login?next=${Router.asPath}`);
+              Router.push(`/login`);
 
               return null;
             },

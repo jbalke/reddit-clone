@@ -91,10 +91,11 @@ export type User = {
   id: Scalars['ID'];
   username: Scalars['String'];
   email: Scalars['String'];
-  verified?: Maybe<Scalars['Boolean']>;
+  verified: Scalars['Boolean'];
   score: Scalars['Int'];
   lastPostAt?: Maybe<Scalars['DateTime']>;
-  isAdmin?: Maybe<Scalars['Boolean']>;
+  lastActiveAt?: Maybe<Scalars['DateTime']>;
+  isAdmin: Scalars['Boolean'];
   isBanned: Scalars['Boolean'];
   updatedAt?: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
@@ -109,6 +110,7 @@ export type Mutation = {
   deletePost: DeletePostResponse;
   flagPost: Scalars['Boolean'];
   postReply: PostReplyResponse;
+  toggleBan: User;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
@@ -148,6 +150,11 @@ export type MutationFlagPostArgs = {
 
 export type MutationPostReplyArgs = {
   input: PostReplyInput;
+};
+
+
+export type MutationToggleBanArgs = {
+  userId: Scalars['ID'];
 };
 
 
@@ -451,6 +458,19 @@ export type SendVerifyEmailMutation = (
   & Pick<Mutation, 'sendVerifyEmail'>
 );
 
+export type ToggleBanMutationVariables = Exact<{
+  userId: Scalars['ID'];
+}>;
+
+
+export type ToggleBanMutation = (
+  { __typename?: 'Mutation' }
+  & { toggleBan: (
+    { __typename?: 'User' }
+    & RegularUserFragment
+  ) }
+);
+
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
@@ -585,7 +605,7 @@ export type UserProfileQuery = (
   { __typename?: 'Query' }
   & { userProfile?: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'username' | 'email' | 'score' | 'lastPostAt' | 'verified' | 'isBanned' | 'isAdmin' | 'createdAt' | 'updatedAt'>
+    & Pick<User, 'id' | 'username' | 'email' | 'score' | 'lastActiveAt' | 'verified' | 'isBanned' | 'isAdmin' | 'createdAt'>
   )> }
 );
 
@@ -780,6 +800,17 @@ export const SendVerifyEmailDocument = gql`
 export function useSendVerifyEmailMutation() {
   return Urql.useMutation<SendVerifyEmailMutation, SendVerifyEmailMutationVariables>(SendVerifyEmailDocument);
 };
+export const ToggleBanDocument = gql`
+    mutation ToggleBan($userId: ID!) {
+  toggleBan(userId: $userId) {
+    ...RegularUser
+  }
+}
+    ${RegularUserFragmentDoc}`;
+
+export function useToggleBanMutation() {
+  return Urql.useMutation<ToggleBanMutation, ToggleBanMutationVariables>(ToggleBanDocument);
+};
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {
   updatePost(input: $input) {
@@ -896,12 +927,11 @@ export const UserProfileDocument = gql`
     username
     email
     score
-    lastPostAt
+    lastActiveAt
     verified
     isBanned
     isAdmin
     createdAt
-    updatedAt
   }
 }
     `;
