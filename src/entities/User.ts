@@ -44,7 +44,7 @@ export class User extends BaseEntity {
   @Column({ type: 'int', default: 0 })
   tokenVersion: number;
 
-  @Field(() => Boolean, { nullable: true })
+  @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   verified: boolean;
 
@@ -55,7 +55,11 @@ export class User extends BaseEntity {
   @Column({ type: 'timestamptz', nullable: true })
   lastPostAt?: Date;
 
-  @Field(() => Boolean, { nullable: true })
+  @Field(() => Date, { nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
+  lastActiveAt?: Date;
+
+  @Field(() => Boolean)
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 

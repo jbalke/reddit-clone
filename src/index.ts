@@ -11,6 +11,7 @@ import { HelloResolver } from './resolvers/hello';
 import { PostResolver } from './resolvers/post';
 import { UserResolver } from './resolvers/user';
 import { MyContext } from './types';
+import { createLastActiveLoader } from './utils/createLastActiveLoader';
 import { createPostLoader } from './utils/createPostLoader';
 import { createReplyLoader } from './utils/createReplyLoader';
 import { createUpvoteLoader } from './utils/createUpvoteLoader';
@@ -42,6 +43,7 @@ const main = async () => {
       upVoteLoader: createUpvoteLoader(),
       postLoader: createPostLoader(),
       replyLoader: createReplyLoader(),
+      lastActiveLoader: createLastActiveLoader(),
     }),
   });
   server.applyMiddleware({ app, cors: false }); //* setting globally via express middleare instead.

@@ -72,20 +72,20 @@ async function requireUserPayload(
   const { authorization } = context.req.headers;
 
   if (!authorization) {
-    throw new AuthenticationError('missing authorization header');
+    throw new Error('missing authorization header');
   }
 
   const tokenRegExMatch = authorization.match(__bearerRE__);
 
   if (!tokenRegExMatch) {
-    throw new AuthenticationError('invalid token');
+    throw new Error('invalid token');
   }
 
   const token = tokenRegExMatch[1];
   try {
     const payload = verify(token, ACCESS_TOKEN_SECRET);
     if (typeof payload !== 'object') {
-      throw new AuthenticationError('invalid token payload');
+      throw new Error('invalid token payload');
     }
 
     const verifiedPayload = payload as AccessTokenPayload;

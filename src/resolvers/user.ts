@@ -21,7 +21,7 @@ import {
 } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
-import { admin, authenticate } from '../middleware/auth';
+import { admin, authenticate, authorize } from '../middleware/auth';
 import {
   createAccessToken,
   createPasswordResetToken,
@@ -83,6 +83,18 @@ class UserResponse {
 @Resolver((of) => User)
 export class UserResolver {
   @FieldResolver(() => Date, { nullable: true })
+  async lastActiveAt(
+    @Root() user: User,
+    @Ctx() { lastActiveLoader }: MyContext
+  ): Promise<Date | null> {
+    if (!user.id) {
+      return null;
+    }
+
+    return await lastActiveLoader.load(user.id);
+  }
+
+  @FieldResolver(() => Date, { nullable: true })
   @UseMiddleware(authenticate)
   updatedAt(
     @Root() user: User,
@@ -90,32 +102,6 @@ export class UserResolver {
   ): Date | null {
     if (creds && (creds.userId === user.id || creds.isAdmin)) {
       return user.updatedAt;
-    }
-
-    return null;
-  }
-
-  @FieldResolver(() => Boolean)
-  @UseMiddleware(authenticate)
-  isAdmin(
-    @Root() user: User,
-    @Ctx() { user: creds }: MyContext
-  ): boolean | null {
-    if (creds && (creds.userId === user.id || creds.isAdmin)) {
-      return user.isAdmin;
-    }
-
-    return null;
-  }
-
-  @FieldResolver()
-  @UseMiddleware(authenticate)
-  verified(
-    @Root() user: User,
-    @Ctx() { user: creds }: MyContext
-  ): boolean | null {
-    if (creds && (creds.userId === user.id || creds.isAdmin)) {
-      return user.verified;
     }
 
     return null;
@@ -153,6 +139,20 @@ export class UserResolver {
     @Ctx() { user }: MyContext
   ): Promise<User | undefined> {
     return User.findOne(userId);
+  }
+
+  @Mutation(() => User)
+  @UseMiddleware(admin)
+  async toggleBan(@Arg('userId', () => ID) userId: string): Promise<User> {
+    const result = await getConnection()
+      .createQueryBuilder()
+      .update(User)
+      .set({ isBanned: () => `NOT "isBanned"` })
+      .where('id = :id and "isAdmin" = false', { id: userId })
+      .returning('*')
+      .execute();
+
+    return result.raw[0] as User;
   }
 
   @Mutation(() => UserResponse)

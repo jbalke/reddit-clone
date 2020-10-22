@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { createLastActiveLoader } from './utils/createLastActiveLoader';
 import { createPostLoader } from './utils/createPostLoader';
 import { createReplyLoader } from './utils/createReplyLoader';
 import { createUpvoteLoader } from './utils/createUpvoteLoader';
@@ -33,4 +34,5 @@ export interface MyContext {
   upVoteLoader: ReturnType<typeof createUpvoteLoader>;
   postLoader: ReturnType<typeof createPostLoader>;
   replyLoader: ReturnType<typeof createReplyLoader>;
+  lastActiveLoader: ReturnType<typeof createLastActiveLoader>;
 }
