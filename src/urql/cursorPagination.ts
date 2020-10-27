@@ -1,5 +1,4 @@
 import { Resolver } from '@urql/exchange-graphcache';
-import { stringifyVariables } from 'urql';
 import { PostsQueryVariables } from '../generated/graphql';
 
 export function cursorPagination(): Resolver {

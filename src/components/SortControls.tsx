@@ -1,8 +1,8 @@
-import { Flex, Tooltip, IconButton } from '@chakra-ui/core';
+import { Flex, IconButton, Tooltip } from '@chakra-ui/core';
 import { Icons } from '@chakra-ui/core/dist/theme/icons';
-import React, { Dispatch, SetStateAction } from 'react';
-import { Sort, SortBy, SortOptions } from '../generated/graphql';
-import { ReducerAction } from '../pages';
+import React, { Dispatch } from 'react';
+import { Sort, SortBy } from '../generated/graphql';
+import { ReducerAction } from '../state/posts';
 
 type SortControlsProps = {
   dispatch: Dispatch<ReducerAction>;

@@ -1,72 +1,18 @@
-import { Box, Button, Flex, Stack, Spinner } from '@chakra-ui/core';
+import { Box, Button, Flex, Spinner, Stack } from '@chakra-ui/core';
 import Link from 'next/link';
-import { useContext, useReducer, useState } from 'react';
+import { useContext, useReducer } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
 import SortControls from '../components/SortControls';
-import {
-  Post as PostType,
-  Sort,
-  SortBy,
-  SortOptions,
-  usePostsQuery,
-} from '../generated/graphql';
+import { Sort, SortBy, usePostsQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
+import { reducer } from '../state/posts';
 
 type PageProps = {};
-
-type ReducerState = {
-  limit: number;
-  cursor: { value: number | undefined; timeStamp: string } | undefined;
-  sortOptions: SortOptions;
-};
-type ActionTypes = 'SET_CURSOR' | 'SET_SORTOPTIONS';
-export type ReducerAction = { type: ActionTypes; payload: any };
-
-function reducer(state: ReducerState, action: ReducerAction): ReducerState {
-  switch (action.type) {
-    case 'SET_CURSOR':
-      let newCursor;
-      switch (state.sortOptions?.sortBy) {
-        case SortBy.Score:
-          newCursor = {
-            value: action.payload.lastPost.score,
-            timeStamp: action.payload.lastPost.createdAt,
-          };
-          break;
-        case SortBy.Replies:
-          newCursor = {
-            value: action.payload.lastPost.replies,
-            timeStamp: action.payload.lastPost.createdAt,
-          };
-          break;
-        default:
-          newCursor = {
-            value: undefined,
-            timeStamp: action.payload.lastPost.createdAt,
-          };
-          break;
-      }
-      const newState = { ...state, cursor: newCursor };
-      return newState;
-
-    case 'SET_SORTOPTIONS':
-      const newSortState = {
-        ...state,
-        cursor: undefined,
-        sortOptions: action.payload,
-      };
-      return newSortState;
-
-    default:
-      return state;
-  }
-}
 
 const Index = ({}: PageProps) => {
   const { secondsUntilNewPost } = useContext(MyContext);
 
-  //TODO: useReducer for posts variabales
   const [state, dispatch] = useReducer(reducer, {
     limit: 20,
     cursor: undefined,
