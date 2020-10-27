@@ -38,6 +38,53 @@ registerEnumType(Vote, {
   description: 'UP or DOWN vote a post',
 });
 
+enum SortBy {
+  AGE = 'createdAt',
+  SCORE = 'score',
+  VOTES = 'voteCount',
+  REPLIES = 'replies',
+}
+
+registerEnumType(SortBy, {
+  name: 'SortBy',
+  description: 'Sort posts',
+});
+
+enum Sort {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+
+registerEnumType(Sort, {
+  name: 'Sort',
+  description: 'Sort posts ASC or DESC',
+});
+
+@InputType()
+export class SortOptions {
+  @Field(() => SortBy)
+  sortBy: SortBy;
+  @Field(() => Sort, { nullable: true })
+  sortDirection: Sort | null;
+}
+
+@InputType()
+export class PostsInput {
+  @Field(() => Int, { defaultValue: 10 })
+  limit: number;
+  @Field(() => Cursor, { nullable: true })
+  cursor: Cursor | null;
+  @Field(() => SortOptions)
+  sortOptions: SortOptions;
+}
+
+@InputType()
+export class Cursor {
+  @Field(() => Int, { nullable: true })
+  value: number | null;
+  @Field(() => String, { nullable: true })
+  timeStamp: string | undefined;
+}
 @InputType()
 export class PostInput {
   @Field()
@@ -228,28 +275,52 @@ export class PostResolver {
     return true;
   }
 
+  //https://medium.com/swlh/how-to-implement-cursor-pagination-like-a-pro-513140b65f32
   @Query(() => PaginatedPosts)
   @UseMiddleware(authenticate)
-  async posts(
-    @Arg('limit', () => Int, { defaultValue: 10 }) limit: number,
-    @Arg('cursor', () => String, { nullable: true }) cursor: string | null
-  ): Promise<PaginatedPosts> {
-    const realLimit = Math.min(50, limit);
+  async posts(@Arg('options') options: PostsInput): Promise<PaginatedPosts> {
+    const realLimit = Math.min(50, options.limit);
     const realLimitPlusOne = realLimit + 1;
 
+    const { cursor, sortOptions } = options;
     const parameters: any[] = [realLimitPlusOne];
+
     if (cursor) {
-      parameters.push(cursor);
+      parameters.push(cursor.timeStamp);
+      if (sortOptions.sortBy !== SortBy.AGE) {
+        parameters.push(cursor.value);
+      }
     }
+
+    console.log('params:', parameters);
+
+    const secondaryOrder =
+      sortOptions && sortOptions?.sortBy !== SortBy.AGE
+        ? ', p."createdAt" DESC'
+        : '';
 
     const posts = await getConnection().query(
       `
-    select p.*
-    from reddit.posts p
-    where p."parentId" is null and "flaggedAt" is null
-    ${cursor ? `and p."createdAt" < $2` : ''}
-    order by p."createdAt" DESC
-    limit $1
+    SELECT p.*
+    FROM reddit.posts p
+    WHERE p."parentId" IS NULL AND p."flaggedAt" IS NULL
+    ${
+      cursor && sortOptions.sortBy === SortBy.SCORE
+        ? 'AND (p.score, p."createdAt") < ($3, $2)'
+        : cursor && sortOptions.sortBy === SortBy.REPLIES
+        ? 'AND (p.replies, p."createdAt") < ($3, $2)'
+        : cursor
+        ? 'AND p."createdAt" < $2'
+        : ''
+    }
+    ${
+      sortOptions
+        ? `ORDER BY p."${sortOptions.sortBy}" ${
+            sortOptions.sortDirection || 'DESC'
+          } ${secondaryOrder}`
+        : 'ORDER BY p."createdAt" DESC'
+    }
+    LIMIT $1
     `,
       parameters
     );

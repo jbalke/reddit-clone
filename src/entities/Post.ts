@@ -62,10 +62,12 @@ export class Post extends BaseEntity {
   level: number;
 
   @Field(() => Int)
+  @Index('REPLIES_INDEX')
   @Column({ type: 'int', default: 0 })
   replies: number;
 
   @Field(() => Int)
+  @Index('SCORE_INDEX')
   @Column({ type: 'int', default: 0 })
   score: number;
 
