@@ -27,8 +27,7 @@ export type Query = {
 
 
 export type QueryPostsArgs = {
-  cursor?: Maybe<Scalars['String']>;
-  limit?: Maybe<Scalars['Int']>;
+  options: PostsInput;
 };
 
 
@@ -101,6 +100,36 @@ export type User = {
   createdAt: Scalars['DateTime'];
 };
 
+
+export type PostsInput = {
+  limit?: Maybe<Scalars['Int']>;
+  cursor?: Maybe<Cursor>;
+  sortOptions: SortOptions;
+};
+
+export type Cursor = {
+  value?: Maybe<Scalars['Int']>;
+  timeStamp?: Maybe<Scalars['String']>;
+};
+
+export type SortOptions = {
+  sortBy: SortBy;
+  sortDirection?: Maybe<Sort>;
+};
+
+/** Sort posts */
+export enum SortBy {
+  Age = 'AGE',
+  Score = 'SCORE',
+  Votes = 'VOTES',
+  Replies = 'REPLIES'
+}
+
+/** Sort posts ASC or DESC */
+export enum Sort {
+  Asc = 'ASC',
+  Desc = 'DESC'
+}
 
 export type Mutation = {
   __typename?: 'Mutation';
@@ -538,8 +567,7 @@ export type PostQuery = (
 );
 
 export type PostsQueryVariables = Exact<{
-  limit?: Maybe<Scalars['Int']>;
-  cursor?: Maybe<Scalars['String']>;
+  options: PostsInput;
 }>;
 
 
@@ -869,8 +897,8 @@ export function usePostQuery(options: Omit<Urql.UseQueryArgs<PostQueryVariables>
   return Urql.useQuery<PostQuery>({ query: PostDocument, ...options });
 };
 export const PostsDocument = gql`
-    query Posts($limit: Int, $cursor: String) {
-  posts(limit: $limit, cursor: $cursor) {
+    query Posts($options: PostsInput!) {
+  posts(options: $options) {
     hasMore
     posts {
       ...PostSummary

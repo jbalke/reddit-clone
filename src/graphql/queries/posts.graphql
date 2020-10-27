@@ -1,5 +1,5 @@
-query Posts($limit: Int, $cursor: String) {
-  posts(limit: $limit, cursor: $cursor) {
+query Posts($options: PostsInput!) {
+  posts(options: $options) {
     hasMore
     posts {
       ...PostSummary

@@ -22,17 +22,13 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
       );
 
       if (secondsSinceLastPost < __postThrottleSeconds__) {
-        setSecondsUntilNewPost(__postThrottleSeconds__ - secondsSinceLastPost);
+        const secondsRemaining = __postThrottleSeconds__ - secondsSinceLastPost;
         if (timeoutId) {
           clearTimeout(timeoutId);
         }
-        timeoutId = setTimeout(
-          (secondsRemaining) => {
-            setSecondsUntilNewPost(secondsRemaining - 1);
-          },
-          1000,
-          secondsUntilNewPost
-        );
+        timeoutId = setTimeout(() => {
+          setSecondsUntilNewPost(secondsRemaining);
+        }, 1000);
         return;
       }
     }
