@@ -1,13 +1,38 @@
-import { Box, BoxProps, IconButton, Tooltip } from '@chakra-ui/core';
+import { Box, BoxProps } from '@chakra-ui/core';
 import Link from 'next/link';
 import React from 'react';
-import { PostContentFragment, useMeQuery } from '../generated/graphql';
+import { MeQuery, PostContentFragment, useMeQuery } from '../generated/graphql';
 import { postAction } from '../types';
+import TooltipButton from './TooltipButton';
 
 type EditDeletePostButtonsProps = {
   post: PostContentFragment;
   handleDelete: postAction;
 } & BoxProps;
+
+//TODO: Clean this up!
+type MyButtonProps = {
+  post: PostContentFragment;
+  data: MeQuery | undefined;
+  href?: string;
+};
+const MyButton = React.forwardRef(
+  ({ post, data, href }: MyButtonProps, ref) => {
+    return (
+      //@ts-ignore
+      <a href={href} ref={ref}>
+        <TooltipButton
+          size="sm"
+          mr={1}
+          icon="edit"
+          label="Edit Post"
+          isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+          variantColor="teal"
+        />
+      </a>
+    );
+  }
+);
 
 function EditDeletePostButtons({
   post,
@@ -19,32 +44,17 @@ function EditDeletePostButtons({
   return (
     <>
       <Box {...props}>
-        <Link href={`/post/edit/${post.id}`}>
-          <Tooltip label="Edit Post" aria-label="Edit Post" placement="bottom">
-            <IconButton
-              size="sm"
-              mr={1}
-              icon="edit"
-              aria-label="Edit Post"
-              isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-              variantColor="teal"
-            />
-          </Tooltip>
+        <Link href={`/post/edit/${post.id}`} passHref>
+          <MyButton post={post} data={data} />
         </Link>
-        <Tooltip
+        <TooltipButton
+          size="sm"
           label="Delete Post"
-          aria-label="Delete Post"
-          placement="bottom"
-        >
-          <IconButton
-            size="sm"
-            icon="delete"
-            aria-label="Delete Post"
-            onClick={handleDelete(post)}
-            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-            variantColor="teal"
-          />
-        </Tooltip>
+          icon="delete"
+          onClick={handleDelete(post)}
+          isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+          variantColor="teal"
+        />
       </Box>
     </>
   );

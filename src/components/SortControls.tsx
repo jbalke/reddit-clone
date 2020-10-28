@@ -1,58 +1,40 @@
-import { Flex, IconButton, Tooltip } from '@chakra-ui/core';
-import { Icons } from '@chakra-ui/core/dist/theme/icons';
+import { Flex } from '@chakra-ui/core';
 import React, { Dispatch } from 'react';
 import { Sort, SortBy } from '../generated/graphql';
 import { ReducerAction } from '../state/posts';
+import TooltipButton from './TooltipButton';
 
 type SortControlsProps = {
   dispatch: Dispatch<ReducerAction>;
 };
 
-type TooltipIconProps = {
-  label: string;
-  icon: Icons;
-  setSortOptions: () => void;
-};
-
-function TooltipIcon({ label, icon, setSortOptions }: TooltipIconProps) {
-  return (
-    <Tooltip label={label} aria-label={label} placement="bottom">
-      <IconButton
-        size="sm"
-        icon={icon}
-        aria-label={label}
-        onClick={() => setSortOptions()}
-      />
-    </Tooltip>
-  );
-}
 function SortControls({ dispatch }: SortControlsProps) {
   return (
     <Flex justifyContent="flex-start">
-      <TooltipIcon
+      <TooltipButton
         label="Newest"
         icon="time"
-        setSortOptions={() =>
+        onClick={() =>
           dispatch({
             type: 'SET_SORTOPTIONS',
             payload: { sortBy: SortBy.Age, sortDirection: Sort.Desc },
           })
         }
       />
-      <TooltipIcon
+      <TooltipButton
         label="Most Discussed"
         icon="chat"
-        setSortOptions={() =>
+        onClick={() =>
           dispatch({
             type: 'SET_SORTOPTIONS',
             payload: { sortBy: SortBy.Replies, sortDirection: Sort.Desc },
           })
         }
       />
-      <TooltipIcon
+      <TooltipButton
         label="Highest Score"
         icon="arrow-up-down"
-        setSortOptions={() =>
+        onClick={() =>
           dispatch({
             type: 'SET_SORTOPTIONS',
             payload: { sortBy: SortBy.Score, sortDirection: Sort.Desc },

@@ -79,6 +79,7 @@ export type Post = {
   voteCount: Scalars['Int'];
   voteStatus?: Maybe<Scalars['Int']>;
   reply?: Maybe<Post>;
+  isLocked: Scalars['Boolean'];
   flaggedAt?: Maybe<Scalars['DateTime']>;
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
@@ -137,9 +138,10 @@ export type Mutation = {
   createPost: PostResponse;
   updatePost: PostResponse;
   deletePost: DeletePostResponse;
-  flagPost: Scalars['Boolean'];
+  flagPost?: Maybe<Post>;
+  toggleLockThread?: Maybe<Array<Post>>;
   postReply: PostReplyResponse;
-  toggleBan: User;
+  toggleBanUser: User;
   changePassword: UserResponse;
   forgotPassword: Scalars['Boolean'];
   register: UserResponse;
@@ -177,12 +179,17 @@ export type MutationFlagPostArgs = {
 };
 
 
+export type MutationToggleLockThreadArgs = {
+  id: Scalars['Int'];
+};
+
+
 export type MutationPostReplyArgs = {
   input: PostReplyInput;
 };
 
 
-export type MutationToggleBanArgs = {
+export type MutationToggleBanUserArgs = {
   userId: Scalars['ID'];
 };
 
@@ -311,7 +318,7 @@ export type BasicPostFragment = (
 
 export type PostContentFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'text' | 'flaggedAt'>
+  & Pick<Post, 'text' | 'flaggedAt' | 'isLocked'>
   & BasicPostFragment
 );
 
@@ -326,7 +333,7 @@ export type PostReplyFragment = (
 
 export type PostSummaryFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'textSnippet'>
+  & Pick<Post, 'textSnippet' | 'isLocked'>
   & BasicPostFragment
 );
 
@@ -412,7 +419,10 @@ export type FlagPostMutationVariables = Exact<{
 
 export type FlagPostMutation = (
   { __typename?: 'Mutation' }
-  & Pick<Mutation, 'flagPost'>
+  & { flagPost?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'flaggedAt'>
+  )> }
 );
 
 export type ForgotPasswordMutationVariables = Exact<{
@@ -487,17 +497,30 @@ export type SendVerifyEmailMutation = (
   & Pick<Mutation, 'sendVerifyEmail'>
 );
 
-export type ToggleBanMutationVariables = Exact<{
+export type ToggleBanUserMutationVariables = Exact<{
   userId: Scalars['ID'];
 }>;
 
 
-export type ToggleBanMutation = (
+export type ToggleBanUserMutation = (
   { __typename?: 'Mutation' }
-  & { toggleBan: (
+  & { toggleBanUser: (
     { __typename?: 'User' }
     & RegularUserFragment
   ) }
+);
+
+export type ToggleLockThreadMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type ToggleLockThreadMutation = (
+  { __typename?: 'Mutation' }
+  & { toggleLockThread?: Maybe<Array<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'isLocked'>
+  )>> }
 );
 
 export type UpdatePostMutationVariables = Exact<{
@@ -665,6 +688,7 @@ export const PostContentFragmentDoc = gql`
   ...BasicPost
   text
   flaggedAt
+  isLocked
 }
     ${BasicPostFragmentDoc}`;
 export const PostReplyFragmentDoc = gql`
@@ -679,6 +703,7 @@ export const PostSummaryFragmentDoc = gql`
     fragment PostSummary on Post {
   ...BasicPost
   textSnippet
+  isLocked
 }
     ${BasicPostFragmentDoc}`;
 export const RegularErrorFragmentDoc = gql`
@@ -757,7 +782,10 @@ export function useDeletePostMutation() {
 };
 export const FlagPostDocument = gql`
     mutation FlagPost($id: Int!) {
-  flagPost(id: $id)
+  flagPost(id: $id) {
+    id
+    flaggedAt
+  }
 }
     `;
 
@@ -828,16 +856,28 @@ export const SendVerifyEmailDocument = gql`
 export function useSendVerifyEmailMutation() {
   return Urql.useMutation<SendVerifyEmailMutation, SendVerifyEmailMutationVariables>(SendVerifyEmailDocument);
 };
-export const ToggleBanDocument = gql`
-    mutation ToggleBan($userId: ID!) {
-  toggleBan(userId: $userId) {
+export const ToggleBanUserDocument = gql`
+    mutation ToggleBanUser($userId: ID!) {
+  toggleBanUser(userId: $userId) {
     ...RegularUser
   }
 }
     ${RegularUserFragmentDoc}`;
 
-export function useToggleBanMutation() {
-  return Urql.useMutation<ToggleBanMutation, ToggleBanMutationVariables>(ToggleBanDocument);
+export function useToggleBanUserMutation() {
+  return Urql.useMutation<ToggleBanUserMutation, ToggleBanUserMutationVariables>(ToggleBanUserDocument);
+};
+export const ToggleLockThreadDocument = gql`
+    mutation ToggleLockThread($id: Int!) {
+  toggleLockThread(id: $id) {
+    id
+    isLocked
+  }
+}
+    `;
+
+export function useToggleLockThreadMutation() {
+  return Urql.useMutation<ToggleLockThreadMutation, ToggleLockThreadMutationVariables>(ToggleLockThreadDocument);
 };
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {

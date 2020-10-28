@@ -58,9 +58,9 @@ function Thread() {
             isClosable: true,
           });
 
-          if (!postToAction!.originalPost) {
-            router.push('/');
-          }
+          // if (!postToAction!.originalPost) {
+          //   router.push('/');
+          // }
         }
       });
     });

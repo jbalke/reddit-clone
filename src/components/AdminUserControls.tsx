@@ -7,7 +7,7 @@ import {
   useToast,
 } from '@chakra-ui/core';
 import React, { useState } from 'react';
-import { User, useToggleBanMutation } from '../generated/graphql';
+import { User, useToggleBanUserMutation } from '../generated/graphql';
 import Modal from './Modal';
 
 type AdminUserControlsProps = {
@@ -15,7 +15,7 @@ type AdminUserControlsProps = {
 } & FlexProps;
 
 function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
-  const [, toggleBan] = useToggleBanMutation();
+  const [, toggleBan] = useToggleBanUserMutation();
 
   const [banConfirmed, setBanConfirmed] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -32,12 +32,12 @@ function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
     setBanConfirmed(false);
 
     toggleBan({ userId: user.id }).then((result) => {
-      if (result.data?.toggleBan) {
+      if (result.data?.toggleBanUser) {
         toast({
           position: 'top-right',
           title: 'Success',
           description: `User has been ${
-            result.data.toggleBan.isBanned ? 'banned' : 'unbanned'
+            result.data.toggleBanUser.isBanned ? 'banned' : 'unbanned'
           }`,
           status: 'success',
           duration: 6000,

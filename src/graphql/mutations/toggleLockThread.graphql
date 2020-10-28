@@ -1,0 +1,6 @@
+mutation ToggleLockThread($id: Int!) {
+  toggleLockThread(id: $id) {
+    id
+    isLocked
+  }
+}

@@ -16,6 +16,7 @@ import {
   RegisterMutation,
   UpdatePostMutation,
   Vote,
+  VoteMutation,
   VoteMutationVariables,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
@@ -132,7 +133,11 @@ export const cache = cacheExchange({
           updateReplies(cache, originalPostId, 1);
         }
       },
-      vote: (_result, args, cache, _info) => {
+      vote: (result, args, cache, _info) => {
+        if (!result.vote) {
+          return;
+        }
+
         const { postId, vote } = args as VoteMutationVariables;
 
         const data = cache.readFragment(

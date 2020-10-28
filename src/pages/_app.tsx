@@ -73,7 +73,6 @@ export default withUrqlClient(getClientConfig, {
 );
 
 //TODO: Allow change email address, password.
-//TODO: Admin functions (lock thread, ban user)
 //TODO: Admin panel (# of users/posts/replies)
 //TODO: Load more posts on scroll
 //TODO: dark mode
