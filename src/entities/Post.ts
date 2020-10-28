@@ -84,6 +84,10 @@ export class Post extends BaseEntity {
   @Field(() => Post, { nullable: true })
   reply: Post | null;
 
+  @Field()
+  @Column({ type: 'boolean', default: false })
+  isLocked: boolean;
+
   @Field(() => Date, { nullable: true })
   @Column({ type: 'timestamptz', nullable: true })
   flaggedAt: Date | null;

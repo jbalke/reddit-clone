@@ -143,7 +143,7 @@ export class UserResolver {
 
   @Mutation(() => User)
   @UseMiddleware(admin)
-  async toggleBan(@Arg('userId', () => ID) userId: string): Promise<User> {
+  async toggleBanUser(@Arg('userId', () => ID) userId: string): Promise<User> {
     const result = await getConnection()
       .createQueryBuilder()
       .update(User)

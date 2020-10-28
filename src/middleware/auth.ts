@@ -36,9 +36,7 @@ export const authorize: MiddlewareFn<MyContext> = async ({ context }, next) => {
 };
 
 export const admin: MiddlewareFn<MyContext> = async ({ context }, next) => {
-  const token = await requireUserPayload(context);
-
-  if (!token?.isAdmin) {
+  if (!context.user?.isAdmin) {
     throw new AuthenticationError('not authorised');
   }
 

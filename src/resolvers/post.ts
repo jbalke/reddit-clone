@@ -220,6 +220,10 @@ export class PostResolver {
       return false;
     }
 
+    if (post.isLocked) {
+      return false;
+    }
+
     const upvote = await Upvote.findOne({
       where: { userId, postId },
     });
@@ -339,22 +343,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt",  "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level", path) AS (
+WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt",  "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level", path) AS (
   SELECT
-    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level", ARRAY["id"]
+    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."level", path || p.id
+    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."isLocked", p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "level"
+    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level"
 FROM
   replies
 ORDER BY path, "createdAt"
@@ -433,6 +437,10 @@ ORDER BY path, "createdAt"
       throw new Error(`unable to find post with id: ${id}`);
     }
 
+    if (post.isLocked) {
+      throw new Error('thread is locked');
+    }
+
     if (post.flaggedAt) {
       throw new Error('flagged posts may not be updated');
     }
@@ -467,6 +475,12 @@ ORDER BY path, "createdAt"
     const post = await Post.findOne({ id });
 
     if (post) {
+      if (post.isLocked) {
+        return {
+          success: false,
+          error: 'thread is locked',
+        };
+      }
       if (post.replies !== 0) {
         return {
           success: false,
@@ -508,11 +522,51 @@ ORDER BY path, "createdAt"
     };
   }
 
-  @Mutation(() => Boolean)
+  @Mutation(() => Post, { nullable: true })
   @UseMiddleware([authorize, admin])
-  async flagPost(@Arg('id', () => Int) id: number): Promise<boolean> {
-    await Post.update({ id }, { flaggedAt: new Date() });
-    return true;
+  async flagPost(@Arg('id', () => Int) id: number): Promise<Post | null> {
+    // const result = await Post.update({ id }, { flaggedAt: new Date() });
+
+    const update = await getConnection()
+      .createQueryBuilder()
+      .update(Post)
+      .set({ flaggedAt: new Date() })
+      .where('id = :id', { id })
+      .returning('*')
+      .execute();
+
+    console.log(update);
+
+    return update.raw[0];
+  }
+
+  @Mutation(() => [Post], { nullable: true })
+  @UseMiddleware([authorize, admin])
+  async toggleLockThread(
+    @Arg('id', () => Int) id: number
+  ): Promise<Post[] | null> {
+    const post = await Post.findOne(id);
+    if (post) {
+      const { originalPostId } = post;
+
+      //toggle isLocked on all thread posts to avoid additional lookups later as thread locking "should" be infrequent.
+      const posts = await getConnection().query(
+        `
+      UPDATE
+        reddit.posts
+      SET 
+        "isLocked" = NOT "isLocked"
+      WHERE
+        id = $1 OR "originalPostId" = $1
+      RETURNING *;
+    `,
+        [originalPostId || id]
+      );
+
+      return posts[0];
+    }
+
+    return null;
   }
 
   @Mutation(() => PostReplyResponse)
@@ -532,6 +586,12 @@ ORDER BY path, "createdAt"
     if (!parentPost) {
       return {
         error: 'parent post not found',
+      };
+    }
+
+    if (parentPost.isLocked) {
+      return {
+        error: 'thread is locked',
       };
     }
 
