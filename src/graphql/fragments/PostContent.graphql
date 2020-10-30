@@ -2,5 +2,4 @@ fragment PostContent on Post {
   ...BasicPost
   text
   flaggedAt
-  isLocked
 }

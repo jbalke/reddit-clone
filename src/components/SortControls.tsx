@@ -12,6 +12,7 @@ function SortControls({ dispatch }: SortControlsProps) {
   return (
     <Flex justifyContent="flex-start">
       <TooltipButton
+        mr={1}
         label="Newest"
         icon="time"
         onClick={() =>
@@ -22,7 +23,8 @@ function SortControls({ dispatch }: SortControlsProps) {
         }
       />
       <TooltipButton
-        label="Most Discussed"
+        mr={1}
+        label="Most Replies"
         icon="chat"
         onClick={() =>
           dispatch({

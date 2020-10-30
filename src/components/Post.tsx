@@ -3,6 +3,7 @@ import {
   FlexProps,
   Heading,
   Icon,
+  IconButton,
   Link as ChakraLink,
   Text,
 } from '@chakra-ui/core';
@@ -10,37 +11,24 @@ import Link from 'next/link';
 import React from 'react';
 import Linkify from 'react-linkify';
 import {
-  MeQuery,
   PostContentFragment,
   PostSummaryFragment,
   useMeQuery,
 } from '../generated/graphql';
-import { postAction } from '../types';
 import { isSummary } from '../utils/isSummary';
 import { relativeTime } from '../utils/relativeTime';
 import AdminControls from './AdminControls';
 import EditDeletePostButtons from './EditDeletePostButtons';
 import { NextChakraLink } from './NextChakraLink';
-import TooltipButton from './TooltipButton';
 import VoteSection from './VoteSection';
 
 type PostProps = {
   post: PostContentFragment | PostSummaryFragment;
   preview?: boolean;
-  handleDelete?: postAction;
-  handleFlag?: postAction;
-  handleLock?: postAction;
 } & FlexProps;
 
-function Post({
-  post,
-  preview = false,
-  handleDelete,
-  handleFlag,
-  handleLock,
-  ...flexProps
-}: PostProps) {
-  const [{ data, fetching }] = useMeQuery();
+function Post({ post, preview = false, ...flexProps }: PostProps) {
+  const [{ data }] = useMeQuery();
 
   return (
     <Flex {...flexProps}>
@@ -86,6 +74,11 @@ function Post({
           <Flex mt={2} justifyContent="space-between" alignItems="center">
             <Text fontSize="sm">Replies: {post.replies}</Text>
             <Flex justifyContent="flex-end" alignItems="center">
+              {post.isPinned &&
+                post.level === 0 &&
+                (!data?.me?.isAdmin || isSummary(post)) && (
+                  <Icon name="star" color="teal.500" title="pinned" />
+                )}
               {post.isLocked &&
                 post.level === 0 &&
                 (!data?.me?.isAdmin || isSummary(post)) && (
@@ -100,23 +93,24 @@ function Post({
                         ? `/post/edit/${post.reply?.id}`
                         : `/reply/${post.id}`
                     }
-                    passHref
                   >
-                    <MyButton data={data} />
+                    <IconButton
+                      aria-label="Reply to Post"
+                      title="Reply to Post"
+                      icon="chat"
+                      isDisabled={data?.me?.isBanned}
+                      variantColor="teal"
+                    />
                   </Link>
                 )}
               {!isSummary(post) &&
-              !post.isLocked &&
-              data?.me?.id === post.author.id &&
-              handleDelete ? (
-                <EditDeletePostButtons
-                  handleDelete={handleDelete}
-                  post={post}
-                />
-              ) : null}
-              {!isSummary(post) && data?.me?.isAdmin && handleFlag ? (
-                <AdminControls post={post} handleFlag={handleFlag} ml={2} />
-              ) : null}
+                !post.isLocked &&
+                data?.me?.id === post.author.id && (
+                  <EditDeletePostButtons post={post} />
+                )}
+              {!isSummary(post) && data?.me?.isAdmin && (
+                <AdminControls post={post} ml={2} />
+              )}
             </Flex>
           </Flex>
         )}
@@ -124,23 +118,5 @@ function Post({
     </Flex>
   );
 }
-
-type MyButtonProps = {
-  data: MeQuery;
-  href?: string;
-};
-const MyButton = React.forwardRef(({ data, href }: MyButtonProps, ref) => {
-  return (
-    //@ts-ignore
-    <a href={href} ref={ref}>
-      <TooltipButton
-        label="Reply to Post"
-        icon="chat"
-        isDisabled={data?.me?.isBanned}
-        variantColor="teal"
-      />
-    </a>
-  );
-});
 
 export default Post;

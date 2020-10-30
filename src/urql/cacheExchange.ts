@@ -123,7 +123,7 @@ export const cache = cacheExchange({
           return;
         }
 
-        invalidate(cache, 'thread');
+        // invalidate(cache, 'thread');
 
         const {
           input: { parentId, originalPostId },

@@ -3,12 +3,12 @@ import {
   FlexProps,
   IconButton,
   Tooltip,
-  useDisclosure,
   useToast,
 } from '@chakra-ui/core';
-import React, { useState } from 'react';
+import React from 'react';
 import { User, useToggleBanUserMutation } from '../generated/graphql';
 import Modal from './Modal';
+import { useModalState } from './useModalState';
 
 type AdminUserControlsProps = {
   user: User;
@@ -16,17 +16,17 @@ type AdminUserControlsProps = {
 
 function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
   const [, toggleBan] = useToggleBanUserMutation();
-
-  const [banConfirmed, setBanConfirmed] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [
+    banConfirmed,
+    setBanConfirmed,
+    onClick,
+    handleConfirmation,
+    isOpen,
+    onClose,
+  ] = useModalState();
   const toast = useToast();
 
   const actionText = user.isBanned ? 'Unban' : 'Ban';
-
-  const handleConfirmation = () => {
-    setBanConfirmed(true);
-    onClose();
-  };
 
   if (banConfirmed) {
     setBanConfirmed(false);
@@ -68,14 +68,14 @@ function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
             size="sm"
             icon="warning"
             aria-label="Ban User"
-            onClick={() => onOpen()}
+            onClick={onClick}
             variantColor={actionText === 'Ban' ? 'red' : 'green'}
           />
         </Tooltip>
       </Flex>
       <Modal
         title="Ban User"
-        message={`${actionText}: ${user.username}. Are you sure?`}
+        message={`${actionText} ${user.username}. Are you sure?`}
         handleConfirmation={handleConfirmation}
         confirmButtonText={`Yes, ${actionText}`}
         isOpen={isOpen}

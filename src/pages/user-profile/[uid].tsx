@@ -57,13 +57,21 @@ function Profile(props: ProfileProps) {
                   administrator
                 </Badge>
               )}
-              {data.userProfile.verified && (
+              {data.userProfile.verified ? (
                 <Badge
                   variant="outline"
                   alignSelf="flex-start"
                   variantColor="green"
                 >
                   verified
+                </Badge>
+              ) : (
+                <Badge
+                  variant="outline"
+                  alignSelf="flex-start"
+                  variantColor="orange"
+                >
+                  not verified
                 </Badge>
               )}
               {data.userProfile.isBanned && (
@@ -90,7 +98,9 @@ function Profile(props: ProfileProps) {
           <Text>
             member since: {formatTimeStamp(data.userProfile.createdAt)}
           </Text>
-          {meData?.me?.isAdmin && <AdminUserControls user={data.userProfile} />}
+          {meData?.me?.isAdmin && !data.userProfile.isAdmin && (
+            <AdminUserControls user={data.userProfile} />
+          )}
         </Box>
       </Layout>
     );

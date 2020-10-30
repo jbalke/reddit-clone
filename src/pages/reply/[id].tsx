@@ -25,7 +25,7 @@ function Reply() {
   useIsAuthenticatedAndVerified();
 
   const router = useRouter();
-  const [, createPostReply] = usePostReplyMutation();
+  const [, postReply] = usePostReplyMutation();
   const [{ data, fetching }] = useGetPostFromUrl();
   const [submitError, setSubmitError] = useState('');
 
@@ -57,18 +57,14 @@ function Reply() {
             }}
             validate={validatePostReplyInput}
             onSubmit={async (values) => {
-              const response = await createPostReply({ input: values });
+              const response = await postReply({ input: values });
               if (response && response.data) {
                 const { postReply } = response.data;
 
                 if (postReply.error) {
                   setSubmitError(postReply.error);
                 } else {
-                  if (originalPost?.id) {
-                    router.push(`/post/${originalPost.id}`);
-                  } else {
-                    router.push('/');
-                  }
+                  router.push(`/post/${originalPost?.id ?? id}`);
                 }
               }
             }}

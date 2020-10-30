@@ -3,32 +3,52 @@ import {
   FlexProps,
   IconButton,
   Tooltip,
-  useDisclosure,
   useToast,
 } from '@chakra-ui/core';
-import React, { useState } from 'react';
+import React from 'react';
 import {
   PostContentFragment,
+  useFlagPostMutation,
   useToggleLockThreadMutation,
+  useTogglePinThreadMutation,
 } from '../generated/graphql';
-import { postAction } from '../types';
 import Modal from './Modal';
+import { useModalState } from './useModalState';
 
 type AdminControlsProps = {
   post: PostContentFragment;
-  handleFlag: postAction;
 } & FlexProps;
 
-function AdminControls({ post, handleFlag, ...props }: AdminControlsProps) {
-  const [lockConfirmed, setLockConfirmed] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [, toggleLockThread] = useToggleLockThreadMutation();
-  const toast = useToast();
+function AdminControls({ post, ...props }: AdminControlsProps) {
+  const [
+    lockConfirmed,
+    setLockConfirmed,
+    lockOnClick,
+    handleLockConfirmation,
+    lockIsOpen,
+    lockOnClose,
+  ] = useModalState();
+  const [
+    pinConfirmed,
+    setPinConfirmed,
+    pinOnClick,
+    handlePinConfirmation,
+    pinIsOpen,
+    pinOnClose,
+  ] = useModalState();
+  const [
+    flagConfirmed,
+    setFlagConfirmed,
+    flagOnClick,
+    handleFlagConfirmation,
+    flagIsOpen,
+    flagOnClose,
+  ] = useModalState();
 
-  const handleConfirmation = () => {
-    setLockConfirmed(true);
-    onClose();
-  };
+  const [, toggleLockThread] = useToggleLockThreadMutation();
+  const [, togglePinThread] = useTogglePinThreadMutation();
+  const [, flagPost] = useFlagPostMutation();
+  const toast = useToast();
 
   if (lockConfirmed) {
     setLockConfirmed(false);
@@ -58,9 +78,53 @@ function AdminControls({ post, handleFlag, ...props }: AdminControlsProps) {
         });
       }
     });
+  } else if (pinConfirmed) {
+    setPinConfirmed(false);
+
+    togglePinThread({ id: post.id }).then((result) => {
+      if (result.data && result.data.togglePinThread) {
+        toast({
+          position: 'top-right',
+          title: 'Success',
+          description: `Thread has been ${
+            result.data.togglePinThread.isPinned ? 'pinned' : 'unpinned'
+          }`,
+          status: 'success',
+          duration: 6000,
+          isClosable: true,
+        });
+      } else {
+        toast({
+          position: 'top-right',
+          title: 'Failure',
+          description: `Operation failed`,
+          status: 'error',
+          duration: 6000,
+          isClosable: true,
+        });
+      }
+    });
+  } else if (flagConfirmed) {
+    setFlagConfirmed(false);
+
+    flagPost({
+      id: post.id,
+    }).then((result) => {
+      if (result.data?.flagPost) {
+        toast({
+          position: 'top-right',
+          title: 'Success',
+          description: 'Post has been flagged!',
+          status: 'success',
+          duration: 6000,
+          isClosable: true,
+        });
+      }
+    });
   }
 
-  const actionText = post.isLocked ? 'Unlock' : 'Lock';
+  const lockActionText = post.isLocked ? 'Unlock' : 'Lock';
+  const pinActionText = post.isPinned ? 'Unpin' : 'Pin';
 
   return (
     <>
@@ -71,34 +135,66 @@ function AdminControls({ post, handleFlag, ...props }: AdminControlsProps) {
             icon="warning"
             aria-label="Flag Post"
             isDisabled={!!post.flaggedAt}
-            onClick={handleFlag(post)}
+            onClick={flagOnClick}
             variantColor="orange"
           />
         </Tooltip>
         {post.level === 0 && (
           <Tooltip
-            label={`${actionText} Thread`}
-            aria-label={`${actionText} Thread`}
+            label={`${pinActionText} Thread`}
+            aria-label={`${pinActionText} Thread`}
             placement="bottom"
           >
             <IconButton
               ml={1}
               size="sm"
-              icon="lock"
+              icon="star"
+              aria-label="Pin Thread"
+              onClick={pinOnClick}
+              variantColor={post.isPinned ? 'red' : 'green'}
+            />
+          </Tooltip>
+        )}
+        {post.level === 0 && (
+          <Tooltip
+            label={`${lockActionText} Thread`}
+            aria-label={`${lockActionText} Thread`}
+            placement="bottom"
+          >
+            <IconButton
+              ml={1}
+              size="sm"
+              icon={post.isLocked ? 'unlock' : 'lock'}
               aria-label="Lock Thread"
-              onClick={() => onOpen()}
-              variantColor={actionText === 'Lock' ? 'red' : 'green'}
+              onClick={lockOnClick}
+              variantColor={post.isLocked ? 'red' : 'green'}
             />
           </Tooltip>
         )}
       </Flex>
       <Modal
-        title={`${actionText} Thread`}
+        title={`${lockActionText} Thread`}
         message={`Are you sure?`}
-        handleConfirmation={handleConfirmation}
-        confirmButtonText={`Yes, ${actionText}`}
-        isOpen={isOpen}
-        onClose={onClose}
+        handleConfirmation={handleLockConfirmation}
+        confirmButtonText={`Yes, ${lockActionText}`}
+        isOpen={lockIsOpen}
+        onClose={lockOnClose}
+      />
+      <Modal
+        title={`${pinActionText} Thread`}
+        message={`Are you sure?`}
+        handleConfirmation={handlePinConfirmation}
+        confirmButtonText={`Yes, ${pinActionText}`}
+        isOpen={pinIsOpen}
+        onClose={pinOnClose}
+      />
+      <Modal
+        title="Flag Post"
+        message={`Flag: "${post.text.slice(0, 25) + '...'}". Are you sure?`}
+        handleConfirmation={handleFlagConfirmation}
+        confirmButtonText="Yes, Flag"
+        isOpen={flagIsOpen}
+        onClose={flagOnClose}
       />
     </>
   );

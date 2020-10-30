@@ -81,6 +81,7 @@ export type Post = {
   reply?: Maybe<Post>;
   isLocked: Scalars['Boolean'];
   flaggedAt?: Maybe<Scalars['DateTime']>;
+  isPinned: Scalars['Boolean'];
   updatedAt: Scalars['DateTime'];
   createdAt: Scalars['DateTime'];
   textSnippet: Scalars['String'];
@@ -140,6 +141,7 @@ export type Mutation = {
   deletePost: DeletePostResponse;
   flagPost?: Maybe<Post>;
   toggleLockThread?: Maybe<Array<Post>>;
+  togglePinThread?: Maybe<Post>;
   postReply: PostReplyResponse;
   toggleBanUser: User;
   changePassword: UserResponse;
@@ -180,6 +182,11 @@ export type MutationFlagPostArgs = {
 
 
 export type MutationToggleLockThreadArgs = {
+  id: Scalars['Int'];
+};
+
+
+export type MutationTogglePinThreadArgs = {
   id: Scalars['Int'];
 };
 
@@ -303,7 +310,7 @@ export type UserLoginInput = {
 
 export type BasicPostFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'id' | 'title' | 'level' | 'replies' | 'score' | 'voteCount' | 'voteStatus' | 'createdAt' | 'updatedAt'>
+  & Pick<Post, 'id' | 'title' | 'level' | 'replies' | 'score' | 'voteCount' | 'voteStatus' | 'isLocked' | 'isPinned' | 'createdAt' | 'updatedAt'>
   & { author: (
     { __typename?: 'User' }
     & Pick<User, 'id' | 'username'>
@@ -318,7 +325,7 @@ export type BasicPostFragment = (
 
 export type PostContentFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'text' | 'flaggedAt' | 'isLocked'>
+  & Pick<Post, 'text' | 'flaggedAt'>
   & BasicPostFragment
 );
 
@@ -333,7 +340,7 @@ export type PostReplyFragment = (
 
 export type PostSummaryFragment = (
   { __typename?: 'Post' }
-  & Pick<Post, 'textSnippet' | 'isLocked'>
+  & Pick<Post, 'textSnippet'>
   & BasicPostFragment
 );
 
@@ -523,6 +530,19 @@ export type ToggleLockThreadMutation = (
   )>> }
 );
 
+export type TogglePinThreadMutationVariables = Exact<{
+  id: Scalars['Int'];
+}>;
+
+
+export type TogglePinThreadMutation = (
+  { __typename?: 'Mutation' }
+  & { togglePinThread?: Maybe<(
+    { __typename?: 'Post' }
+    & Pick<Post, 'id' | 'isPinned'>
+  )> }
+);
+
 export type UpdatePostMutationVariables = Exact<{
   input: UpdatePostInput;
 }>;
@@ -679,6 +699,8 @@ export const BasicPostFragmentDoc = gql`
   score
   voteCount
   voteStatus
+  isLocked
+  isPinned
   createdAt
   updatedAt
 }
@@ -688,7 +710,6 @@ export const PostContentFragmentDoc = gql`
   ...BasicPost
   text
   flaggedAt
-  isLocked
 }
     ${BasicPostFragmentDoc}`;
 export const PostReplyFragmentDoc = gql`
@@ -703,7 +724,6 @@ export const PostSummaryFragmentDoc = gql`
     fragment PostSummary on Post {
   ...BasicPost
   textSnippet
-  isLocked
 }
     ${BasicPostFragmentDoc}`;
 export const RegularErrorFragmentDoc = gql`
@@ -878,6 +898,18 @@ export const ToggleLockThreadDocument = gql`
 
 export function useToggleLockThreadMutation() {
   return Urql.useMutation<ToggleLockThreadMutation, ToggleLockThreadMutationVariables>(ToggleLockThreadDocument);
+};
+export const TogglePinThreadDocument = gql`
+    mutation TogglePinThread($id: Int!) {
+  togglePinThread(id: $id) {
+    id
+    isPinned
+  }
+}
+    `;
+
+export function useTogglePinThreadMutation() {
+  return Urql.useMutation<TogglePinThreadMutation, TogglePinThreadMutationVariables>(TogglePinThreadDocument);
 };
 export const UpdatePostDocument = gql`
     mutation UpdatePost($input: UpdatePostInput!) {

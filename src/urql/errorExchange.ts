@@ -17,7 +17,7 @@ export const errorExchange: Exchange = ({ client, forward }) => (ops$) => {
           client
             .mutation(
               `
-          mutate Logout {
+          mutation Logout {
             logout
           }`
             )

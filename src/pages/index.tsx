@@ -27,6 +27,7 @@ const Index = ({}: PageProps) => {
         sortOptions: state.sortOptions,
       },
     },
+    requestPolicy: 'cache-and-network',
   });
   if (!fetching && !data) {
     return <div>Could not retrieve any posts.</div>;

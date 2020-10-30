@@ -1,61 +1,102 @@
-import { Box, BoxProps } from '@chakra-ui/core';
+import { Box, BoxProps, IconButton, useToast } from '@chakra-ui/core';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import React from 'react';
-import { MeQuery, PostContentFragment, useMeQuery } from '../generated/graphql';
-import { postAction } from '../types';
-import TooltipButton from './TooltipButton';
+import {
+  PostContentFragment,
+  useDeletePostMutation,
+  useMeQuery,
+} from '../generated/graphql';
+import { formatMessage } from '../utils/formatMessage';
+import Modal from './Modal';
+import { useModalState } from './useModalState';
 
 type EditDeletePostButtonsProps = {
   post: PostContentFragment;
-  handleDelete: postAction;
 } & BoxProps;
 
-//TODO: Clean this up!
-type MyButtonProps = {
-  post: PostContentFragment;
-  data: MeQuery | undefined;
-  href?: string;
-};
-const MyButton = React.forwardRef(
-  ({ post, data, href }: MyButtonProps, ref) => {
-    return (
-      //@ts-ignore
-      <a href={href} ref={ref}>
-        <TooltipButton
-          size="sm"
-          mr={1}
-          icon="edit"
-          label="Edit Post"
-          isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-          variantColor="teal"
-        />
-      </a>
-    );
-  }
-);
+function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
+  const router = useRouter();
 
-function EditDeletePostButtons({
-  post,
-  handleDelete,
-  ...props
-}: EditDeletePostButtonsProps) {
   const [{ data }] = useMeQuery();
+  const toast = useToast();
+  const [
+    deleteConfirmed,
+    setDeleteConfirmed,
+    onClick,
+    handleConfirmation,
+    isOpen,
+    onClose,
+  ] = useModalState();
+
+  const [, deletePost] = useDeletePostMutation();
+
+  if (deleteConfirmed) {
+    setDeleteConfirmed(false);
+
+    deletePost({
+      id: post.id,
+    }).then((result) => {
+      if (result.data?.deletePost.success) {
+        toast({
+          position: 'top-right',
+          title: 'Success',
+          description: 'Post has been deleted!',
+          status: 'success',
+          duration: 6000,
+          isClosable: true,
+        });
+
+        if (!post.originalPost) {
+          router.push('/');
+        }
+      } else {
+        toast({
+          position: 'top-right',
+          title: 'Failure',
+          description: result.data?.deletePost.error
+            ? formatMessage(result.data.deletePost.error)
+            : '',
+          status: 'error',
+          duration: 6000,
+          isClosable: true,
+        });
+      }
+    });
+  }
 
   return (
     <>
       <Box {...props}>
-        <Link href={`/post/edit/${post.id}`} passHref>
-          <MyButton post={post} data={data} />
+        <Link href={`/post/edit/${post.id}`}>
+          <IconButton
+            size="sm"
+            mr={1}
+            icon="edit"
+            aria-label="Edit Post"
+            title="Edit Post"
+            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+            variantColor="teal"
+          />
         </Link>
-        <TooltipButton
+        <IconButton
           size="sm"
-          label="Delete Post"
+          aria-label="Delete Post"
+          title="Delete Post"
           icon="delete"
-          onClick={handleDelete(post)}
+          onClick={onClick}
           isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
           variantColor="teal"
         />
       </Box>
+      <Modal
+        title="Delete Post"
+        message={`Delete: "${post.text.slice(0, 25) + '...'}". Are you sure?`}
+        handleConfirmation={handleConfirmation}
+        confirmButtonText="Yes, Delete"
+        isOpen={isOpen}
+        onClose={onClose}
+      />
     </>
   );
 }

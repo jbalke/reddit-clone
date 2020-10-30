@@ -16,6 +16,8 @@ fragment BasicPost on Post {
   score
   voteCount
   voteStatus
+  isLocked
+  isPinned
   createdAt
   updatedAt
 }
