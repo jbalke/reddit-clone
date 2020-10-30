@@ -296,8 +296,6 @@ export class PostResolver {
       }
     }
 
-    console.log('params:', parameters);
-
     const secondaryOrder =
       sortOptions && sortOptions?.sortBy !== SortBy.AGE
         ? ', p."createdAt" DESC'
@@ -319,10 +317,10 @@ export class PostResolver {
     }
     ${
       sortOptions
-        ? `ORDER BY p."${sortOptions.sortBy}" ${
+        ? `ORDER BY p."isPinned" DESC, p."${sortOptions.sortBy}" ${
             sortOptions.sortDirection || 'DESC'
           } ${secondaryOrder}`
-        : 'ORDER BY p."createdAt" DESC'
+        : 'ORDER BY p."isPinned" DESC, p."createdAt" DESC'
     }
     LIMIT $1
     `,
@@ -343,22 +341,22 @@ export class PostResolver {
   ): Promise<Post[] | undefined> {
     const posts = await getConnection().query(
       `
-WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt",  "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level", path) AS (
+WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "createdAt",  "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isPinned", "isLocked", "level", path) AS (
   SELECT
-    "id", title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level", ARRAY["id"]
+    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isPinned", "isLocked", "level", ARRAY["id"]
   FROM 
     reddit.posts
   WHERE
     posts.id = $1
   UNION
   SELECT
-    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."isLocked", p."level", path || p.id
+    p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."isPinned",  p."isLocked", p."level", path || p.id
   FROM
     reddit.posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
-    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isLocked", "level"
+    id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isPinned",  "isLocked", "level"
 FROM
   replies
 ORDER BY path, "createdAt"
@@ -564,6 +562,34 @@ ORDER BY path, "createdAt"
       );
 
       return posts[0];
+    }
+
+    return null;
+  }
+
+  @Mutation(() => Post, { nullable: true })
+  @UseMiddleware([authorize, admin])
+  async togglePinThread(
+    @Arg('id', () => Int) id: number
+  ): Promise<Post | null> {
+    const post = await Post.findOne(id);
+    if (post) {
+      const { originalPostId } = post;
+
+      const result = await getConnection().query(
+        `
+        UPDATE
+          reddit.posts
+        SET
+          "isPinned" = NOT "isPinned"
+        WHERE
+          id = $1
+        RETURNING *;
+      `,
+        [originalPostId ?? id]
+      );
+
+      return result[0][0];
     }
 
     return null;

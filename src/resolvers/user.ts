@@ -107,18 +107,18 @@ export class UserResolver {
     return null;
   }
 
-  @FieldResolver()
+  @FieldResolver(() => Int)
   async score(@Root() user: User): Promise<number> {
     const result = await getConnection().query(
       `
-    select SUM(p.score) 
-    from reddit.posts p
-    where p."authorId" = $1
+    select COALESCE(SUM(score), 0) as score
+    from reddit.posts
+    where "authorId" = $1
     `,
       [user.id]
     );
 
-    return parseInt(result[0].sum);
+    return result[0].score;
   }
 
   @FieldResolver()
@@ -135,14 +135,13 @@ export class UserResolver {
   @Query(() => User, { nullable: true })
   @UseMiddleware(authenticate)
   async userProfile(
-    @Arg('userId', () => ID) userId: string,
-    @Ctx() { user }: MyContext
+    @Arg('userId', () => ID) userId: string
   ): Promise<User | undefined> {
     return User.findOne(userId);
   }
 
   @Mutation(() => User)
-  @UseMiddleware(admin)
+  @UseMiddleware([authenticate, admin])
   async toggleBanUser(@Arg('userId', () => ID) userId: string): Promise<User> {
     const result = await getConnection()
       .createQueryBuilder()
@@ -258,7 +257,7 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   @Query(() => [User])
-  @UseMiddleware(admin)
+  @UseMiddleware([authenticate, admin])
   users(): Promise<User[]> {
     return User.find();
   }
@@ -464,7 +463,7 @@ If you did not request a password reset, you can safely ignore this email.
   // }
 
   @Mutation(() => Boolean)
-  @UseMiddleware(admin)
+  @UseMiddleware([authenticate, admin])
   async deleteUser(@Arg('id', () => ID) id: string): Promise<boolean> {
     try {
       const result = await getConnection()

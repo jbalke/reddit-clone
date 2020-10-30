@@ -15,6 +15,8 @@ import { User } from './User';
 
 @ObjectType()
 @Entity('posts')
+@Index(['score', 'createdAt'])
+@Index(['replies', 'createdAt'])
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -35,6 +37,7 @@ export class Post extends BaseEntity {
   @ManyToOne(() => User, (author) => author.posts)
   author: User;
 
+  @Index()
   @Column({ type: 'int', nullable: true })
   originalPostId: number | null;
 
@@ -62,12 +65,10 @@ export class Post extends BaseEntity {
   level: number;
 
   @Field(() => Int)
-  @Index('REPLIES_INDEX')
   @Column({ type: 'int', default: 0 })
   replies: number;
 
   @Field(() => Int)
-  @Index('SCORE_INDEX')
   @Column({ type: 'int', default: 0 })
   score: number;
 
@@ -93,11 +94,16 @@ export class Post extends BaseEntity {
   flaggedAt: Date | null;
 
   @Field()
+  @Index()
+  @Column({ type: 'boolean', default: false })
+  isPinned: boolean;
+
+  @Field()
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 
   @Field()
-  @Index('CREATED_AT_INDEX', { synchronize: false })
+  @Index()
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;
 }
