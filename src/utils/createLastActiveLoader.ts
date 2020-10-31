@@ -6,7 +6,7 @@ export const createLastActiveLoader = () =>
   new DataLoader<string, Date>(async (userIds) => {
     const lastActive = await getRepository(Post)
       .createQueryBuilder('post')
-      .select('MAX(post."updatedAt")', 'lastActive')
+      .select('MAX(post."createdAt")', 'lastActive')
       .addSelect('post."authorId"')
       .where('post."authorId" IN (:...ids)', { ids: userIds as string[] })
       .groupBy('post."authorId"')

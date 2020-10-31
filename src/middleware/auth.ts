@@ -37,7 +37,7 @@ export const authorize: MiddlewareFn<MyContext> = async ({ context }, next) => {
 
 export const admin: MiddlewareFn<MyContext> = async ({ context }, next) => {
   if (!context.user?.isAdmin) {
-    throw new AuthenticationError('not authorised');
+    throw new Error('not authorised');
   }
 
   return next();

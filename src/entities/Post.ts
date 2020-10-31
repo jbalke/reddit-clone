@@ -15,8 +15,8 @@ import { User } from './User';
 
 @ObjectType()
 @Entity('posts')
-@Index(['score', 'createdAt'])
-@Index(['replies', 'createdAt'])
+@Index(['isPinned', 'score', 'createdAt'], {})
+@Index(['isPinned', 'replies', 'createdAt'])
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
