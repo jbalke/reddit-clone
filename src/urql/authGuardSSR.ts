@@ -4,6 +4,7 @@ import { NextUrqlPageContext } from 'next-urql';
 import { MeQuery } from '../generated/graphql';
 
 export const AuthGuardSSR = (page: NextPage) => {
+  //@ts-ignore
   page.getInitialProps = async ({
     urqlClient,
     res,

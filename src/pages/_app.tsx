@@ -58,7 +58,7 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
 }
 
 MyApp.getInitialProps = async (ctx: NextUrqlAppContext) => {
-  const appProps = await NextApp.getInitialProps(ctx);
+  const appProps = await NextApp.getInitialProps(ctx as any);
 
   return {
     ...appProps,

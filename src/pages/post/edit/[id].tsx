@@ -8,6 +8,7 @@ import {
   Flex,
   FormControl,
   Heading,
+  Spinner,
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
@@ -45,7 +46,15 @@ function EditPost(props: EditPostProps) {
   if (fetching) {
     return (
       <Layout>
-        <Wrapper size="small">loading...</Wrapper>
+        <Spinner
+          display="block"
+          mx="auto"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="teal.500"
+          size="xl"
+        />
       </Layout>
     );
   }

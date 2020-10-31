@@ -1,4 +1,4 @@
-import { Box, BoxProps, IconButton, useToast } from '@chakra-ui/core';
+import { Box, BoxProps, IconButton, Tooltip, useToast } from '@chakra-ui/core';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
@@ -79,15 +79,21 @@ function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
             variantColor="teal"
           />
         </Link>
-        <IconButton
-          size="sm"
-          aria-label="Delete Post"
-          title="Delete Post"
-          icon="delete"
-          onClick={onClick}
-          isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
-          variantColor="teal"
-        />
+        <Tooltip
+          label="delete post"
+          aria-label="delete post"
+          placement="bottom"
+        >
+          <IconButton
+            size="sm"
+            aria-label="Delete Post"
+            // title="Delete Post"
+            icon="delete"
+            onClick={onClick}
+            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+            variantColor="teal"
+          />
+        </Tooltip>
       </Box>
       <Modal
         title="Delete Post"

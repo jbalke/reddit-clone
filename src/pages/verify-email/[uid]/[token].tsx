@@ -3,6 +3,7 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
+  Spinner,
   Text,
 } from '@chakra-ui/core';
 import { GetServerSideProps } from 'next';
@@ -40,7 +41,15 @@ function VerifyEmail({ userId, token }: VerifyEmailProps) {
   if (fetching) {
     return (
       <Layout size="small">
-        <Text>verifying...</Text>
+        <Spinner
+          display="block"
+          mx="auto"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="teal.500"
+          size="xl"
+        />
       </Layout>
     );
   } else if (data?.verifyEmail.verified) {

@@ -2,7 +2,7 @@ import { devtoolsExchange } from '@urql/devtools';
 import { authExchange } from '@urql/exchange-auth';
 import { retryExchange } from '@urql/exchange-retry';
 import { NextPageContext } from 'next';
-import { SSRExchange } from 'next-urql';
+import { PartialNextContext, SSRExchange } from 'next-urql';
 import { CombinedError, dedupExchange, fetchExchange } from 'urql';
 import {
   clearAccessToken,
@@ -14,7 +14,6 @@ import {
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptions } from './fetchOptionsExchange';
-import { authExchange as oldAuthExchange } from './authExchange';
 import Router from 'next/router';
 
 const options = {
@@ -29,7 +28,7 @@ const options = {
 
 export const getClientConfig = (
   ssrExchange: SSRExchange,
-  ctx?: NextPageContext
+  ctx?: PartialNextContext
 ): any => {
   return {
     url: 'http://localhost:4000/graphql',

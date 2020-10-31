@@ -6,6 +6,7 @@ import {
   IconButton,
   Link as ChakraLink,
   Text,
+  Tooltip,
 } from '@chakra-ui/core';
 import Link from 'next/link';
 import React from 'react';
@@ -20,6 +21,7 @@ import { relativeTime } from '../utils/relativeTime';
 import AdminControls from './AdminControls';
 import EditDeletePostButtons from './EditDeletePostButtons';
 import { NextChakraLink } from './NextChakraLink';
+import TooltipButton from './TooltipButton';
 import VoteSection from './VoteSection';
 
 type PostProps = {
@@ -74,16 +76,6 @@ function Post({ post, preview = false, ...flexProps }: PostProps) {
           <Flex mt={2} justifyContent="space-between" alignItems="center">
             <Text fontSize="sm">Replies: {post.replies}</Text>
             <Flex justifyContent="flex-end" alignItems="center">
-              {post.isPinned &&
-                post.level === 0 &&
-                (!data?.me?.isAdmin || isSummary(post)) && (
-                  <Icon name="star" color="teal.500" title="pinned" />
-                )}
-              {post.isLocked &&
-                post.level === 0 &&
-                (!data?.me?.isAdmin || isSummary(post)) && (
-                  <Icon name="lock" color="red.500" title="Locked" />
-                )}
               {!isSummary(post) &&
                 !post.isLocked &&
                 data?.me?.id !== post.author.id && (
@@ -103,6 +95,17 @@ function Post({ post, preview = false, ...flexProps }: PostProps) {
                     />
                   </Link>
                 )}
+              {post.isPinned && post.level === 0 && isSummary(post) && (
+                <Tooltip label="pinned" aria-label="pinned" placement="bottom">
+                  <Icon name="star" color="teal.500" title="pinned" />
+                </Tooltip>
+              )}
+              {post.isLocked && post.level === 0 && isSummary(post) && (
+                <Tooltip label="locked" aria-label="locked" placement="bottom">
+                  <Icon name="lock" color="teal.500" title="Locked" />
+                </Tooltip>
+              )}
+
               {!isSummary(post) &&
                 !post.isLocked &&
                 data?.me?.id === post.author.id && (

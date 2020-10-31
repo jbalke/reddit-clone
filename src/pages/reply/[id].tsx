@@ -7,6 +7,7 @@ import {
   Button,
   Flex,
   FormControl,
+  Spinner,
   Stack,
 } from '@chakra-ui/core';
 import { Form, Formik } from 'formik';
@@ -32,7 +33,15 @@ function Reply() {
   if (fetching) {
     return (
       <Layout size="regular">
-        <div>Loading...</div>
+        <Spinner
+          display="block"
+          mx="auto"
+          thickness="4px"
+          speed="0.65s"
+          emptyColor="gray.200"
+          color="teal.500"
+          size="xl"
+        />
       </Layout>
     );
   } else if (data && data.thread) {

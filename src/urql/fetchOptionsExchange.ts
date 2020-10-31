@@ -1,4 +1,4 @@
-import { NextPageContext } from 'next';
+import { PartialNextContext } from 'next-urql';
 import { Exchange, Operation } from 'urql';
 import { fromPromise, fromValue, map, mergeMap, pipe } from 'wonka';
 import { getAccessToken } from '../accessToken';
@@ -27,7 +27,7 @@ const fetchOptionsExchange = (fn: any): Exchange => ({ forward }) => (ops$) => {
   );
 };
 
-export function fetchOptions(ctx: NextPageContext | undefined) {
+export function fetchOptions(ctx: PartialNextContext | undefined) {
   return fetchOptionsExchange(async (fetchOptions: any) => {
     try {
       let token = '';
