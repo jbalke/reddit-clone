@@ -13,45 +13,24 @@ import {
   useTogglePinThreadMutation,
 } from '../generated/graphql';
 import Modal from './Modal';
-import { useModalState } from './useModalState';
+import { useModalState } from '../utils/useModalState';
 
 type AdminControlsProps = {
   post: PostContentFragment;
 } & FlexProps;
 
 function AdminControls({ post, ...props }: AdminControlsProps) {
-  const [
-    lockConfirmed,
-    setLockConfirmed,
-    lockOnClick,
-    handleLockConfirmation,
-    lockIsOpen,
-    lockOnClose,
-  ] = useModalState();
-  const [
-    pinConfirmed,
-    setPinConfirmed,
-    pinOnClick,
-    handlePinConfirmation,
-    pinIsOpen,
-    pinOnClose,
-  ] = useModalState();
-  const [
-    flagConfirmed,
-    setFlagConfirmed,
-    flagOnClick,
-    handleFlagConfirmation,
-    flagIsOpen,
-    flagOnClose,
-  ] = useModalState();
+  const [lockIntent, lockAction, lockModal] = useModalState();
+  const [pinIntent, pinAction, pinModal] = useModalState();
+  const [flagIntent, flagAction, flagModal] = useModalState();
 
   const [, toggleLockThread] = useToggleLockThreadMutation();
   const [, togglePinThread] = useTogglePinThreadMutation();
   const [, flagPost] = useFlagPostMutation();
   const toast = useToast();
 
-  if (lockConfirmed) {
-    setLockConfirmed(false);
+  if (lockIntent.confirmed) {
+    lockIntent.setConfirmed(false);
 
     toggleLockThread({ id: post.id }).then((result) => {
       if (result.data && result.data.toggleLockThread?.length) {
@@ -78,8 +57,8 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
         });
       }
     });
-  } else if (pinConfirmed) {
-    setPinConfirmed(false);
+  } else if (pinIntent.confirmed) {
+    pinIntent.setConfirmed(false);
 
     togglePinThread({ id: post.id }).then((result) => {
       if (result.data && result.data.togglePinThread) {
@@ -104,8 +83,8 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
         });
       }
     });
-  } else if (flagConfirmed) {
-    setFlagConfirmed(false);
+  } else if (flagIntent.confirmed) {
+    pinIntent.setConfirmed(false);
 
     flagPost({
       id: post.id,
@@ -123,8 +102,8 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
     });
   }
 
-  const lockActionText = post.isLocked ? 'Unlock' : 'Lock';
-  const pinActionText = post.isPinned ? 'Unpin' : 'Pin';
+  const lockIntentText = post.isLocked ? 'Unlock' : 'Lock';
+  const pinIntentText = post.isPinned ? 'Unpin' : 'Pin';
 
   return (
     <>
@@ -135,14 +114,14 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
             icon="warning"
             aria-label="Flag Post"
             isDisabled={!!post.flaggedAt}
-            onClick={flagOnClick}
+            onClick={flagAction.onClick}
             variantColor="orange"
           />
         </Tooltip>
         {post.level === 0 && (
           <Tooltip
-            label={`${pinActionText} Thread`}
-            aria-label={`${pinActionText} Thread`}
+            label={`${pinIntentText} Thread`}
+            aria-label={`${pinIntentText} Thread`}
             placement="bottom"
           >
             <IconButton
@@ -150,15 +129,15 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
               size="sm"
               icon="star"
               aria-label="Pin Thread"
-              onClick={pinOnClick}
+              onClick={pinAction.onClick}
               variantColor={post.isPinned ? 'red' : 'green'}
             />
           </Tooltip>
         )}
         {post.level === 0 && (
           <Tooltip
-            label={`${lockActionText} Thread`}
-            aria-label={`${lockActionText} Thread`}
+            label={`${lockIntentText} Thread`}
+            aria-label={`${lockIntentText} Thread`}
             placement="bottom"
           >
             <IconButton
@@ -166,35 +145,35 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
               size="sm"
               icon={post.isLocked ? 'unlock' : 'lock'}
               aria-label="Lock Thread"
-              onClick={lockOnClick}
+              onClick={lockAction.onClick}
               variantColor={post.isLocked ? 'red' : 'green'}
             />
           </Tooltip>
         )}
       </Flex>
       <Modal
-        title={`${lockActionText} Thread`}
+        title={`${lockIntentText} Thread`}
         message={`Are you sure?`}
-        handleConfirmation={handleLockConfirmation}
-        confirmButtonText={`Yes, ${lockActionText}`}
-        isOpen={lockIsOpen}
-        onClose={lockOnClose}
+        handleConfirmation={lockAction.handleConfirmation}
+        confirmButtonText={`Yes, ${lockIntentText}`}
+        isOpen={lockModal.isOpen}
+        onClose={lockModal.onClose}
       />
       <Modal
-        title={`${pinActionText} Thread`}
+        title={`${pinIntentText} Thread`}
         message={`Are you sure?`}
-        handleConfirmation={handlePinConfirmation}
-        confirmButtonText={`Yes, ${pinActionText}`}
-        isOpen={pinIsOpen}
-        onClose={pinOnClose}
+        handleConfirmation={pinAction.handleConfirmation}
+        confirmButtonText={`Yes, ${pinIntentText}`}
+        isOpen={pinModal.isOpen}
+        onClose={pinModal.onClose}
       />
       <Modal
         title="Flag Post"
         message={`Flag: "${post.text.slice(0, 25) + '...'}". Are you sure?`}
-        handleConfirmation={handleFlagConfirmation}
+        handleConfirmation={flagAction.handleConfirmation}
         confirmButtonText="Yes, Flag"
-        isOpen={flagIsOpen}
-        onClose={flagOnClose}
+        isOpen={flagModal.isOpen}
+        onClose={flagModal.onClose}
       />
     </>
   );

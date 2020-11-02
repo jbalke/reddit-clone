@@ -75,7 +75,7 @@ const Header = () => {
         >
           <NextChakraLink href={`/user-profile/${data.me.id}`}>
             Logged in as {data.me.username}{' '}
-            {data.me.isBanned && (
+            {data.me.bannedUntil && (
               <Text cursor="not-allowed" title="Banned" display="inline">
                 (B)
               </Text>

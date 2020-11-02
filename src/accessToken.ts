@@ -5,7 +5,7 @@ interface myToken {
   alg?: string;
   userId: string;
   isAdmin: boolean;
-  isBanned: boolean;
+  bannedUntil: string;
   tokenVersion: number;
   exp: number;
   iat: number;

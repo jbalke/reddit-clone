@@ -12,7 +12,10 @@ import React from 'react';
 import AdminUserControls from '../../components/AdminUserControls';
 import Layout from '../../components/Layout';
 import { useMeQuery, useUserProfileQuery } from '../../generated/graphql';
-import { formatTimeStamp } from '../../utils/formatTimeStamp';
+import {
+  formatTimeStamp,
+  formatTimeStampFull,
+} from '../../utils/formatTimeStamp';
 import { relativeTime } from '../../utils/relativeTime';
 
 type ProfileProps = {};
@@ -74,7 +77,7 @@ function Profile(props: ProfileProps) {
                   not verified
                 </Badge>
               )}
-              {data.userProfile.isBanned && (
+              {data.userProfile.bannedUntil && (
                 <Badge
                   variant="outline"
                   alignSelf="flex-start"
@@ -85,7 +88,7 @@ function Profile(props: ProfileProps) {
               )}
             </Stack>
           </Flex>
-          <Text>Score: {data.userProfile.score}</Text>
+          <Text>score: {data.userProfile.score}</Text>
           {data.userProfile.email && (
             <Text>email: {data.userProfile.email}</Text>
           )}
@@ -98,6 +101,11 @@ function Profile(props: ProfileProps) {
           <Text>
             member since: {formatTimeStamp(data.userProfile.createdAt)}
           </Text>
+          {data.userProfile.bannedUntil && (
+            <Text>
+              banned until: {formatTimeStampFull(data.userProfile.bannedUntil)}
+            </Text>
+          )}
           {meData?.me?.isAdmin && !data.userProfile.isAdmin && (
             <AdminUserControls user={data.userProfile} />
           )}

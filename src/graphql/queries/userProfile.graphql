@@ -6,7 +6,7 @@ query UserProfile($userId: ID!) {
     score
     lastActiveAt
     verified
-    isBanned
+    bannedUntil
     isAdmin
     createdAt
   }

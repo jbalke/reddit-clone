@@ -39,6 +39,7 @@ function VoteSection({ post }: VoteSectionProps) {
         isDisabled={
           data?.me?.id === post.author.id ||
           post.isLocked ||
+          data?.me?.bannedUntil ||
           fetching ||
           !data?.me
         }
@@ -78,6 +79,7 @@ function VoteSection({ post }: VoteSectionProps) {
         isDisabled={
           data?.me?.id === post.author.id ||
           post.isLocked ||
+          data?.me?.bannedUntil ||
           fetching ||
           !data?.me
         }

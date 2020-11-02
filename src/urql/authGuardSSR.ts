@@ -19,18 +19,18 @@ export const AuthGuardSSR = (page: NextPage) => {
         me {
           id
           verified
-          isBanned
+          bannedUntil
         }
       }
       `
         )
         .toPromise();
 
-      if (result.data?.me?.verified && !result.data?.me?.isBanned) {
+      if (result.data?.me?.verified && !result.data?.me?.bannedUntil) {
         return {};
       }
       if (result && res && req) {
-        if (result.data?.me?.isBanned) {
+        if (result.data?.me?.bannedUntil) {
           redirectToBanned(res);
         } else if (result.data?.me?.verified === false) {
           redirectToVerification(res);

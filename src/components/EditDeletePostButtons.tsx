@@ -9,7 +9,7 @@ import {
 } from '../generated/graphql';
 import { formatMessage } from '../utils/formatMessage';
 import Modal from './Modal';
-import { useModalState } from './useModalState';
+import { useModalState } from '../utils/useModalState';
 
 type EditDeletePostButtonsProps = {
   post: PostContentFragment;
@@ -21,18 +21,15 @@ function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
   const [{ data }] = useMeQuery();
   const toast = useToast();
   const [
-    deleteConfirmed,
-    setDeleteConfirmed,
-    onClick,
-    handleConfirmation,
-    isOpen,
-    onClose,
+    { confirmed, setConfirmed },
+    { onClick, handleConfirmation },
+    { isOpen, onClose },
   ] = useModalState();
 
   const [, deletePost] = useDeletePostMutation();
 
-  if (deleteConfirmed) {
-    setDeleteConfirmed(false);
+  if (confirmed) {
+    setConfirmed(false);
 
     deletePost({
       id: post.id,
@@ -75,7 +72,7 @@ function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
             icon="edit"
             aria-label="Edit Post"
             title="Edit Post"
-            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+            isDisabled={!!post.flaggedAt || !!data?.me?.bannedUntil}
             variantColor="teal"
           />
         </Link>
@@ -90,7 +87,7 @@ function EditDeletePostButtons({ post, ...props }: EditDeletePostButtonsProps) {
             // title="Delete Post"
             icon="delete"
             onClick={onClick}
-            isDisabled={!!post.flaggedAt || !!data?.me?.isBanned}
+            isDisabled={!!post.flaggedAt || !!data?.me?.bannedUntil}
             variantColor="teal"
           />
         </Tooltip>

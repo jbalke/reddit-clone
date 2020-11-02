@@ -12,7 +12,7 @@ export const useIsAuthenticatedAndVerified = () => {
         router.replace('/login?next=' + router.asPath);
       } else if (!data.me.verified) {
         router.replace('/resend-verification');
-      } else if (data.me.isBanned) {
+      } else if (data.me.bannedUntil) {
         router.replace('/banned');
       }
     }

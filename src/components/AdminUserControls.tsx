@@ -8,7 +8,7 @@ import {
 import React from 'react';
 import { User, useToggleBanUserMutation } from '../generated/graphql';
 import Modal from './Modal';
-import { useModalState } from './useModalState';
+import { useModalState } from '../utils/useModalState';
 
 type AdminUserControlsProps = {
   user: User;
@@ -17,19 +17,16 @@ type AdminUserControlsProps = {
 function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
   const [, toggleBan] = useToggleBanUserMutation();
   const [
-    banConfirmed,
-    setBanConfirmed,
-    onClick,
-    handleConfirmation,
-    isOpen,
-    onClose,
+    { confirmed, setConfirmed },
+    { onClick, handleConfirmation },
+    { isOpen, onClose },
   ] = useModalState();
   const toast = useToast();
 
-  const actionText = user.isBanned ? 'Unban' : 'Ban';
+  const actionText = user.bannedUntil ? 'Unban' : 'Ban';
 
-  if (banConfirmed) {
-    setBanConfirmed(false);
+  if (confirmed) {
+    setConfirmed(false);
 
     toggleBan({ userId: user.id }).then((result) => {
       if (result.data?.toggleBanUser) {
@@ -37,7 +34,7 @@ function AdminUserControls({ user, ...props }: AdminUserControlsProps) {
           position: 'top-right',
           title: 'Success',
           description: `User has been ${
-            result.data.toggleBanUser.isBanned ? 'banned' : 'unbanned'
+            result.data.toggleBanUser.bannedUntil ? 'banned' : 'unbanned'
           }`,
           status: 'success',
           duration: 6000,

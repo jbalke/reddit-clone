@@ -2,12 +2,18 @@ import { useDisclosure } from '@chakra-ui/core';
 import { Dispatch, SetStateAction, useState } from 'react';
 
 type ModalState = [
-  boolean,
-  Dispatch<SetStateAction<boolean>>,
-  () => void,
-  () => void,
-  boolean,
-  () => void
+  {
+    confirmed: boolean;
+    setConfirmed: Dispatch<SetStateAction<boolean>>;
+  },
+  {
+    onClick: () => void;
+    handleConfirmation: () => void;
+  },
+  {
+    isOpen: boolean;
+    onClose: () => void;
+  }
 ];
 
 export function useModalState(): ModalState {
@@ -26,11 +32,17 @@ export function useModalState(): ModalState {
   };
 
   return [
-    confirmed,
-    setConfirmed,
-    onClick,
-    handleConfirmation,
-    isOpen,
-    onClose,
+    {
+      confirmed,
+      setConfirmed,
+    },
+    {
+      onClick,
+      handleConfirmation,
+    },
+    {
+      isOpen,
+      onClose,
+    },
   ];
 }

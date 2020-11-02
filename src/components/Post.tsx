@@ -90,7 +90,7 @@ function Post({ post, preview = false, ...flexProps }: PostProps) {
                       aria-label="Reply to Post"
                       title="Reply to Post"
                       icon="chat"
-                      isDisabled={data?.me?.isBanned}
+                      isDisabled={data?.me?.bannedUntil}
                       variantColor="teal"
                     />
                   </Link>

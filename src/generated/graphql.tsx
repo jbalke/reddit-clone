@@ -55,9 +55,10 @@ export type Payload = {
   __typename?: 'Payload';
   userId: Scalars['ID'];
   isAdmin: Scalars['Boolean'];
-  isBanned: Scalars['Boolean'];
+  bannedUntil: Scalars['DateTime'];
   tokenVersion: Scalars['Float'];
 };
+
 
 export type PaginatedPosts = {
   __typename?: 'PaginatedPosts';
@@ -97,11 +98,10 @@ export type User = {
   lastPostAt?: Maybe<Scalars['DateTime']>;
   lastActiveAt?: Maybe<Scalars['DateTime']>;
   isAdmin: Scalars['Boolean'];
-  isBanned: Scalars['Boolean'];
+  bannedUntil?: Maybe<Scalars['DateTime']>;
   updatedAt?: Maybe<Scalars['DateTime']>;
   createdAt: Scalars['DateTime'];
 };
-
 
 export type PostsInput = {
   limit?: Maybe<Scalars['Int']>;
@@ -363,7 +363,7 @@ export type RegularPostResponseFragment = (
 
 export type RegularUserFragment = (
   { __typename?: 'User' }
-  & Pick<User, 'id' | 'username' | 'verified' | 'isAdmin' | 'isBanned' | 'lastPostAt'>
+  & Pick<User, 'id' | 'username' | 'verified' | 'isAdmin' | 'bannedUntil' | 'lastPostAt'>
 );
 
 export type RegularUserResponseFragment = (
@@ -662,7 +662,7 @@ export type TestTokenQuery = (
     { __typename?: 'PayloadResponse' }
     & { jwt?: Maybe<(
       { __typename?: 'Payload' }
-      & Pick<Payload, 'userId' | 'isAdmin' | 'isBanned' | 'tokenVersion'>
+      & Pick<Payload, 'userId' | 'isAdmin' | 'bannedUntil' | 'tokenVersion'>
     )> }
   ) }
 );
@@ -676,7 +676,7 @@ export type UserProfileQuery = (
   { __typename?: 'Query' }
   & { userProfile?: Maybe<(
     { __typename?: 'User' }
-    & Pick<User, 'id' | 'username' | 'email' | 'score' | 'lastActiveAt' | 'verified' | 'isBanned' | 'isAdmin' | 'createdAt'>
+    & Pick<User, 'id' | 'username' | 'email' | 'score' | 'lastActiveAt' | 'verified' | 'bannedUntil' | 'isAdmin' | 'createdAt'>
   )> }
 );
 
@@ -750,7 +750,7 @@ export const RegularUserFragmentDoc = gql`
   username
   verified
   isAdmin
-  isBanned
+  bannedUntil
   lastPostAt
 }
     `;
@@ -1010,7 +1010,7 @@ export const TestTokenDocument = gql`
     jwt {
       userId
       isAdmin
-      isBanned
+      bannedUntil
       tokenVersion
     }
   }
@@ -1029,7 +1029,7 @@ export const UserProfileDocument = gql`
     score
     lastActiveAt
     verified
-    isBanned
+    bannedUntil
     isAdmin
     createdAt
   }
