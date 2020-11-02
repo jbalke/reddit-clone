@@ -61,7 +61,7 @@ export const createAccessToken = (user: User) => {
     {
       userId: user.id,
       isAdmin: user.isAdmin,
-      isBanned: user.isBanned,
+      bannedUntil: user.bannedUntil,
       tokenVersion: user.tokenVersion,
     },
     ACCESS_TOKEN_SECRET,

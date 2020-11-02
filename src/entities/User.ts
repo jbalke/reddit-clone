@@ -63,11 +63,11 @@ export class User extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   isAdmin: boolean;
 
-  @Field()
-  @Column({ type: 'boolean', default: false })
-  isBanned: boolean;
-
   @Field(() => Date, { nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
+  bannedUntil: Date | null;
+
+  @Field()
   @UpdateDateColumn({ type: 'timestamptz' })
   updatedAt: Date;
 

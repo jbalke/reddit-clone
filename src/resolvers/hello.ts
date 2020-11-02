@@ -16,8 +16,8 @@ class Payload implements AccessTokenPayload {
   userId: string;
   @Field()
   isAdmin: boolean;
-  @Field()
-  isBanned: boolean;
+  @Field(() => String, { nullable: true })
+  bannedUntil: string | null;
   @Field()
   tokenVersion: number;
 }

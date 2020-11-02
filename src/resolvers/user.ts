@@ -141,12 +141,20 @@ export class UserResolver {
   }
 
   @Mutation(() => User)
-  @UseMiddleware([authenticate, admin])
+  @UseMiddleware([authorize, admin])
   async toggleBanUser(@Arg('userId', () => ID) userId: string): Promise<User> {
     const result = await getConnection()
       .createQueryBuilder()
       .update(User)
-      .set({ isBanned: () => `NOT "isBanned"` })
+      .set({
+        bannedUntil: () =>
+          `
+          CASE 
+          	WHEN "bannedUntil" IS NULL THEN CURRENT_TIMESTAMP + interval '3 days'
+          	ELSE NULL
+          END
+          `,
+      })
       .where('id = :id and "isAdmin" = false', { id: userId })
       .returning('*')
       .execute();
@@ -257,7 +265,7 @@ If you did not request a password reset, you can safely ignore this email.
   }
 
   @Query(() => [User])
-  @UseMiddleware([authenticate, admin])
+  @UseMiddleware([authorize, admin])
   users(): Promise<User[]> {
     return User.find();
   }
@@ -428,6 +436,12 @@ If you did not request a password reset, you can safely ignore this email.
       throw new Error(err.message);
     }
 
+    //if bannedUntil has passed
+    if (user.bannedUntil && user.bannedUntil.getTime() <= Date.now()) {
+      user.bannedUntil = null;
+      await user.save();
+    }
+
     // password match
     sendRefreshToken(res, createRefreshToken(user));
 
@@ -463,7 +477,7 @@ If you did not request a password reset, you can safely ignore this email.
   // }
 
   @Mutation(() => Boolean)
-  @UseMiddleware([authenticate, admin])
+  @UseMiddleware([authorize, admin])
   async deleteUser(@Arg('id', () => ID) id: string): Promise<boolean> {
     try {
       const result = await getConnection()

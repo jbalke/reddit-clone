@@ -28,7 +28,7 @@ export const verified: MiddlewareFn<MyContext> = async ({ context }, next) => {
 export const authorize: MiddlewareFn<MyContext> = async ({ context }, next) => {
   await requireUserPayload(context);
 
-  if (context.user?.isBanned) {
+  if (context.user?.bannedUntil) {
     throw new Error('user is banned');
   }
 
