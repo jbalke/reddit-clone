@@ -298,29 +298,29 @@ export class PostResolver {
 
     const secondaryOrder =
       sortOptions && sortOptions?.sortBy !== SortBy.AGE
-        ? ', p."createdAt" DESC'
+        ? ', "createdAt" DESC'
         : '';
 
     const posts = await getConnection().query(
       `
-    SELECT p.*
-    FROM reddit.posts p
-    WHERE p."parentId" IS NULL AND p."flaggedAt" IS NULL
+    SELECT id, title, text, score, level, "authorId", replies, "updatedAt", "createdAt", "voteCount", "isLocked", "isPinned"
+    FROM reddit.posts 
+    WHERE "parentId" IS NULL AND "flaggedAt" IS NULL
     ${
       cursor && sortOptions.sortBy === SortBy.SCORE
-        ? 'AND (p.score, p."createdAt") < ($3, $2)'
+        ? 'AND (score, "createdAt") < ($3, $2)'
         : cursor && sortOptions.sortBy === SortBy.REPLIES
-        ? 'AND (p.replies, p."createdAt") < ($3, $2)'
+        ? 'AND (replies, "createdAt") < ($3, $2)'
         : cursor
-        ? 'AND p."createdAt" < $2'
+        ? 'AND "createdAt" < $2'
         : ''
     }
     ${
       sortOptions
-        ? `ORDER BY p."isPinned" DESC, p."${sortOptions.sortBy}" ${
+        ? `ORDER BY "isPinned" DESC, "${sortOptions.sortBy}" ${
             sortOptions.sortDirection || 'DESC'
           } ${secondaryOrder}`
-        : 'ORDER BY p."isPinned" DESC, p."createdAt" DESC'
+        : 'ORDER BY "isPinned" DESC, "createdAt" DESC'
     }
     LIMIT $1
     `,

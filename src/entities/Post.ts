@@ -15,8 +15,9 @@ import { User } from './User';
 
 @ObjectType()
 @Entity('posts')
-@Index(['isPinned', 'score', 'createdAt'], {})
-@Index(['isPinned', 'replies', 'createdAt'])
+@Index('IDX_POSTS_REPLIES', { synchronize: false })
+@Index('IDX_POSTS_SCORE', { synchronize: false })
+@Index('IDX_POSTS_CREATEDAT', { synchronize: false })
 export class Post extends BaseEntity {
   @Field(() => Int)
   @PrimaryGeneratedColumn()
@@ -94,7 +95,6 @@ export class Post extends BaseEntity {
   flaggedAt: Date | null;
 
   @Field()
-  @Index()
   @Column({ type: 'boolean', default: false })
   isPinned: boolean;
 
