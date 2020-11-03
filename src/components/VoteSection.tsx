@@ -40,7 +40,6 @@ function VoteSection({ post }: VoteSectionProps) {
           data?.me?.id === post.author.id ||
           post.isLocked ||
           data?.me?.bannedUntil ||
-          fetching ||
           !data?.me
         }
         aria-label="Upvote post"
@@ -80,7 +79,6 @@ function VoteSection({ post }: VoteSectionProps) {
           data?.me?.id === post.author.id ||
           post.isLocked ||
           data?.me?.bannedUntil ||
-          fetching ||
           !data?.me
         }
         aria-label="Downvote post"

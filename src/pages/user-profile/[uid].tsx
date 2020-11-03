@@ -3,10 +3,12 @@ import {
   Box,
   Flex,
   Heading,
+  Icon,
   Spinner,
   Stack,
   Text,
 } from '@chakra-ui/core';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React from 'react';
 import AdminUserControls from '../../components/AdminUserControls';
@@ -104,6 +106,14 @@ function Profile(props: ProfileProps) {
           {data.userProfile.bannedUntil && (
             <Text>
               banned until: {formatTimeStampFull(data.userProfile.bannedUntil)}
+              <Link href="/banned">
+                <Icon
+                  ml={2}
+                  name="question"
+                  color="teal.500"
+                  cursor="pointer"
+                />
+              </Link>
             </Text>
           )}
           {meData?.me?.isAdmin && !data.userProfile.isAdmin && (
