@@ -10,7 +10,7 @@ type SortControlsProps = {
 
 function SortControls({ dispatch }: SortControlsProps) {
   return (
-    <Flex justifyContent="flex-start">
+    <Flex>
       <TooltipButton
         mr={1}
         label="Newest"

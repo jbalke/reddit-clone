@@ -1,6 +1,6 @@
-import { Box, Button, Flex, Spinner, Stack } from '@chakra-ui/core';
+import { Flex, Box, Button, Spinner, Stack } from '@chakra-ui/core';
 import Link from 'next/link';
-import { useContext, useReducer } from 'react';
+import { useContext, useEffect, useReducer, useRef } from 'react';
 import Layout from '../components/Layout';
 import Post from '../components/Post';
 import SortControls from '../components/SortControls';
@@ -33,10 +33,36 @@ const Index = ({}: PageProps) => {
     return <div>Could not retrieve any posts.</div>;
   }
 
+  const loaderRef = useRef(null);
+
+  useEffect(() => {
+    const targetRef = document.getElementById('target');
+    if (!targetRef || !data || !data.posts.hasMore) return;
+
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      thresholds: 1,
+    };
+    const observer = new IntersectionObserver(() => {
+      dispatch({
+        type: 'SET_CURSOR',
+        payload: {
+          lastPost: data.posts.posts[data.posts.posts.length - 1],
+        },
+      });
+    }, options);
+
+    observer.observe(targetRef);
+    return () => {
+      observer.unobserve(targetRef);
+    };
+  }, [data]);
+
   return (
     <>
       <Layout size="regular">
-        <Box aria-busy={!data && (fetching || stale)}>
+        <Box aria-busy={!data && (fetching || stale)} mb="5rem">
           {!data && (fetching || stale) ? (
             <Spinner
               display="block"
@@ -48,14 +74,12 @@ const Index = ({}: PageProps) => {
               size="xl"
             />
           ) : (
-            <Stack>
-              <Flex>
+            <Flex direction="column">
+              <Flex justifyContent="space-between" alignItems="center" mb={4}>
                 <SortControls dispatch={dispatch} />
                 <Link href="/create-post">
                   <Button
                     width={90}
-                    mb={4}
-                    ml="auto"
                     variantColor="teal"
                     aria-label="new post"
                     isDisabled={secondsUntilNewPost ? true : false}
@@ -65,37 +89,38 @@ const Index = ({}: PageProps) => {
                   </Button>
                 </Link>
               </Flex>
-              {data &&
-                data.posts.posts.map((p) => (
-                  <Post
-                    key={p.id}
-                    post={p}
-                    p={2}
-                    shadow="md"
-                    borderWidth="1px"
-                  />
-                ))}
-            </Stack>
+              <Stack spacing={4}>
+                {data &&
+                  data.posts.posts.map((p) => (
+                    <Post
+                      key={p.id}
+                      post={p}
+                      p={2}
+                      shadow="md"
+                      borderWidth="1px"
+                    />
+                  ))}
+              </Stack>
+            </Flex>
           )}
-        </Box>
-        {data && data.posts.hasMore && (
-          <Flex justifyContent="center" alignItems="center">
-            <Button
-              onClick={() => {
-                dispatch({
-                  type: 'SET_CURSOR',
-                  payload: {
-                    lastPost: data.posts.posts[data.posts.posts.length - 1],
-                  },
-                });
-              }}
-              isLoading={fetching || stale}
-              my={4}
-            >
-              load more
-            </Button>
+          <Flex justifyContent="center" mt={4} id="target">
+            {data && data.posts.hasMore && (
+              <Button
+                onClick={() => {
+                  dispatch({
+                    type: 'SET_CURSOR',
+                    payload: {
+                      lastPost: data.posts.posts[data.posts.posts.length - 1],
+                    },
+                  });
+                }}
+                isLoading={fetching || stale}
+              >
+                load more
+              </Button>
+            )}
           </Flex>
-        )}
+        </Box>
       </Layout>
     </>
   );
