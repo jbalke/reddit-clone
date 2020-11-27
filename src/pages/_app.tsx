@@ -51,7 +51,6 @@ function MyApp({ Component, resetUrqlClient, pageProps }: any) {
         }}
       >
         <Component {...pageProps} />
-        <div id="portal"></div>
       </MyContext.Provider>
     </ThemeProvider>
   );
