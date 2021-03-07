@@ -16,7 +16,6 @@ import {
   RegisterMutation,
   UpdatePostMutation,
   Vote,
-  VoteMutation,
   VoteMutationVariables,
 } from '../generated/graphql';
 import schema from '../generated/introspection.json';
