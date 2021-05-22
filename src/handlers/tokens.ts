@@ -44,6 +44,7 @@ export function sendRefreshToken(res: Response, token: string): void {
     maxAge: __maxAge__,
     sameSite: 'strict',
     secure: __prod__,
+    domain: __prod__ ? '.johnbalke.com' : undefined,
   });
 }
 

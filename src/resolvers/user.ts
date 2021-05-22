@@ -15,9 +15,8 @@ import {
 } from 'type-graphql';
 import { getConnection } from 'typeorm';
 import {
-  PASSWORD_RESET_URL,
-  VERIFY_EMAIL_URL,
   __emailRE__,
+  __webURL__,
 } from '../constants';
 import { User } from '../entities/User';
 import { clearRefreshCookie, sendRefreshToken } from '../handlers/tokens';
@@ -236,7 +235,7 @@ export class UserResolver {
     }
 
     const jwt = createPasswordResetToken(user, '1h');
-    const resetPasswordURL = `${PASSWORD_RESET_URL}/${user.id}/${jwt}`;
+    const resetPasswordURL = `${__webURL__}/password-reset/${user.id}/${jwt}`;
 
     await sendEmail({
       to: user.email,
@@ -323,7 +322,7 @@ If you did not request a password reset, you can safely ignore this email.
     }
 
     const jwt = createVerifyEmailToken(user, '3d');
-    const verifyUrl = `${VERIFY_EMAIL_URL}/${user.id}/${jwt}`;
+    const verifyUrl = `${__webURL__}/verify-email/${user.id}/${jwt}`;
 
     sendEmail(createVerificationEmail(user, verifyUrl));
     sendRefreshToken(res, createRefreshToken(user));
@@ -340,7 +339,8 @@ If you did not request a password reset, you can safely ignore this email.
 
     if (user && !user.verified) {
       const jwt = createVerifyEmailToken(user, '3d');
-      const verifyUrl = `${VERIFY_EMAIL_URL}/${user.id}/${jwt}`;
+      const verifyUrl = `${__webURL__}/verify-email/${user.id}/${jwt}`;
+
       sendEmail(createVerificationEmail(user, verifyUrl));
     }
 
@@ -456,25 +456,6 @@ If you did not request a password reset, you can safely ignore this email.
     clearRefreshCookie(res);
     return true;
   }
-
-  // @Mutation(() => User, { nullable: true })
-  // async updateUser(
-  //   @Arg("id") id: number,
-  //   @Arg("title", () => String, { nullable: true }) title: string
-  // ): Promise<User | undefined> {
-  //   const result = await getConnection()
-  //     .createQueryBuilder()
-  //     .update(User)
-  //     .set({ title })
-  //     .where("id = :id", { id })
-  //     .returning("*")
-  //     .execute();
-
-  //   if (result.affected === 0) {
-  //     return undefined;
-  //   }
-  //   return result.raw[0];
-  // }
 
   @Mutation(() => Boolean)
   @UseMiddleware([authorize, admin])
