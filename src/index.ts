@@ -25,7 +25,7 @@ const main = async () => {
   let connectionOptions = {
     type: 'postgres' as const,
     url: __databaseURL__,
-    logging: true,
+    // logging: true,
     // synchronize: true,
     cache: true,
     dropSchema: false,
