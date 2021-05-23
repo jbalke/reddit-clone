@@ -34,6 +34,7 @@ const main = async () => {
   };
 
   const dev_options = {
+    schema: 'reddit',
     ssl: true,
     extra: {
       ssl: {
@@ -48,7 +49,7 @@ const main = async () => {
 
   const conn = await createConnection(connectionOptions);
   //* Run new migrations (i.e. initial db creation)
-  await conn.runMigrations();
+  // await conn.runMigrations();
 
   const app = express();
   app.set('trust proxy', true);
