@@ -4,7 +4,7 @@ import React from 'react';
 export type WrapperProps = {
   children: React.ReactNode;
   size?: 'small' | 'regular';
-} & BoxProps;
+} & Omit<BoxProps, 'size'>;
 
 function Wrapper({ size = 'regular', children, ...boxProps }: WrapperProps) {
   return (

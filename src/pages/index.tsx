@@ -1,4 +1,5 @@
 import { Flex, Box, Button, Spinner, Stack } from '@chakra-ui/core';
+import { withUrqlClient } from 'next-urql';
 import Link from 'next/link';
 import { useContext, useEffect, useReducer, useRef } from 'react';
 import Layout from '../components/Layout';
@@ -7,6 +8,7 @@ import SortControls from '../components/SortControls';
 import { Sort, SortBy, usePostsQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
 import { reducer } from '../state/posts';
+import { getClientConfig } from '../urql/urqlConfig';
 
 type PageProps = {};
 
@@ -33,7 +35,7 @@ const Index = ({}: PageProps) => {
     return <div>Could not retrieve any posts.</div>;
   }
 
-  const loaderRef = useRef(null);
+  // const loaderRef = useRef(null);
 
   useEffect(() => {
     const targetRef = document.getElementById('target');
@@ -61,29 +63,29 @@ const Index = ({}: PageProps) => {
 
   return (
     <>
-      <Layout size="regular">
-        <Box aria-busy={!data && (fetching || stale)} mb="5rem">
+      <Layout size='regular'>
+        <Box aria-busy={!data && (fetching || stale)} mb='5rem'>
           {!data && (fetching || stale) ? (
             <Spinner
-              display="block"
-              mx="auto"
-              thickness="4px"
-              speed="0.65s"
-              emptyColor="gray.200"
-              color="teal.500"
-              size="xl"
+              display='block'
+              mx='auto'
+              thickness='4px'
+              speed='0.65s'
+              emptyColor='gray.200'
+              color='teal.500'
+              size='xl'
             />
           ) : (
-            <Flex direction="column">
-              <Flex justifyContent="space-between" alignItems="center" mb={4}>
+            <Flex direction='column'>
+              <Flex justifyContent='space-between' alignItems='center' mb={4}>
                 <SortControls dispatch={dispatch} />
-                <Link href="/create-post">
+                <Link href='/create-post'>
                   <Button
                     width={90}
-                    variantColor="teal"
-                    aria-label="new post"
+                    variantColor='teal'
+                    aria-label='new post'
                     isDisabled={secondsUntilNewPost ? true : false}
-                    title="new post"
+                    title='new post'
                   >
                     {secondsUntilNewPost ? secondsUntilNewPost : 'new post'}
                   </Button>
@@ -96,14 +98,14 @@ const Index = ({}: PageProps) => {
                       key={p.id}
                       post={p}
                       p={2}
-                      shadow="md"
-                      borderWidth="1px"
+                      shadow='md'
+                      borderWidth='1px'
                     />
                   ))}
               </Stack>
             </Flex>
           )}
-          <Flex justifyContent="center" mt={4} id="target">
+          <Flex justifyContent='center' mt={4} id='target'>
             {data && data.posts.hasMore && (
               <Button
                 onClick={() => {
@@ -126,4 +128,4 @@ const Index = ({}: PageProps) => {
   );
 };
 
-export default Index;
+export default withUrqlClient(getClientConfig, { ssr: true })(Index);

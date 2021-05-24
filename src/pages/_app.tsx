@@ -65,6 +65,7 @@ MyApp.getInitialProps = async (ctx: NextUrqlAppContext) => {
 };
 
 export default withUrqlClient(getClientConfig, {
+  ssr: false,
   neverSuspend: true,
 })(
   // @ts-ignore

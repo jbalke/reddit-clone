@@ -1,8 +1,8 @@
 import { devtoolsExchange } from '@urql/devtools';
 import { authExchange } from '@urql/exchange-auth';
 import { retryExchange } from '@urql/exchange-retry';
-import { NextPageContext } from 'next';
 import { PartialNextContext, SSRExchange } from 'next-urql';
+import Router from 'next/router';
 import { CombinedError, dedupExchange, fetchExchange } from 'urql';
 import {
   clearAccessToken,
@@ -14,7 +14,6 @@ import {
 import { cache } from './cacheExchange';
 import { errorExchange } from './errorExchange';
 import { fetchOptions } from './fetchOptionsExchange';
-import Router from 'next/router';
 
 const options = {
   initialDelayMs: 1000,
@@ -31,7 +30,7 @@ export const getClientConfig = (
   ctx?: PartialNextContext
 ): any => {
   return {
-    url: 'http://localhost:4000/graphql',
+    url: process.env.NEXT_PUBLIC_API_URL!,
     exchanges: process.browser
       ? [
           devtoolsExchange,
@@ -39,7 +38,6 @@ export const getClientConfig = (
           cache,
           retryExchange(options), // Use the retryExchange factory to add a new exchange
           errorExchange,
-          fetchOptions(ctx),
           authExchange<{ token: string }>({
             addAuthToOperation: ({ authState, operation }) => {
               if (!authState || !authState.token) {
@@ -102,13 +100,13 @@ export const getClientConfig = (
               return null;
             },
           }),
+          fetchOptions(ctx),
           ssrExchange,
           fetchExchange,
         ]
       : [
           dedupExchange,
           cache,
-          fetchOptions(ctx),
           authExchange<{ token: string }>({
             addAuthToOperation: ({ authState, operation }) => {
               if (!authState || !authState.token) {
@@ -172,6 +170,7 @@ export const getClientConfig = (
               return null;
             },
           }),
+          fetchOptions(ctx),
           ssrExchange,
           fetchExchange,
         ],

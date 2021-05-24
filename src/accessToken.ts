@@ -43,7 +43,7 @@ export function clearAccessToken() {
 
 export async function refreshAccessToken(): Promise<string> {
   try {
-    const response = await fetch('http://localhost:4000/refresh_token', {
+    const response = await fetch(process.env.NEXT_PUBLIC_REFRESH_TOKEN_URL!, {
       credentials: 'include',
       method: 'POST',
     });

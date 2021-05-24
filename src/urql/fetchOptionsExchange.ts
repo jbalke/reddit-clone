@@ -35,11 +35,14 @@ export function fetchOptions(ctx: PartialNextContext | undefined) {
         const cookie = ctx.req?.headers?.cookie;
 
         try {
-          const response = await fetch('http://localhost:4000/refresh_token', {
-            method: 'POST',
-            credentials: 'include',
-            headers: cookie ? { cookie } : undefined,
-          });
+          const response = await fetch(
+            process.env.NEXT_PUBLIC_REFRESH_TOKEN_URL!,
+            {
+              method: 'POST',
+              credentials: 'include',
+              headers: cookie ? { cookie } : undefined,
+            }
+          );
 
           const data = (await response.json()) as RefreshTokenResponse;
           token = data.accessToken;

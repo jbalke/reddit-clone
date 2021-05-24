@@ -5,6 +5,7 @@ import { clearAccessToken } from '../accessToken';
 import { __isProd__ } from '../constants';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
 import { MyContext } from '../myContext';
+import { isServer } from '../utils/isServer';
 import { NextChakraLink } from './NextChakraLink';
 
 type MenuItemProps = {
@@ -48,7 +49,7 @@ const Header = () => {
     </Button>
   );
 
-  const [{ data, fetching }] = useMeQuery();
+  const [{ data, fetching }] = useMeQuery({ pause: !process.browser });
 
   let authLinks = null;
   if (fetching) {
