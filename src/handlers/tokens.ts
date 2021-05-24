@@ -5,6 +5,7 @@ import {
   COOKIE_NAME,
   REFRESH_TOKEN_SECRET,
   __prod__,
+  __app_domain__,
 } from '../constants';
 import { createAccessToken, createRefreshToken } from '../tokens';
 import { User } from '../entities/User';
@@ -44,7 +45,7 @@ export function sendRefreshToken(res: Response, token: string): void {
     maxAge: __maxAge__,
     sameSite: 'strict',
     secure: __prod__,
-    domain: __prod__ ? '.johnbalke.com' : undefined,
+    domain: __prod__ ? __app_domain__ : undefined,
   });
 }
 
