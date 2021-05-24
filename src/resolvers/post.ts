@@ -304,7 +304,7 @@ export class PostResolver {
     const posts = await getConnection().query(
       `
     SELECT id, title, text, score, level, "authorId", replies, "updatedAt", "createdAt", "voteCount", "isLocked", "isPinned"
-    FROM reddit.posts 
+    FROM posts 
     WHERE "parentId" IS NULL AND "flaggedAt" IS NULL
     ${
       cursor && sortOptions.sortBy === SortBy.SCORE
@@ -345,14 +345,14 @@ WITH RECURSIVE replies (id, title, text, score, "voteCount", "updatedAt", "creat
   SELECT
     id, title, text, score, "voteCount", "updatedAt", "createdAt", "flaggedAt", "originalPostId", "parentId", "authorId", replies, "isPinned", "isLocked", "level", ARRAY["id"]
   FROM 
-    reddit.posts
+    posts
   WHERE
     posts.id = $1
   UNION
   SELECT
     p.id, p.title, p.text, p.score, p."voteCount", p."updatedAt", p."createdAt", p. "flaggedAt", p."originalPostId", p."parentId", p."authorId", p.replies, p."isPinned",  p."isLocked", p."level", path || p.id
   FROM
-    reddit.posts p
+    posts p
   INNER JOIN replies r ON r.id = p."parentId" AND r.level < $2
 ) 
 SELECT
@@ -375,7 +375,7 @@ ORDER BY path, "createdAt"
       SELECT
         *
       FROM 
-        reddit.posts
+        posts
       WHERE
         posts.id = $1
     `,
@@ -551,7 +551,7 @@ ORDER BY path, "createdAt"
       const posts = await getConnection().query(
         `
       UPDATE
-        reddit.posts
+        posts
       SET 
         "isLocked" = NOT "isLocked"
       WHERE
@@ -579,7 +579,7 @@ ORDER BY path, "createdAt"
       const result = await getConnection().query(
         `
         UPDATE
-          reddit.posts
+          posts
         SET
           "isPinned" = NOT "isPinned"
         WHERE

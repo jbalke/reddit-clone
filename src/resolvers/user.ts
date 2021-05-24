@@ -111,7 +111,7 @@ export class UserResolver {
     const result = await getConnection().query(
       `
     select COALESCE(SUM(score), 0) as score
-    from reddit.posts
+    from posts
     where "authorId" = $1
     `,
       [user.id]
