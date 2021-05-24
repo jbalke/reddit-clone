@@ -50,5 +50,10 @@ export function sendRefreshToken(res: Response, token: string): void {
 }
 
 export function clearRefreshCookie(res: Response): void {
-  res.clearCookie(COOKIE_NAME);
+  res.clearCookie(COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: 'strict',
+    secure: __prod__,
+    domain: __prod__ ? __app_domain__ : undefined,
+  });
 }
