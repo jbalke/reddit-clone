@@ -533,7 +533,7 @@ ORDER BY path, "createdAt"
       .returning('*')
       .execute();
 
-    console.log(update);
+    // console.log(update);
 
     return update.raw[0];
   }
@@ -558,7 +558,7 @@ ORDER BY path, "createdAt"
         id = $1 OR "originalPostId" = $1
       RETURNING *;
     `,
-        [originalPostId || id]
+        [originalPostId ?? id]
       );
 
       return posts[0];
