@@ -84,7 +84,7 @@ function AdminControls({ post, ...props }: AdminControlsProps) {
       }
     });
   } else if (flagIntent.confirmed) {
-    pinIntent.setConfirmed(false);
+    flagIntent.setConfirmed(false);
 
     flagPost({
       id: post.id,
