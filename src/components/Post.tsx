@@ -21,7 +21,6 @@ import { relativeTime } from '../utils/relativeTime';
 import AdminControls from './AdminControls';
 import EditDeletePostButtons from './EditDeletePostButtons';
 import { NextChakraLink } from './NextChakraLink';
-import TooltipButton from './TooltipButton';
 import VoteSection from './VoteSection';
 
 type PostProps = {
