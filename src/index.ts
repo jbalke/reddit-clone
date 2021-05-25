@@ -25,8 +25,6 @@ const main = async () => {
   let connectionOptions = {
     type: 'postgres' as const,
     url: __databaseURL__,
-    // logging: true,
-    // synchronize: true,
     cache: true,
     dropSchema: false,
     entities: [Post, User, Upvote],
@@ -34,7 +32,8 @@ const main = async () => {
   };
 
   const dev_options = {
-    schema: 'reddit',
+    logging: true,
+    synchronize: true,
     ssl: true,
     extra: {
       ssl: {
