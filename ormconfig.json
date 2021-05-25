@@ -1,0 +1,21 @@
+{
+  "type": "postgres",
+  "schema": "reddit-clone",
+  "url": "postgresql://crvszsimcvvfhx:e8bf9025437279d0c6ec0e4ecff44c4d4ae3c5be41de6b9e77efac8489ac0bc4@ec2-54-217-236-206.eu-west-1.compute.amazonaws.com:5432/d2rgo7cc92rvsg",
+  "entities": ["dist/entities/**/*.js"],
+  "migrations": ["dist/migration/**/*.js"],
+  "subscribers": ["dist/subscriber/**/*.js"],
+  "ssl": true,
+  "extra": {
+    "ssl": {
+      "rejectUnauthorized": false
+    }
+  },
+  "cache": true,
+  "dropSchema": false,
+  "cli": {
+    "entitiesDir": "src/entities",
+    "migrationsDir": "src/migration",
+    "subscribersDir": "src/subscriber "
+  }
+}
