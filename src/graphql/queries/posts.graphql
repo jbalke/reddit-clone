@@ -1,0 +1,8 @@
+query Posts($options: PostsInput!) {
+  posts(options: $options) {
+    hasMore
+    posts {
+      ...PostSummary
+    }
+  }
+}

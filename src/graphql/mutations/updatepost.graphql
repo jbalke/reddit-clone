@@ -1,0 +1,5 @@
+mutation UpdatePost($input: UpdatePostInput!) {
+  updatePost(input: $input) {
+    ...RegularPostResponse
+  }
+}

@@ -1,0 +1,6 @@
+mutation FlagPost($id: Int!) {
+  flagPost(id: $id) {
+    id
+    flaggedAt
+  }
+}

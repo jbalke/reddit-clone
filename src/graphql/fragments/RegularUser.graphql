@@ -1,0 +1,8 @@
+fragment RegularUser on User {
+  id
+  username
+  verified
+  isAdmin
+  bannedUntil
+  lastPostAt
+}

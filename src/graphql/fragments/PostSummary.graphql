@@ -1,0 +1,4 @@
+fragment PostSummary on Post {
+  ...BasicPost
+  textSnippet
+}

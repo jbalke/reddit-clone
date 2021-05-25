@@ -1,0 +1,5 @@
+query Reply($id: Int!) {
+  post(id: $id) {
+    ...PostReply
+  }
+}

@@ -1,0 +1,23 @@
+fragment BasicPost on Post {
+  id
+  title
+  author {
+    id
+    username
+  }
+  originalPost {
+    id
+  }
+  reply {
+    id
+  }
+  level
+  replies
+  score
+  voteCount
+  voteStatus
+  isLocked
+  isPinned
+  createdAt
+  updatedAt
+}

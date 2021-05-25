@@ -1,0 +1,6 @@
+mutation TogglePinThread($id: Int!) {
+  togglePinThread(id: $id) {
+    id
+    isPinned
+  }
+}

@@ -1,0 +1,10 @@
+query TestToken {
+  token {
+    jwt {
+      userId
+      isAdmin
+      bannedUntil
+      tokenVersion
+    }
+  }
+}
